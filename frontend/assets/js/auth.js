@@ -1,5 +1,6 @@
 (function () {
   const guestPages = ["login", "cadastro", "esqueceu-senha", "redefinir-senha"];
+  const protectedPages = ["dashboard", "security"];
 
   const getMessageBox = () => document.querySelector("[data-message]");
 
@@ -111,8 +112,18 @@
     return response.data;
   };
 
+  const loadTwoFactorStatus = async () => {
+    const response = await PortalVidaLivreApi.get("two-factor-status.php");
+    return response.data;
+  };
+
   const redirectIfAuthenticated = async () => {
     const session = await loadSession();
+
+    if (session.login_two_factor_pending) {
+      window.location.replace("/frontend/two-factor.html");
+      return true;
+    }
 
     if (session.authenticated) {
       window.location.replace("/frontend/dashboard.html");
@@ -139,6 +150,12 @@
 
     if (emailTarget) {
       emailTarget.textContent = session.user?.email || "";
+    }
+
+    const twoFactorTarget = document.querySelector("[data-current-user-2fa]");
+
+    if (twoFactorTarget) {
+      twoFactorTarget.textContent = session.user?.two_factor_enabled ? "Ativo" : "Inativo";
     }
 
     return session.user;
@@ -182,6 +199,12 @@
     if (page === "index") {
       try {
         const session = await loadSession();
+
+        if (session.login_two_factor_pending) {
+          window.location.replace("/frontend/two-factor.html");
+          return;
+        }
+
         window.location.replace(
           session.authenticated ? "/frontend/dashboard.html" : "/frontend/login.html"
         );
@@ -204,7 +227,26 @@
       return;
     }
 
-    if (page === "dashboard") {
+    if (page === "two-factor") {
+      try {
+        const status = await loadTwoFactorStatus();
+
+        if (status.authenticated) {
+          window.location.replace("/frontend/dashboard.html");
+          return;
+        }
+
+        if (!status.login_pending) {
+          window.location.replace("/frontend/login.html");
+        }
+      } catch (error) {
+        showMessage("Nao foi possivel validar o desafio 2FA.", "error");
+      }
+
+      return;
+    }
+
+    if (protectedPages.includes(page)) {
       try {
         await requireAuth();
         bindLogout();
@@ -222,6 +264,8 @@
     isValidEmail,
     passwordStrengthErrors,
     formDataToObject,
+    loadSession,
+    loadTwoFactorStatus,
     redirectIfAuthenticated,
     requireAuth,
     bindLogout,

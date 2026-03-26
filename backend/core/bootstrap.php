@@ -8,11 +8,12 @@ require_once __DIR__ . '/env.php';
 require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/response.php';
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/crypto.php';
 require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/csrf.php';
 require_once __DIR__ . '/mailer.php';
+require_once __DIR__ . '/two_factor.php';
 
 load_env(dirname(__DIR__) . '/.env');
 
 ensure_session_started();
-

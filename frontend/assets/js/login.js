@@ -35,7 +35,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     try {
-      await PortalVidaLivreApi.post("login.php", data, { csrf: true });
+      const response = await PortalVidaLivreApi.post("login.php", data, { csrf: true });
+
+      if (response.data?.requires_2fa) {
+        window.location.assign("/frontend/two-factor.html");
+        return;
+      }
+
       window.location.assign("/frontend/dashboard.html");
     } catch (error) {
       PortalVidaLivreAuth.applyErrors(form, error.errors || {});

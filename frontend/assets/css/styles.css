@@ -98,6 +98,17 @@ input {
     border: 1px solid var(--gray-200);
 }
 
+.section-block {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--gray-200);
+}
+
+.section-block h2 {
+    margin: 0 0 0.75rem;
+    font-size: 1.1rem;
+}
+
 .page-text {
     margin-top: 0;
     color: var(--gray-600);
@@ -177,6 +188,33 @@ button:hover {
     margin: 0 0 0.75rem;
 }
 
+.qr-image {
+    display: block;
+    width: 220px;
+    max-width: 100%;
+    margin-bottom: 1rem;
+    border: 1px solid var(--gray-300);
+    background: #fff;
+}
+
+code {
+    display: inline-block;
+    padding: 0.1rem 0.35rem;
+    background: var(--gray-100);
+    border: 1px solid var(--gray-200);
+}
+
+.code-list {
+    margin: 0;
+    padding-left: 1.25rem;
+}
+
+.code-list li {
+    margin-bottom: 0.5rem;
+    font-family: monospace;
+    font-size: 1rem;
+}
+
 @media (max-width: 640px) {
     .header-row {
         flex-direction: column;
@@ -195,4 +233,3 @@ button:hover {
         width: 100%;
     }
 }
-

@@ -35,10 +35,18 @@ if ($user === null || !password_verify($password, (string) $user['password_hash'
     ], 401);
 }
 
+if ((bool) ($user['two_factor_enabled'] ?? false) && !empty($user['two_factor_secret_encrypted'])) {
+    start_two_factor_pending((int) $user['id']);
+
+    success_response('Codigo de verificacao necessario.', [
+        'requires_2fa' => true,
+        'csrf_token' => rotate_csrf_token(),
+    ]);
+}
+
 $publicUser = login_user($user);
 
 success_response('Login realizado com sucesso.', [
     'user' => $publicUser,
     'csrf_token' => rotate_csrf_token(),
 ]);
-

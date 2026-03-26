@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="/frontend/">
+    <title>Verificacao 2FA | Portal Vida Livre</title>
+    <link rel="stylesheet" href="./assets/css/styles.css">
+</head>
+<body data-page="two-factor">
+    <header class="site-header">
+        <div class="container header-row">
+            <a class="brand" href="./index.html">Portal Vida Livre</a>
+            <nav class="nav">
+                <a href="./login.html">Login</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="panel">
+            <h1>Verificacao em dois fatores</h1>
+            <p class="page-text">Informe o codigo de 6 digitos do app authenticator ou use um backup code.</p>
+            <div class="message hidden" data-message></div>
+
+            <form id="two-factor-code-form" class="form" novalidate>
+                <div class="form-group">
+                    <label for="code">Codigo do authenticator</label>
+                    <input id="code" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6">
+                    <small class="field-error" data-error-for="code"></small>
+                </div>
+
+                <button type="submit">Validar codigo</button>
+            </form>
+
+            <div class="section-block">
+                <h2>Usar backup code</h2>
+                <form id="two-factor-backup-login-form" class="form" novalidate>
+                    <div class="form-group">
+                        <label for="backup_code">Backup code</label>
+                        <input id="backup_code" name="backup_code" type="text" autocomplete="one-time-code">
+                        <small class="field-error" data-error-for="backup_code"></small>
+                    </div>
+
+                    <button type="submit">Usar backup code</button>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <script src="./assets/js/api.js" defer></script>
+    <script src="./assets/js/auth.js" defer></script>
+    <script src="./assets/js/two-factor.js" defer></script>
+</body>
+</html>
+

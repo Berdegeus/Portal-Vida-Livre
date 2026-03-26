@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="/frontend/">
+    <title>Seguranca | Portal Vida Livre</title>
+    <link rel="stylesheet" href="./assets/css/styles.css">
+</head>
+<body data-page="security">
+    <header class="site-header">
+        <div class="container header-row">
+            <a class="brand" href="./index.html">Portal Vida Livre</a>
+            <nav class="nav">
+                <a href="./dashboard.html">Painel</a>
+                <a href="./security.html" aria-current="page">Seguranca</a>
+                <button type="button" class="nav-button" data-logout>Sair</button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="panel">
+            <h1>Seguranca da conta</h1>
+            <p class="page-text">Ative ou desative a autenticacao em dois fatores e gerencie seus backup codes.</p>
+            <div class="message hidden" data-message></div>
+
+            <div class="section-block">
+                <h2>Status do 2FA</h2>
+                <p class="page-text" data-two-factor-status>Carregando status...</p>
+            </div>
+
+            <div class="section-block" data-setup-section>
+                <h2>Ativar 2FA</h2>
+                <form id="two-factor-setup-form" class="form" novalidate>
+                    <div class="form-group">
+                        <label for="setup_current_password">Senha atual</label>
+                        <input id="setup_current_password" name="current_password" type="password" autocomplete="current-password">
+                        <small class="field-error" data-error-for="current_password"></small>
+                    </div>
+
+                    <button type="submit">Iniciar configuracao</button>
+                </form>
+            </div>
+
+            <div class="section-block hidden" data-setup-result>
+                <h2>Configurar app authenticator</h2>
+                <p class="page-text">Escaneie o QR Code no Google Authenticator, Microsoft Authenticator, Authy ou app equivalente.</p>
+                <img alt="QR Code do 2FA" class="qr-image" data-qr-image>
+                <p><strong>Chave manual:</strong> <code data-manual-secret></code></p>
+
+                <form id="two-factor-confirm-form" class="form" novalidate>
+                    <div class="form-group">
+                        <label for="confirm_current_password">Senha atual</label>
+                        <input id="confirm_current_password" name="current_password" type="password" autocomplete="current-password">
+                        <small class="field-error" data-error-for="current_password"></small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirm_code">Codigo de 6 digitos</label>
+                        <input id="confirm_code" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6">
+                        <small class="field-error" data-error-for="code"></small>
+                    </div>
+
+                    <button type="submit">Confirmar ativacao</button>
+                </form>
+            </div>
+
+            <div class="section-block hidden" data-enabled-section>
+                <h2>2FA ativo</h2>
+                <p class="page-text">Seu 2FA esta ativo. Voce pode regenerar backup codes ou desativar o recurso.</p>
+
+                <form id="two-factor-backup-form" class="form" novalidate>
+                    <div class="form-group">
+                        <label for="backup_current_password">Senha atual</label>
+                        <input id="backup_current_password" name="current_password" type="password" autocomplete="current-password">
+                        <small class="field-error" data-error-for="current_password"></small>
+                    </div>
+
+                    <button type="submit">Regenerar backup codes</button>
+                </form>
+
+                <form id="two-factor-disable-form" class="form" novalidate>
+                    <div class="form-group">
+                        <label for="disable_current_password">Senha atual</label>
+                        <input id="disable_current_password" name="current_password" type="password" autocomplete="current-password">
+                        <small class="field-error" data-error-for="current_password"></small>
+                    </div>
+
+                    <button type="submit">Desativar 2FA</button>
+                </form>
+            </div>
+
+            <div class="section-block hidden" data-backup-codes-section>
+                <h2>Backup codes</h2>
+                <p class="page-text">Guarde estes codigos em local seguro. Eles aparecem em texto puro apenas nesta tela.</p>
+                <ul class="code-list" data-backup-codes-list></ul>
+            </div>
+        </section>
+    </main>
+
+    <script src="./assets/js/api.js" defer></script>
+    <script src="./assets/js/auth.js" defer></script>
+    <script src="./assets/js/security.js" defer></script>
+</body>
+</html>
+

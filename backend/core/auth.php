@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+const TWO_FACTOR_PENDING_MAX_ATTEMPTS = 5;
+const TWO_FACTOR_PENDING_TTL = 300;
+
 function ensure_session_started(): void
 {
     if (session_status() === PHP_SESSION_ACTIVE) {
@@ -34,13 +37,18 @@ function user_public_data(array $user): array
         'name' => (string) $user['name'],
         'email' => (string) $user['email'],
         'created_at' => $user['created_at'] ?? null,
+        'two_factor_enabled' => (bool) ($user['two_factor_enabled'] ?? false),
+        'two_factor_confirmed_at' => $user['two_factor_confirmed_at'] ?? null,
     ];
 }
 
 function find_user_by_email(string $email): ?array
 {
     $statement = db()->prepare(
-        'SELECT id, name, email, password_hash, created_at
+        'SELECT id, name, email, password_hash, created_at,
+                two_factor_enabled, two_factor_secret_encrypted,
+                two_factor_temp_secret_encrypted,
+                two_factor_confirmed_at, two_factor_temp_secret_created_at
          FROM users
          WHERE email = :email
          LIMIT 1'
@@ -54,7 +62,25 @@ function find_user_by_email(string $email): ?array
 function find_user_by_id(int $id): ?array
 {
     $statement = db()->prepare(
-        'SELECT id, name, email, created_at
+        'SELECT id, name, email, created_at,
+                two_factor_enabled, two_factor_confirmed_at
+         FROM users
+         WHERE id = :id
+         LIMIT 1'
+    );
+    $statement->execute(['id' => $id]);
+    $user = $statement->fetch();
+
+    return is_array($user) ? $user : null;
+}
+
+function find_user_auth_by_id(int $id): ?array
+{
+    $statement = db()->prepare(
+        'SELECT id, name, email, password_hash, created_at,
+                two_factor_enabled, two_factor_secret_encrypted,
+                two_factor_temp_secret_encrypted,
+                two_factor_confirmed_at, two_factor_temp_secret_created_at
          FROM users
          WHERE id = :id
          LIMIT 1'
@@ -83,6 +109,7 @@ function create_user(string $name, string $email, string $password): int
 function login_user(array $user): array
 {
     ensure_session_started();
+    clear_two_factor_pending();
     session_regenerate_id(true);
     $_SESSION['user_id'] = (int) $user['id'];
     unset($_SESSION['csrf_token']);
@@ -94,6 +121,7 @@ function logout_user(): void
 {
     ensure_session_started();
 
+    clear_two_factor_pending();
     $_SESSION = [];
 
     if (ini_get('session.use_cookies')) {
@@ -135,6 +163,80 @@ function current_user(): ?array
     }
 
     return user_public_data($user);
+}
+
+function verify_current_password(int $userId, string $password): bool
+{
+    $user = find_user_auth_by_id($userId);
+
+    if ($user === null) {
+        return false;
+    }
+
+    return password_verify($password, (string) $user['password_hash']);
+}
+
+function start_two_factor_pending(int $userId): void
+{
+    ensure_session_started();
+
+    unset($_SESSION['user_id']);
+    $_SESSION['two_factor_pending'] = [
+        'user_id' => $userId,
+        'started_at' => time(),
+        'expires_at' => time() + TWO_FACTOR_PENDING_TTL,
+        'attempts' => 0,
+    ];
+}
+
+function get_two_factor_pending(): ?array
+{
+    ensure_session_started();
+
+    $pending = $_SESSION['two_factor_pending'] ?? null;
+
+    if (!is_array($pending)) {
+        return null;
+    }
+
+    $userId = $pending['user_id'] ?? null;
+    $expiresAt = (int) ($pending['expires_at'] ?? 0);
+    $attempts = (int) ($pending['attempts'] ?? 0);
+
+    if ((!is_int($userId) && !ctype_digit((string) $userId)) || $expiresAt < time()) {
+        clear_two_factor_pending();
+        return null;
+    }
+
+    if ($attempts >= TWO_FACTOR_PENDING_MAX_ATTEMPTS) {
+        clear_two_factor_pending();
+        return null;
+    }
+
+    return [
+        'user_id' => (int) $userId,
+        'started_at' => (int) ($pending['started_at'] ?? 0),
+        'expires_at' => $expiresAt,
+        'attempts' => $attempts,
+    ];
+}
+
+function increment_two_factor_pending_attempts(): int
+{
+    ensure_session_started();
+
+    if (!isset($_SESSION['two_factor_pending']) || !is_array($_SESSION['two_factor_pending'])) {
+        return 0;
+    }
+
+    $_SESSION['two_factor_pending']['attempts'] = (int) ($_SESSION['two_factor_pending']['attempts'] ?? 0) + 1;
+
+    return (int) $_SESSION['two_factor_pending']['attempts'];
+}
+
+function clear_two_factor_pending(): void
+{
+    unset($_SESSION['two_factor_pending']);
 }
 
 function create_password_reset_token(int $userId): string
