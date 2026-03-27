@@ -5,6 +5,7 @@
   "require": {
     "php": ">=8.1",
     "phpmailer/phpmailer": "^6.9",
-    "chillerlan/php-qrcode": "^5.0"
+    "chillerlan/php-qrcode": "^5.0",
+    "spomky-labs/otphp": "^11.4"
   }
 }
