@@ -70,6 +70,7 @@
   };
 
   const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const isValidName = (name) => /^[\p{L}\p{M}\s-]+$/u.test((name || "").trim());
 
   const passwordStrengthErrors = (password) => {
     const errors = [];
@@ -265,6 +266,7 @@
     clearFieldErrors,
     applyErrors,
     isValidEmail,
+    isValidName,
     passwordStrengthErrors,
     formDataToObject,
     loadSession,
