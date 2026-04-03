@@ -132,9 +132,9 @@ try {
 // ── Insert ────────────────────────────────────────────────────────────────────
 $sql = <<<SQL
     INSERT INTO directory_entries
-        (slug, entry_type, name, specialty, city, state, service_mode, short_bio, is_active)
+        (slug, entry_type, name, specialty, city, state, service_mode, short_bio)
     VALUES
-        (:slug, :entry_type, :name, :specialty, :city, :state, :service_mode, :short_bio, 0)
+        (:slug, :entry_type, :name, :specialty, :city, :state, :service_mode, :short_bio)
 SQL;
 
 try {
