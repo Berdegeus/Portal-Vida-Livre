@@ -118,16 +118,36 @@
     return response.data;
   };
 
+  const sanitizeRedirectTarget = (value, fallback = "/frontend/dashboard.html") => {
+    if (typeof value !== "string" || value === "") {
+      return fallback;
+    }
+
+    if (!value.startsWith("/") || value.startsWith("//")) {
+      return fallback;
+    }
+
+    return value;
+  };
+
+  const getRedirectTarget = (fallback = "/frontend/dashboard.html") =>
+    sanitizeRedirectTarget(new URLSearchParams(window.location.search).get("redirect"), fallback);
+
   const redirectIfAuthenticated = async () => {
     const session = await loadSession();
+    const redirectTarget = getRedirectTarget();
 
     if (session.login_two_factor_pending) {
-      window.location.replace("/frontend/two-factor.html");
+      const twoFactorUrl = new URL("/frontend/two-factor.html", window.location.origin);
+      if (redirectTarget && redirectTarget !== "/frontend/dashboard.html") {
+        twoFactorUrl.searchParams.set("redirect", redirectTarget);
+      }
+      window.location.replace(twoFactorUrl.toString());
       return true;
     }
 
     if (session.authenticated) {
-      window.location.replace("/frontend/dashboard.html");
+      window.location.replace(redirectTarget);
       return true;
     }
 
@@ -271,6 +291,8 @@
     formDataToObject,
     loadSession,
     loadTwoFactorStatus,
+    sanitizeRedirectTarget,
+    getRedirectTarget,
     redirectIfAuthenticated,
     requireAuth,
     bindLogout,

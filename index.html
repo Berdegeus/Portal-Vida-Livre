@@ -29,11 +29,11 @@
         <ul class="nav__list">
           <li><a href="#como-funciona" class="nav__link">Como funciona</a></li>
           <li><a href="#depoimentos" class="nav__link">Depoimentos</a></li>
-          <li><a href="#" class="nav__link">Pergunte ao especialista</a></li>
+          <li><a href="/frontend/busca.html?tipo=professional" class="nav__link">Pergunte ao especialista</a></li>
         </ul>
-        <div class="nav__actions">
+        <div class="nav__actions" id="headerActions">
           <a href="/frontend/login.html" class="btn btn--ghost">Entrar</a>
-          <a href="/controllers/CadastroController.php" class="btn btn--primary">Cadastre-se</a>
+          <a href="/frontend/cadastro.html" class="btn btn--primary">Cadastre-se</a>
         </div>
       </nav>
 
@@ -56,7 +56,7 @@
     <div class="container hero__content">
       <p class="hero__badge">
         <span class="hero__badge-dot"></span>
-        Mais de 2.000 especialistas prontos para ajudar
+        <span id="heroBadgeText">Mais de 2.000 especialistas prontos para ajudar</span>
       </p>
       <h1 class="hero__title">
         Encontre apoio para uma<br>
@@ -125,19 +125,19 @@
       <div class="container">
         <div class="stats">
           <div class="stat">
-            <span class="stat__number" data-target="2847">0</span>
+            <span class="stat__number" data-stat-key="specialists_total" data-target="2847">0</span>
             <span class="stat__label">Especialistas cadastrados</span>
           </div>
           <div class="stat">
-            <span class="stat__number" data-target="380">0</span>
+            <span class="stat__number" data-stat-key="support_groups_total" data-target="380">0</span>
             <span class="stat__label">Grupos de apoio</span>
           </div>
           <div class="stat">
-            <span class="stat__number" data-target="15420">0</span>
+            <span class="stat__number" data-stat-key="transformed_lives_total" data-target="15420">0</span>
             <span class="stat__label">Vidas transformadas</span>
           </div>
           <div class="stat">
-            <span class="stat__number" data-target="98">0</span>
+            <span class="stat__number" data-stat-key="cities_total" data-target="98">0</span>
             <span class="stat__label">Cidades atendidas</span>
           </div>
         </div>
@@ -346,8 +346,8 @@
             para te acolher com respeito e sigilo.
           </p>
           <div class="cta__buttons">
-            <a href="/controllers/BuscaController.php" class="btn btn--primary btn--lg">Buscar especialista</a>
-            <a href="/controllers/CadastroController.php" class="btn btn--outline btn--lg">Sou profissional</a>
+            <a href="/frontend/busca.html" class="btn btn--primary btn--lg">Buscar especialista</a>
+            <a href="/frontend/cadastro.html" class="btn btn--outline btn--lg">Sou profissional</a>
           </div>
         </div>
         <div class="cta__decoration">
@@ -380,13 +380,13 @@
             Conectando pessoas ao apoio que elas merecem para uma vida mais saudável e livre.
           </p>
           <div class="footer__social">
-            <a href="#" class="footer__social-link" aria-label="Instagram">
+            <a href="#" class="footer__social-link" aria-label="Instagram" data-disabled-link="Os perfis sociais oficiais serão divulgados em breve.">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
             </a>
-            <a href="#" class="footer__social-link" aria-label="Facebook">
+            <a href="#" class="footer__social-link" aria-label="Facebook" data-disabled-link="Os perfis sociais oficiais serão divulgados em breve.">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
             </a>
-            <a href="#" class="footer__social-link" aria-label="YouTube">
+            <a href="#" class="footer__social-link" aria-label="YouTube" data-disabled-link="Os perfis sociais oficiais serão divulgados em breve.">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19.1c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.43z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/></svg>
             </a>
           </div>
@@ -395,29 +395,29 @@
         <div class="footer__col">
           <h4 class="footer__heading">Para você</h4>
           <ul class="footer__links">
-            <li><a href="/controllers/BuscaController.php">Buscar especialista</a></li>
-            <li><a href="/controllers/BuscaController.php?tipo=grupo_apoio">Grupos de apoio</a></li>
-            <li><a href="#">Pergunte ao especialista</a></li>
-            <li><a href="#">Blog e artigos</a></li>
+            <li><a href="/frontend/busca.html">Buscar especialista</a></li>
+            <li><a href="/frontend/busca.html?tipo=support_group">Grupos de apoio</a></li>
+            <li><a href="/frontend/busca.html?tipo=professional">Pergunte ao especialista</a></li>
+            <li><a href="#" data-disabled-link="A área de blog e artigos estará disponível em breve.">Blog e artigos</a></li>
           </ul>
         </div>
 
         <div class="footer__col">
           <h4 class="footer__heading">Para profissionais</h4>
           <ul class="footer__links">
-            <li><a href="/controllers/CadastroController.php">Cadastre-se gratuitamente</a></li>
-            <li><a href="#">Planos para clínicas</a></li>
-            <li><a href="#">Central de ajuda</a></li>
+            <li><a href="/frontend/cadastro.html">Cadastre-se gratuitamente</a></li>
+            <li><a href="/frontend/cadastro.html">Planos para clínicas</a></li>
+            <li><a href="mailto:privacidade-vidalivre@gmail.com?subject=Central%20de%20ajuda%20Portal%20Vida%20Livre">Central de ajuda</a></li>
           </ul>
         </div>
 
         <div class="footer__col">
           <h4 class="footer__heading">Sobre</h4>
           <ul class="footer__links">
-            <li><a href="#">Quem somos</a></li>
-            <li><a href="#">Termos de uso</a></li>
-            <li><a href="#">Política de privacidade</a></li>
-            <li><a href="#">Contato</a></li>
+            <li><a href="#como-funciona">Quem somos</a></li>
+            <li><a href="#" data-disabled-link="Os termos de uso serão publicados em uma próxima etapa.">Termos de uso</a></li>
+            <li><a href="/frontend/privacidade.html">Política de privacidade</a></li>
+            <li><a href="mailto:privacidade-vidalivre@gmail.com?subject=Contato%20Portal%20Vida%20Livre">Contato</a></li>
           </ul>
         </div>
       </div>

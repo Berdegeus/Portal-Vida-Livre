@@ -1,5 +1,6 @@
 document.addEventListener("DOMContentLoaded", async () => {
   const form = document.querySelector("#login-form");
+  const redirectTarget = PortalVidaLivreAuth.getRedirectTarget("/frontend/dashboard.html");
 
   if (!form) {
     return;
@@ -38,11 +39,15 @@ document.addEventListener("DOMContentLoaded", async () => {
       const response = await PortalVidaLivreApi.post("login.php", data, { csrf: true });
 
       if (response.data?.requires_2fa) {
-        window.location.assign("/frontend/two-factor.html");
+        const twoFactorUrl = new URL("/frontend/two-factor.html", window.location.origin);
+        if (redirectTarget && redirectTarget !== "/frontend/dashboard.html") {
+          twoFactorUrl.searchParams.set("redirect", redirectTarget);
+        }
+        window.location.assign(twoFactorUrl.toString());
         return;
       }
 
-      window.location.assign("/frontend/dashboard.html");
+      window.location.assign(redirectTarget);
     } catch (error) {
       PortalVidaLivreAuth.applyErrors(form, error.errors || {});
       PortalVidaLivreAuth.showMessage(error.message || "Nao foi possivel realizar o login.", "error");
