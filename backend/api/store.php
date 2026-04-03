@@ -69,9 +69,15 @@ if (!in_array($entryType, $validTypes, true)) {
 if (mb_strlen($name) < 2 || mb_strlen($name) > 160) {
     jsonError('Nome deve ter entre 2 e 160 caracteres.');
 }
+if (!preg_match('/^[a-zA-ZÀ-ÿ\s\.\']+$/u', $name)) {
+    jsonError('O nome deve conter apenas letras, espaços, pontos ou apóstrofos.');
+}
 
 if (mb_strlen($specialty) < 2 || mb_strlen($specialty) > 160) {
     jsonError('Especialidade deve ter entre 2 e 160 caracteres.');
+}
+if (!preg_match('/^[a-zA-ZÀ-ÿ\s\.\,\-]+$/u', $specialty)) {
+    jsonError('A especialidade contém caracteres inválidos.');
 }
 
 if (!preg_match('/^[a-z0-9][a-z0-9\-]{1,}[a-z0-9]$/', $slug) || mb_strlen($slug) > 160) {
@@ -80,6 +86,9 @@ if (!preg_match('/^[a-z0-9][a-z0-9\-]{1,}[a-z0-9]$/', $slug) || mb_strlen($slug)
 
 if (mb_strlen($city) < 2 || mb_strlen($city) > 120) {
     jsonError('Cidade deve ter entre 2 e 120 caracteres.');
+}
+if (!preg_match('/^[a-zA-ZÀ-ÿ\s\'\-]+$/u', $city)) {
+    jsonError('A cidade deve conter apenas letras, espaços, hífens ou apóstrofos.');
 }
 
 $validStates = [
@@ -99,6 +108,9 @@ if (!in_array($serviceMode, $validModes, true)) {
 $bioLen = mb_strlen($shortBio);
 if ($bioLen < 80 || $bioLen > 1200) {
     jsonError("Descrição deve ter entre 80 e 1200 caracteres (atual: {$bioLen}).");
+}
+if (preg_match('/[<>]/', $shortBio)) {
+    jsonError('A descrição não pode conter tags HTML (< ou >) por questões de segurança.');
 }
 
 // ── Database ──────────────────────────────────────────────────────────────────
