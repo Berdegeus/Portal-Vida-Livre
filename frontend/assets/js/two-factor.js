@@ -1,6 +1,7 @@
 document.addEventListener("DOMContentLoaded", async () => {
   const codeForm = document.querySelector("#two-factor-code-form");
   const backupForm = document.querySelector("#two-factor-backup-login-form");
+  const redirectTarget = PortalVidaLivreAuth.getRedirectTarget("/frontend/dashboard.html");
 
   if (!codeForm || !backupForm) {
     return;
@@ -10,7 +11,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const status = await PortalVidaLivreAuth.loadTwoFactorStatus();
 
     if (status.authenticated) {
-      window.location.replace("/frontend/dashboard.html");
+      window.location.replace(redirectTarget);
       return false;
     }
 
@@ -52,7 +53,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     try {
       await PortalVidaLivreApi.post("two-factor-verify.php", { code: data.code }, { csrf: true });
-      window.location.assign("/frontend/dashboard.html");
+      window.location.assign(redirectTarget);
     } catch (error) {
       PortalVidaLivreAuth.applyErrors(codeForm, error.errors || {});
       PortalVidaLivreAuth.showMessage(error.message || "Nao foi possivel validar o codigo.", "error");
@@ -81,7 +82,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         { backup_code: data.backup_code },
         { csrf: true }
       );
-      window.location.assign("/frontend/dashboard.html");
+      window.location.assign(redirectTarget);
     } catch (error) {
       PortalVidaLivreAuth.applyErrors(backupForm, error.errors || {});
       PortalVidaLivreAuth.showMessage(error.message || "Nao foi possivel validar o backup code.", "error");

@@ -16,4 +16,4 @@ load_env(dirname(__DIR__) . '/.env');
 run_schema();
 run_seed();
 
-echo "Schema e seed aplicados com sucesso.\n";
+echo "Seed aplicado com sucesso.\n";

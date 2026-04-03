@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="/frontend/">
+    <title>Buscar apoio | Portal Vida Livre</title>
+    <link rel="stylesheet" href="./assets/css/styles.css">
+</head>
+<body data-page="busca">
+    <header class="header" id="header">
+        <div class="container header__inner">
+            <a href="/" class="logo">
+                <span class="logo__icon">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="16" cy="16" r="14" stroke="currentColor" stroke-width="2.5"/>
+                        <path d="M16 8C16 8 10 14 10 18C10 21.3137 12.6863 24 16 24C19.3137 24 22 21.3137 22 18C22 14 16 8 16 8Z" fill="currentColor" opacity="0.3"/>
+                        <path d="M16 11C16 11 12 15.5 12 18C12 20.2091 13.7909 22 16 22C18.2091 22 20 20.2091 20 18C20 15.5 16 11 16 11Z" fill="currentColor"/>
+                    </svg>
+                </span>
+                <span class="logo__text">Vida<span class="logo__accent">Livre</span></span>
+            </a>
+
+            <nav class="nav" id="nav">
+                <ul class="nav__list">
+                    <li><a href="/frontend/busca.html" class="nav__link" aria-current="page">Buscar apoio</a></li>
+                </ul>
+                <div class="nav__actions" id="searchHeaderActions">
+                    <a href="./login.html" class="btn btn--ghost">Entrar</a>
+                    <a href="./cadastro.html" class="btn btn--primary">Cadastre-se</a>
+                </div>
+            </nav>
+
+            <button class="hamburger" id="hamburger" aria-label="Abrir menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="panel search-layout">
+            <div class="search-toolbar">
+                <div>
+                    <h1>Buscar apoio</h1>
+                    <p class="page-text">Encontre especialistas, clínicas e grupos de apoio com os filtros da home.</p>
+                </div>
+
+                <form id="directory-search-form" class="search-toolbar__form" novalidate>
+                    <div class="search-toolbar__grid">
+                        <div class="form-group">
+                            <label for="especialidade">Especialidade ou tipo de vício</label>
+                            <input id="especialidade" name="especialidade" type="text" autocomplete="off" list="specialties-list">
+                            <datalist id="specialties-list"></datalist>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="cidade">Cidade ou região</label>
+                            <input id="cidade" name="cidade" type="text" autocomplete="off" list="locations-list">
+                            <datalist id="locations-list"></datalist>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="tipo">Tipo de atendimento</label>
+                            <select id="tipo" name="tipo">
+                                <option value="">Todos</option>
+                                <option value="professional">Especialistas</option>
+                                <option value="clinic">Clínicas</option>
+                                <option value="support_group">Grupos de apoio</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit">Buscar</button>
+                </form>
+            </div>
+
+            <div class="message hidden" data-message></div>
+            <p class="search-results-summary" data-results-summary>Carregando resultados...</p>
+            <div class="results-grid" data-results-container></div>
+        </section>
+    </main>
+
+    <script src="./assets/js/api.js" defer></script>
+    <script src="./assets/js/internal-ui.js" defer></script>
+    <script src="./assets/js/busca.js" defer></script>
+</body>
+</html>

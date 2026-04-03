@@ -10,13 +10,34 @@
 </head>
 
 <body data-page="privacidade">
-    <header class="site-header">
-        <div class="container header-row">
-            <a class="brand" href="./index.html">Portal Vida Livre</a>
-            <nav class="nav">
-                <a href="./login.html">Entrar</a>
-                <a href="./cadastro.html">Cadastro</a>
+    <header class="header" id="header">
+        <div class="container header__inner">
+            <a href="/" class="logo">
+                <span class="logo__icon">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="16" cy="16" r="14" stroke="currentColor" stroke-width="2.5"/>
+                        <path d="M16 8C16 8 10 14 10 18C10 21.3137 12.6863 24 16 24C19.3137 24 22 21.3137 22 18C22 14 16 8 16 8Z" fill="currentColor" opacity="0.3"/>
+                        <path d="M16 11C16 11 12 15.5 12 18C12 20.2091 13.7909 22 16 22C18.2091 22 20 20.2091 20 18C20 15.5 16 11 16 11Z" fill="currentColor"/>
+                    </svg>
+                </span>
+                <span class="logo__text">Vida<span class="logo__accent">Livre</span></span>
+            </a>
+
+            <nav class="nav" id="nav">
+                <ul class="nav__list">
+                    <li><a href="/frontend/busca.html" class="nav__link">Buscar apoio</a></li>
+                </ul>
+                <div class="nav__actions">
+                    <a href="./login.html" class="btn btn--ghost">Entrar</a>
+                    <a href="./cadastro.html" class="btn btn--primary">Cadastre-se</a>
+                </div>
             </nav>
+
+            <button class="hamburger" id="hamburger" aria-label="Abrir menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
         </div>
     </header>
 
