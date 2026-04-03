@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cadastrar no Diretório — VidaLivre</title>
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* =============================================
+       PAGE HERO — cadastro-profissional
+    ============================================= */
+    .page-hero {
+      padding: 9rem 0 4rem;
+      background: linear-gradient(170deg, var(--amber-50) 0%, var(--cream) 50%, var(--warm-white) 100%);
+      position: relative;
+      overflow: hidden;
+      text-align: center;
+    }
+
+    .page-hero__blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.45;
+      pointer-events: none;
+    }
+    .page-hero__blob--1 {
+      width: 380px; height: 380px;
+      background: var(--amber-200);
+      top: -80px; right: -60px;
+      animation: float 18s ease-in-out infinite;
+    }
+    .page-hero__blob--2 {
+      width: 260px; height: 260px;
+      background: var(--orange-100);
+      bottom: -40px; left: -40px;
+      animation: float 14s ease-in-out infinite reverse;
+    }
+
+    .page-hero__badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 1rem;
+      background: var(--color-surface);
+      border: 1px solid var(--amber-200);
+      border-radius: var(--radius-full);
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--amber-700);
+      margin-bottom: 1.5rem;
+      box-shadow: var(--shadow-sm);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      animation: fadeUp 0.5s var(--ease-out) both;
+    }
+
+    .page-hero__title {
+      font-family: var(--font-display);
+      font-size: clamp(2rem, 5vw, 3rem);
+      color: var(--gray-900);
+      line-height: 1.2;
+      margin-bottom: 1rem;
+      animation: fadeUp 0.5s var(--ease-out) 0.08s both;
+    }
+
+    .page-hero__title span {
+      color: var(--color-primary);
+    }
+
+    .page-hero__sub {
+      font-size: 1.05rem;
+      color: var(--gray-500);
+      max-width: 560px;
+      margin: 0 auto;
+      line-height: 1.7;
+      animation: fadeUp 0.5s var(--ease-out) 0.16s both;
+    }
+
+    /* =============================================
+       FORM WRAPPER
+    ============================================= */
+    .form-section {
+      padding: 3rem 0 6rem;
+      background: var(--warm-white);
+    }
+
+    .form-card {
+      background: var(--color-surface);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--color-border);
+      overflow: hidden;
+      max-width: 820px;
+      margin: 0 auto;
+      animation: fadeUp 0.6s var(--ease-out) 0.2s both;
+    }
+
+    /* Progress steps */
+    .form-progress {
+      display: flex;
+      border-bottom: 1px solid var(--color-border);
+      background: var(--gray-50);
+    }
+
+    .form-step-tab {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      padding: 1.1rem 1rem;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--gray-400);
+      border-bottom: 2.5px solid transparent;
+      transition: all 0.3s var(--ease-out);
+      cursor: default;
+      text-align: center;
+    }
+
+    .form-step-tab.active {
+      color: var(--color-primary);
+      border-bottom-color: var(--color-primary);
+      background: var(--amber-50);
+    }
+
+    .form-step-tab.done {
+      color: #34D399;
+      border-bottom-color: #34D399;
+    }
+
+    .step-num {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 800;
+      background: var(--gray-200);
+      color: var(--gray-500);
+      flex-shrink: 0;
+      transition: all 0.3s;
+    }
+
+    .form-step-tab.active .step-num {
+      background: var(--color-primary);
+      color: white;
+    }
+
+    .form-step-tab.done .step-num {
+      background: #34D399;
+      color: white;
+    }
+
+    /* Form body */
+    .form-body {
+      padding: 2.5rem 2.5rem 2rem;
+    }
+
+    .form-step {
+      display: none;
+    }
+    .form-step.active {
+      display: block;
+      animation: fadeUp 0.4s var(--ease-out) both;
+    }
+
+    .form-step__title {
+      font-family: var(--font-display);
+      font-size: 1.35rem;
+      color: var(--gray-900);
+      margin-bottom: 0.35rem;
+    }
+
+    .form-step__desc {
+      font-size: 0.9rem;
+      color: var(--gray-400);
+      margin-bottom: 2rem;
+    }
+
+    /* Field grid */
+    .field-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem 1.5rem;
+    }
+
+    .field-grid .field--full {
+      grid-column: span 2;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .field label {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--gray-700);
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .field label .required {
+      color: var(--orange-500);
+    }
+
+    .field label .tooltip {
+      font-size: 0.75rem;
+      color: var(--gray-400);
+      font-weight: 500;
+      cursor: help;
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+      padding: 0.7rem 1rem;
+      font-size: 0.925rem;
+      font-family: var(--font-body);
+      color: var(--gray-800);
+      background: var(--gray-50);
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-md);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    }
+
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      border-color: var(--color-primary);
+      background: white;
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.12);
+    }
+
+    .field input.error,
+    .field select.error,
+    .field textarea.error {
+      border-color: #EF4444;
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+    }
+
+    .field textarea {
+      resize: vertical;
+      min-height: 120px;
+      line-height: 1.6;
+    }
+
+    .field select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2378716C' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.85rem center;
+      padding-right: 2.5rem;
+    }
+
+    .field__hint {
+      font-size: 0.78rem;
+      color: var(--gray-400);
+    }
+
+    .field__error {
+      font-size: 0.78rem;
+      color: #EF4444;
+      font-weight: 600;
+      display: none;
+    }
+
+    .field__error.show {
+      display: block;
+    }
+
+    /* Char counter */
+    .char-counter {
+      font-size: 0.78rem;
+      color: var(--gray-400);
+      text-align: right;
+    }
+    .char-counter.warn { color: var(--orange-500); }
+    .char-counter.over  { color: #EF4444; }
+
+    /* Type selector cards */
+    .type-selector {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .type-card {
+      position: relative;
+      cursor: pointer;
+    }
+
+    .type-card input[type="radio"] {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .type-card__body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 1.4rem 1rem;
+      border: 2px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      background: var(--gray-50);
+      text-align: center;
+      transition: all 0.25s var(--ease-out);
+    }
+
+    .type-card input:checked + .type-card__body {
+      border-color: var(--color-primary);
+      background: var(--amber-50);
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.12);
+    }
+
+    .type-card__icon {
+      font-size: 1.8rem;
+      line-height: 1;
+    }
+
+    .type-card__label {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--gray-700);
+    }
+
+    .type-card__desc {
+      font-size: 0.75rem;
+      color: var(--gray-400);
+      line-height: 1.4;
+    }
+
+    /* Service mode pills */
+    .mode-selector {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .mode-pill {
+      position: relative;
+      cursor: pointer;
+    }
+
+    .mode-pill input[type="radio"] {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .mode-pill__body {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.55rem 1.1rem;
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-full);
+      background: var(--gray-50);
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--gray-600);
+      transition: all 0.2s var(--ease-out);
+    }
+
+    .mode-pill input:checked + .mode-pill__body {
+      border-color: var(--color-primary);
+      background: var(--amber-50);
+      color: var(--amber-700);
+    }
+
+    /* Form navigation */
+    .form-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.5rem 2.5rem 2rem;
+      border-top: 1px solid var(--color-border);
+      background: var(--gray-50);
+    }
+
+    .form-nav__back {
+      background: none;
+      border: none;
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--gray-400);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.5rem 0.75rem;
+      border-radius: var(--radius-sm);
+      transition: color 0.2s, background 0.2s;
+    }
+
+    .form-nav__back:hover {
+      color: var(--gray-700);
+      background: var(--gray-100);
+    }
+
+    .form-nav__back:disabled {
+      opacity: 0.35;
+      pointer-events: none;
+    }
+
+    /* Success screen */
+    .success-screen {
+      display: none;
+      text-align: center;
+      padding: 4rem 2.5rem;
+    }
+
+    .success-screen.show {
+      display: block;
+      animation: fadeUp 0.5s var(--ease-out) both;
+    }
+
+    .success-icon {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #34D399, #10B981);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.75rem;
+      box-shadow: 0 8px 24px rgba(52, 211, 153, 0.3);
+    }
+
+    .success-screen h2 {
+      font-family: var(--font-display);
+      font-size: 1.75rem;
+      color: var(--gray-900);
+      margin-bottom: 0.75rem;
+    }
+
+    .success-screen p {
+      color: var(--gray-500);
+      font-size: 0.95rem;
+      max-width: 420px;
+      margin: 0 auto 2rem;
+      line-height: 1.7;
+    }
+
+    /* Alert box */
+    .form-alert {
+      display: none;
+      padding: 0.85rem 1.1rem;
+      border-radius: var(--radius-md);
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .form-alert.show { display: flex; }
+
+    .form-alert--error {
+      background: #FEF2F2;
+      border: 1px solid #FCA5A5;
+      color: #B91C1C;
+    }
+
+    .form-alert--success {
+      background: #ECFDF5;
+      border: 1px solid #6EE7B7;
+      color: #065F46;
+    }
+
+    /* Info aside */
+    .form-aside {
+      background: linear-gradient(135deg, var(--amber-50), var(--orange-50, #fff7ed));
+      border: 1px solid var(--amber-200);
+      border-radius: var(--radius-md);
+      padding: 1.25rem 1.4rem;
+      margin-top: 1.75rem;
+      display: flex;
+      gap: 0.9rem;
+    }
+
+    .form-aside__icon { font-size: 1.4rem; flex-shrink: 0; margin-top: 0.1rem; }
+
+    .form-aside__text {
+      font-size: 0.84rem;
+      color: var(--gray-600);
+      line-height: 1.6;
+    }
+
+    .form-aside__text strong { color: var(--amber-700); }
+
+    /* Slug preview */
+    .slug-preview {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.78rem;
+      color: var(--gray-400);
+      margin-top: 0.25rem;
+    }
+
+    .slug-preview span {
+      color: var(--color-primary);
+      font-weight: 700;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .form-body { padding: 1.5rem 1.25rem 1rem; }
+      .form-nav { padding: 1.25rem; }
+      .field-grid { grid-template-columns: 1fr; }
+      .field-grid .field--full { grid-column: span 1; }
+      .type-selector { grid-template-columns: 1fr; }
+      .form-step-tab .step-label { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ========== HEADER ========== -->
+  <header class="header" id="header">
+    <div class="container header__inner">
+      <a href="/" class="logo">
+        <span class="logo__icon">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="16" cy="16" r="14" stroke="currentColor" stroke-width="2.5"/>
+            <path d="M16 8C16 8 10 14 10 18C10 21.3137 12.6863 24 16 24C19.3137 24 22 21.3137 22 18C22 14 16 8 16 8Z" fill="currentColor" opacity="0.3"/>
+            <path d="M16 11C16 11 12 15.5 12 18C12 20.2091 13.7909 22 16 22C18.2091 22 20 20.2091 20 18C20 15.5 16 11 16 11Z" fill="currentColor"/>
+          </svg>
+        </span>
+        <span class="logo__text">Vida<span class="logo__accent">Livre</span></span>
+      </a>
+
+      <nav class="nav" id="nav">
+        <ul class="nav__list">
+          <li><a href="/#como-funciona" class="nav__link">Como funciona</a></li>
+          <li><a href="/#depoimentos" class="nav__link">Depoimentos</a></li>
+          <li><a href="/frontend/busca.html?tipo=professional" class="nav__link">Pergunte ao especialista</a></li>
+        </ul>
+        <div class="nav__actions" id="headerActions">
+          <a href="/frontend/login.html" class="btn btn--ghost">Entrar</a>
+          <a href="/frontend/cadastro.html" class="btn btn--primary">Cadastre-se</a>
+        </div>
+      </nav>
+
+      <button class="hamburger" id="hamburger" aria-label="Abrir menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ========== PAGE HERO ========== -->
+  <section class="page-hero">
+    <div class="page-hero__blob page-hero__blob--1"></div>
+    <div class="page-hero__blob page-hero__blob--2"></div>
+    <div class="container" style="position:relative;">
+      <p class="page-hero__badge">✦ Para profissionais e grupos</p>
+      <h1 class="page-hero__title">
+        Cadastre-se no<br><span>Diretório VidaLivre</span>
+      </h1>
+      <p class="page-hero__sub">
+        Apareça nas buscas de pessoas que precisam do seu apoio. Cadastro gratuito e rápido.
+      </p>
+    </div>
+  </section>
+
+  <!-- ========== FORM SECTION ========== -->
+  <section class="form-section">
+    <div class="container">
+      <div class="form-card" id="formCard">
+
+        <!-- Progress tabs -->
+        <div class="form-progress" role="tablist" aria-label="Etapas do cadastro">
+          <div class="form-step-tab active" id="tab-1" role="tab" aria-selected="true">
+            <span class="step-num">1</span>
+            <span class="step-label">Tipo</span>
+          </div>
+          <div class="form-step-tab" id="tab-2" role="tab">
+            <span class="step-num">2</span>
+            <span class="step-label">Dados</span>
+          </div>
+          <div class="form-step-tab" id="tab-3" role="tab">
+            <span class="step-num">3</span>
+            <span class="step-label">Localização</span>
+          </div>
+          <div class="form-step-tab" id="tab-4" role="tab">
+            <span class="step-num">4</span>
+            <span class="step-label">Sobre</span>
+          </div>
+        </div>
+
+        <!-- Global alert -->
+        <div id="globalAlert" class="form-alert form-alert--error" style="margin: 1.25rem 2.5rem 0;" role="alert" aria-live="polite">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span id="globalAlertMsg"></span>
+        </div>
+
+        <form id="directoryForm" novalidate>
+          <!-- ===== STEP 1 — Tipo de cadastro ===== -->
+          <div class="form-step active" id="step-1">
+            <div class="form-body">
+              <h2 class="form-step__title">Qual tipo de cadastro?</h2>
+              <p class="form-step__desc">Escolha a categoria que melhor descreve você ou sua organização.</p>
+
+              <div class="type-selector" role="radiogroup" aria-label="Tipo de cadastro">
+                <label class="type-card">
+                  <input type="radio" name="entry_type" value="professional" checked>
+                  <div class="type-card__body">
+                    <span class="type-card__icon">🧑‍⚕️</span>
+                    <span class="type-card__label">Profissional</span>
+                    <span class="type-card__desc">Psicólogo, psiquiatra, terapeuta ou outro especialista individual</span>
+                  </div>
+                </label>
+                <label class="type-card">
+                  <input type="radio" name="entry_type" value="clinic">
+                  <div class="type-card__body">
+                    <span class="type-card__icon">🏥</span>
+                    <span class="type-card__label">Clínica</span>
+                    <span class="type-card__desc">Centro de tratamento, clínica de reabilitação ou consultório multiprofissional</span>
+                  </div>
+                </label>
+                <label class="type-card">
+                  <input type="radio" name="entry_type" value="support_group">
+                  <div class="type-card__body">
+                    <span class="type-card__icon">🤝</span>
+                    <span class="type-card__label">Grupo de Apoio</span>
+                    <span class="type-card__desc">AA, NA, ALANON e outros grupos de suporte comunitário</span>
+                  </div>
+                </label>
+              </div>
+
+              <div class="form-aside">
+                <span class="form-aside__icon">ℹ️</span>
+                <p class="form-aside__text">
+                  <strong>Cadastro gratuito e sem compromisso.</strong> Após o envio, nossa equipe revisará as informações em até 2 dias úteis antes de publicar no diretório.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- ===== STEP 2 — Dados principais ===== -->
+          <div class="form-step" id="step-2">
+            <div class="form-body">
+              <h2 class="form-step__title">Dados principais</h2>
+              <p class="form-step__desc" id="step2Desc">Informações que identificam você no diretório.</p>
+
+              <div class="field-grid">
+                <div class="field field--full">
+                  <label for="name">Nome completo / Nome da organização <span class="required">*</span></label>
+                  <input type="text" id="name" name="name" placeholder="Ex.: Dra. Ana Paula Silva" maxlength="160" autocomplete="organization">
+                  <span class="field__error" id="name-error"></span>
+                </div>
+
+                <div class="field field--full">
+                  <label for="specialty">Especialidade / Área de atuação <span class="required">*</span></label>
+                  <input type="text" id="specialty" name="specialty" placeholder="Ex.: Dependência Química, Tabagismo, Alcoolismo…" maxlength="160" list="specialtyList">
+                  <datalist id="specialtyList">
+                    <option value="Dependência Química">
+                    <option value="Alcoolismo">
+                    <option value="Tabagismo">
+                    <option value="Dependência Digital">
+                    <option value="Jogos de Azar">
+                    <option value="Transtornos Alimentares">
+                    <option value="Saúde Mental">
+                    <option value="Psicologia Clínica">
+                    <option value="Psiquiatria">
+                    <option value="Terapia Cognitivo-Comportamental">
+                    <option value="Grupos de Apoio">
+                    <option value="Reabilitação">
+                  </datalist>
+                  <span class="field__error" id="specialty-error"></span>
+                </div>
+
+                <div class="field field--full">
+                  <label for="slug">
+                    Endereço no diretório <span class="required">*</span>
+                    <span class="tooltip" title="Identificador único na URL da sua página. Use apenas letras minúsculas, números e hífens.">(?)</span>
+                  </label>
+                  <input type="text" id="slug" name="slug" placeholder="ana-paula-silva" maxlength="160" pattern="[a-z0-9\-]+">
+                  <div class="slug-preview" id="slugPreview">
+                    vidalivre.com.br/profissional/<span id="slugValue">—</span>
+                  </div>
+                  <span class="field__error" id="slug-error"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ===== STEP 3 — Localização & atendimento ===== -->
+          <div class="form-step" id="step-3">
+            <div class="form-body">
+              <h2 class="form-step__title">Localização e atendimento</h2>
+              <p class="form-step__desc">Onde você atua e de que forma o atendimento é realizado.</p>
+
+              <div class="field-grid">
+                <div class="field">
+                  <label for="city">Cidade <span class="required">*</span></label>
+                  <input type="text" id="city" name="city" placeholder="Ex.: São Paulo" maxlength="120" autocomplete="address-level2">
+                  <span class="field__error" id="city-error"></span>
+                </div>
+
+                <div class="field">
+                  <label for="state">Estado <span class="required">*</span></label>
+                  <select id="state" name="state">
+                    <option value="">Selecione…</option>
+                    <option value="AC">Acre</option>
+                    <option value="AL">Alagoas</option>
+                    <option value="AP">Amapá</option>
+                    <option value="AM">Amazonas</option>
+                    <option value="BA">Bahia</option>
+                    <option value="CE">Ceará</option>
+                    <option value="DF">Distrito Federal</option>
+                    <option value="ES">Espírito Santo</option>
+                    <option value="GO">Goiás</option>
+                    <option value="MA">Maranhão</option>
+                    <option value="MT">Mato Grosso</option>
+                    <option value="MS">Mato Grosso do Sul</option>
+                    <option value="MG">Minas Gerais</option>
+                    <option value="PA">Pará</option>
+                    <option value="PB">Paraíba</option>
+                    <option value="PR">Paraná</option>
+                    <option value="PE">Pernambuco</option>
+                    <option value="PI">Piauí</option>
+                    <option value="RJ">Rio de Janeiro</option>
+                    <option value="RN">Rio Grande do Norte</option>
+                    <option value="RS">Rio Grande do Sul</option>
+                    <option value="RO">Rondônia</option>
+                    <option value="RR">Roraima</option>
+                    <option value="SC">Santa Catarina</option>
+                    <option value="SP">São Paulo</option>
+                    <option value="SE">Sergipe</option>
+                    <option value="TO">Tocantins</option>
+                  </select>
+                  <span class="field__error" id="state-error"></span>
+                </div>
+
+                <div class="field field--full">
+                  <label>Modo de atendimento <span class="required">*</span></label>
+                  <div class="mode-selector" role="radiogroup" aria-label="Modo de atendimento">
+                    <label class="mode-pill">
+                      <input type="radio" name="service_mode" value="presencial" checked>
+                      <span class="mode-pill__body">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                        Presencial
+                      </span>
+                    </label>
+                    <label class="mode-pill">
+                      <input type="radio" name="service_mode" value="online">
+                      <span class="mode-pill__body">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                        Online
+                      </span>
+                    </label>
+                    <label class="mode-pill">
+                      <input type="radio" name="service_mode" value="hibrido">
+                      <span class="mode-pill__body">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+                        Híbrido
+                      </span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ===== STEP 4 — Bio & revisão ===== -->
+          <div class="form-step" id="step-4">
+            <div class="form-body">
+              <h2 class="form-step__title">Apresentação</h2>
+              <p class="form-step__desc">Escreva um texto que aparecerá na sua listagem do diretório.</p>
+
+              <div class="field" style="margin-bottom:1.5rem;">
+                <label for="short_bio">Descrição / Mini bio <span class="required">*</span></label>
+                <textarea id="short_bio" name="short_bio" placeholder="Fale sobre sua experiência, abordagem e como você pode ajudar quem busca tratamento para dependências…" maxlength="1200" rows="6"></textarea>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.3rem;">
+                  <span class="field__hint">Mínimo 80 · Máximo 1200 caracteres.</span>
+                  <span class="char-counter" id="bioCounter">0 / 1200</span>
+                </div>
+                <span class="field__error" id="short_bio-error"></span>
+              </div>
+
+              <!-- Review summary -->
+              <div style="background:var(--gray-50); border:1px solid var(--color-border); border-radius:var(--radius-md); padding:1.25rem 1.4rem;">
+                <p style="font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--gray-400); margin-bottom:1rem;">Resumo do cadastro</p>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.6rem 1.5rem; font-size:0.875rem;">
+                  <div><span style="color:var(--gray-400);">Tipo:</span> <span id="rev-type" style="font-weight:700; color:var(--gray-700);"></span></div>
+                  <div><span style="color:var(--gray-400);">Nome:</span> <span id="rev-name" style="font-weight:700; color:var(--gray-700);"></span></div>
+                  <div><span style="color:var(--gray-400);">Especialidade:</span> <span id="rev-specialty" style="font-weight:700; color:var(--gray-700);"></span></div>
+                  <div><span style="color:var(--gray-400);">Localização:</span> <span id="rev-location" style="font-weight:700; color:var(--gray-700);"></span></div>
+                  <div><span style="color:var(--gray-400);">Atendimento:</span> <span id="rev-mode" style="font-weight:700; color:var(--gray-700);"></span></div>
+                  <div><span style="color:var(--gray-400);">URL:</span> <span id="rev-slug" style="font-weight:700; color:var(--color-primary); font-size:0.8rem;"></span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+
+        <!-- Success screen -->
+        <div class="success-screen" id="successScreen">
+          <div class="success-icon">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <h2>Cadastro enviado!</h2>
+          <p>Recebemos suas informações. Nossa equipe revisará e publicará seu perfil no diretório em até <strong>2 dias úteis</strong>.</p>
+          <div style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;">
+            <a href="/frontend/busca.html" class="btn btn--primary btn--lg">Ver diretório</a>
+            <a href="/" class="btn btn--ghost btn--lg">Voltar ao início</a>
+          </div>
+        </div>
+
+        <!-- Form navigation -->
+        <div class="form-nav" id="formNav">
+          <button type="button" class="form-nav__back" id="btnBack" disabled>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            Voltar
+          </button>
+          <button type="button" class="btn btn--primary" id="btnNext">
+            Continuar
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+
+      </div><!-- /form-card -->
+    </div>
+  </section>
+
+  <!-- ========== FOOTER ========== -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer__grid">
+        <div class="footer__brand">
+          <a href="/" class="logo logo--footer">
+            <span class="logo__icon">
+              <svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="16" cy="16" r="14" stroke="currentColor" stroke-width="2.5"/>
+                <path d="M16 8C16 8 10 14 10 18C10 21.3137 12.6863 24 16 24C19.3137 24 22 21.3137 22 18C22 14 16 8 16 8Z" fill="currentColor" opacity="0.3"/>
+                <path d="M16 11C16 11 12 15.5 12 18C12 20.2091 13.7909 22 16 22C18.2091 22 20 20.2091 20 18C20 15.5 16 11 16 11Z" fill="currentColor"/>
+              </svg>
+            </span>
+            <span class="logo__text">Vida<span class="logo__accent">Livre</span></span>
+          </a>
+          <p class="footer__tagline">Conectando pessoas ao apoio que elas merecem para uma vida mais saudável e livre.</p>
+        </div>
+        <div class="footer__col">
+          <h4 class="footer__heading">Para você</h4>
+          <ul class="footer__links">
+            <li><a href="/frontend/busca.html">Buscar especialista</a></li>
+            <li><a href="/frontend/busca.html?tipo=support_group">Grupos de apoio</a></li>
+          </ul>
+        </div>
+        <div class="footer__col">
+          <h4 class="footer__heading">Para profissionais</h4>
+          <ul class="footer__links">
+            <li><a href="/frontend/cadastro-profissional.html">Cadastre-se gratuitamente</a></li>
+          </ul>
+        </div>
+        <div class="footer__col">
+          <h4 class="footer__heading">Sobre</h4>
+          <ul class="footer__links">
+            <li><a href="/frontend/privacidade.html">Política de privacidade</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer__bottom">
+        <p>&copy; 2026 VidaLivre. Todos os direitos reservados.</p>
+        <p class="footer__disclaimer">⚠️ Em caso de emergência, ligue 192 (SAMU) ou 188 (CVV).</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="assets/js/cadastro-profissional.js"></script>
+  <script>
+    // Header scroll
+    const header = document.getElementById('header');
+    window.addEventListener('scroll', () => {
+      header.classList.toggle('scrolled', window.scrollY > 20);
+    });
+    // Hamburger
+    const hamburger = document.getElementById('hamburger');
+    const nav = document.getElementById('nav');
+    hamburger.addEventListener('click', () => {
+      hamburger.classList.toggle('active');
+      nav.classList.toggle('open');
+    });
+  </script>
+</body>
+</html>
