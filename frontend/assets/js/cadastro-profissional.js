@@ -1,8 +1,3 @@
-/**
- * VidaLivre — Cadastro de Profissional/Grupo no Diretório
- * frontend/assets/js/cadastro-profissional.js
- */
-
 (function () {
   'use strict';
 
@@ -140,21 +135,36 @@
     }
   }
 
-  /* ─── Validation ─────────────────────────────────────── */
+/* ─── Validation ─────────────────────────────────────── */
   const validators = {
     1() { return true; /* radio always has a value */ },
 
     2() {
       let ok = true;
-      ok = requireField('name',      'Informe o nome completo ou da organização.') && ok;
-      ok = requireField('specialty', 'Informe a especialidade ou área de atuação.') && ok;
-      ok = requireSlug()   && ok;
+      // Regex: Letras (com acentos), espaços, pontos e apóstrofos (ex: Dra. D'Arc)
+      ok = requireRegex('name', 
+        'Informe o nome completo ou da organização.', 
+        /^[a-zA-ZÀ-ÿ\s\.\']+$/, 
+        'O nome deve conter apenas letras, espaços, pontos ou apóstrofos.') && ok;
+      
+      // Regex: Letras (com acentos), espaços, pontos, vírgulas e hífens
+      ok = requireRegex('specialty', 
+        'Informe a especialidade ou área de atuação.', 
+        /^[a-zA-ZÀ-ÿ\s\.\,\-]+$/, 
+        'A especialidade contém caracteres inválidos.') && ok;
+      
+      ok = requireSlug() && ok;
       return ok;
     },
 
     3() {
       let ok = true;
-      ok = requireField('city',  'Informe a cidade.') && ok;
+      // Regex: Letras (com acentos), espaços, apóstrofos e hífens
+      ok = requireRegex('city',  
+        'Informe a cidade.', 
+        /^[a-zA-ZÀ-ÿ\s\'\-]+$/, 
+        'A cidade deve conter apenas letras, espaços, hífens ou apóstrofos.') && ok;
+      
       ok = requireField('state', 'Selecione o estado.') && ok;
       return ok;
     },
@@ -171,9 +181,25 @@
   function requireField(id, msg) {
     const el  = document.getElementById(id);
     const err = document.getElementById(`${id}-error`);
-    const val = el.value.trim();
-    if (!val) {
+    if (!el.value.trim()) {
       showFieldError(el, err, msg);
+      return false;
+    }
+    clearFieldError(el, err);
+    return true;
+  }
+
+  function requireRegex(id, emptyMsg, regex, regexMsg) {
+    const el  = document.getElementById(id);
+    const err = document.getElementById(`${id}-error`);
+    const val = el.value.trim();
+
+    if (!val) {
+      showFieldError(el, err, emptyMsg);
+      return false;
+    }
+    if (!regex.test(val)) {
+      showFieldError(el, err, regexMsg);
       return false;
     }
     clearFieldError(el, err);
@@ -200,12 +226,19 @@
   function requireBio() {
     const el  = document.getElementById('short_bio');
     const err = document.getElementById('short_bio-error');
-    const len = el.value.trim().length;
+    const val = el.value.trim();
+    const len = val.length;
 
     if (len < 80) {
       showFieldError(el, err, `Descrição muito curta. Mínimo 80 caracteres (atual: ${len}).`);
       return false;
     }
+    // Regex: Impede o uso de tags HTML (segurança contra XSS)
+    if (/[<>]/.test(val)) {
+      showFieldError(el, err, 'A descrição não pode conter símbolos matemáticos ou tags HTML (< ou >).');
+      return false;
+    }
+    
     clearFieldError(el, err);
     return true;
   }
