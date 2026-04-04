@@ -49,15 +49,15 @@ if (empty($user['two_factor_temp_secret_encrypted'])) {
     error_response('Nao ha configuracao de 2FA pendente para confirmar.', [], 400);
 }
 
-try {
-    $secret = decrypt_sensitive_value((string) $user['two_factor_temp_secret_encrypted']);
-} catch (\Throwable $throwable) {
-    error_response('Nao foi possivel confirmar o 2FA.', [], 500);
+$secret = get_pending_two_factor_secret($user);
+
+if ($secret === null) {
+    error_response('Nao ha configuracao de 2FA pendente para confirmar.', [], 400);
 }
 
 if (!verify_totp_code($secret, $code)) {
     error_response('Codigo de verificacao invalido.', [
-        'code' => ['Codigo invalido.'],
+        'code' => ['Codigo invalido. Verifique o app autenticador.'],
     ], 422);
 }
 
@@ -73,4 +73,3 @@ success_response('2FA ativado com sucesso.', [
     'two_factor' => $updatedUser !== null ? two_factor_status_array($updatedUser) : null,
     'backup_codes' => $backupCodes,
 ]);
-

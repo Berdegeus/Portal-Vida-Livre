@@ -1,6 +1,6 @@
 (function () {
   const guestPages = ["login", "cadastro", "esqueceu-senha", "redefinir-senha"];
-  const protectedPages = ["dashboard", "security"];
+  const protectedPages = ["dashboard", "security", "minha-conta", "two-factor"];
 
   const getMessageBox = () => document.querySelector("[data-message]");
 
@@ -69,8 +69,11 @@
     });
   };
 
-  const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  const isValidName = (name) => /^[\p{L}\p{M}\s-]+$/u.test((name || "").trim());
+const isValidEmail = (email) => /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(email);
+
+const isValidName = (name) => /^[\p{L}\s\-]+$/u.test(name);
+
+const isValidTotpCode = (code) => /^\d{6}$/.test(code);
 
   const passwordStrengthErrors = (password) => {
     const errors = [];
@@ -118,36 +121,16 @@
     return response.data;
   };
 
-  const sanitizeRedirectTarget = (value, fallback = "/frontend/dashboard.html") => {
-    if (typeof value !== "string" || value === "") {
-      return fallback;
-    }
-
-    if (!value.startsWith("/") || value.startsWith("//")) {
-      return fallback;
-    }
-
-    return value;
-  };
-
-  const getRedirectTarget = (fallback = "/frontend/dashboard.html") =>
-    sanitizeRedirectTarget(new URLSearchParams(window.location.search).get("redirect"), fallback);
-
   const redirectIfAuthenticated = async () => {
     const session = await loadSession();
-    const redirectTarget = getRedirectTarget();
 
     if (session.login_two_factor_pending) {
-      const twoFactorUrl = new URL("/frontend/two-factor.html", window.location.origin);
-      if (redirectTarget && redirectTarget !== "/frontend/dashboard.html") {
-        twoFactorUrl.searchParams.set("redirect", redirectTarget);
-      }
-      window.location.replace(twoFactorUrl.toString());
+      window.location.replace("/frontend/two-factor.html");
       return true;
     }
 
     if (session.authenticated) {
-      window.location.replace(redirectTarget);
+      window.location.replace("/frontend/dashboard.html");
       return true;
     }
 
@@ -287,12 +270,11 @@
     applyErrors,
     isValidEmail,
     isValidName,
+    isValidTotpCode,
     passwordStrengthErrors,
     formDataToObject,
     loadSession,
     loadTwoFactorStatus,
-    sanitizeRedirectTarget,
-    getRedirectTarget,
     redirectIfAuthenticated,
     requireAuth,
     bindLogout,

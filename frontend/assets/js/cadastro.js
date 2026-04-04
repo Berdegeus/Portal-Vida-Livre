@@ -14,6 +14,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (btnVerPolitica) {
     btnVerPolitica.addEventListener("click", (e) => {
       e.preventDefault();
+      e.stopPropagation();
       modal.classList.remove("hidden");
       document.body.style.overflow = "hidden";
     });
