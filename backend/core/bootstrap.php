@@ -14,7 +14,6 @@ require_once __DIR__ . '/crypto.php';
 require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/csrf.php';
 require_once __DIR__ . '/mailer.php';
-require_once __DIR__ . '/two_factor.php';
 require_once __DIR__ . '/totp.php';
 
 load_env(dirname(__DIR__) . '/.env');

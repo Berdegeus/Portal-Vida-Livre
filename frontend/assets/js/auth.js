@@ -193,6 +193,7 @@ const isValidTotpCode = (code) => /^\d{6}$/.test(code);
       "email-verified": "E-mail confirmado com sucesso. Agora voce pode entrar.",
       "password-reset": "Senha redefinida com sucesso. Faca login com a nova senha.",
       "logged-out": "Sessao encerrada com sucesso.",
+      "conta-excluida": "Sua conta foi excluida. Esperamos que tenha encontrado o apoio que precisava. Se precisar de ajuda no futuro, estaremos aqui para ajudar.",
     };
 
     if (status && messages[status]) {

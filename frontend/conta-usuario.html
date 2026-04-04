@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="/frontend/">
+    <title>Minha Conta | Portal Vida Livre</title>
+    <link rel="stylesheet" href="./assets/css/styles.css">
+</head>
+<body data-page="minha-conta">
+    <header class="header" id="header">
+        <div class="container header__inner">
+            <a href="/" class="logo">
+                <span class="logo__icon">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="16" cy="16" r="14" stroke="currentColor" stroke-width="2.5"/>
+                        <path d="M16 8C16 8 10 14 10 18C10 21.3137 12.6863 24 16 24C19.3137 24 22 21.3137 22 18C22 14 16 8 16 8Z" fill="currentColor" opacity="0.3"/>
+                        <path d="M16 11C16 11 12 15.5 12 18C12 20.2091 13.7909 22 16 22C18.2091 22 20 20.2091 20 18C20 15.5 16 11 16 11Z" fill="currentColor"/>
+                    </svg>
+                </span>
+                <span class="logo__text">Vida<span class="logo__accent">Livre</span></span>
+            </a>
+
+            <nav class="nav" id="nav">
+                <ul class="nav__list">
+                    <li><a href="./dashboard.html" class="nav__link">Painel</a></li>
+                    <li><a href="./security.html" class="nav__link">Segurança</a></li>
+                    <li><a href="./conta-usuario.html" class="nav__link" aria-current="page">Minha Conta</a></li>
+                    <li><a href="/frontend/busca.html" class="nav__link">Buscar apoio</a></li>
+                </ul>
+                <div class="nav__actions">
+                    <button type="button" class="btn btn--primary" data-logout>Sair</button>
+                </div>
+            </nav>
+
+            <button class="hamburger" id="hamburger" aria-label="Abrir menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="panel">
+            <h1>Minha Conta</h1>
+            <p class="page-text">Veja os dados que o Portal Vida Livre armazena sobre você.</p>
+            <div class="message hidden" data-message></div>
+
+            <div class="section-block">
+                <h2>Dados pessoais</h2>
+                <div class="info-list" data-conta-carregando>
+                    <p>Carregando dados...</p>
+                </div>
+                <div class="info-list hidden" data-conta-dados>
+                    <p><strong>Nome:</strong> <span data-conta-nome>-</span></p>
+                    <p><strong>E-mail:</strong> <span data-conta-email>-</span></p>
+                    <p><strong>E-mail verificado:</strong> <span data-conta-email-verificado>-</span></p>
+                    <p><strong>Conta criada em:</strong> <span data-conta-criada-em>-</span></p>
+                </div>
+            </div>
+
+            <div class="section-block">
+                <h2>Privacidade e consentimento</h2>
+                <div class="info-list">
+                    <p><strong>Consentimento LGPD registrado em:</strong> <span data-conta-lgpd-consentimento>-</span></p>
+                    <p><strong>Autenticação em dois fatores:</strong> <span data-conta-2fa>-</span></p>
+                </div>
+            </div>
+
+            <div class="section-block">
+                <h2>Exclusão de dados</h2>
+                <p class="page-text">
+                    Você tem o direito de solicitar a exclusão dos seus dados a qualquer momento,
+                    conforme previsto na Lei Geral de Proteção de Dados (LGPD).
+                    Essa ação é permanente e não pode ser desfeita.
+                </p>
+                <div class="message hidden" data-exclusao-message></div>
+                <form id="form-exclusao" novalidate>
+                    <div class="form-group">
+                        <label for="exclusao_senha">Confirme sua senha para continuar</label>
+                        <input
+                            id="exclusao_senha"
+                            name="password"
+                            type="password"
+                            autocomplete="current-password"
+                            placeholder="Sua senha atual"
+                        >
+                        <small class="field-error" data-error-for="password"></small>
+                    </div>
+                    <button type="submit" class="btn btn-danger" data-btn-exclusao>
+                        Solicitar exclusão da minha conta
+                    </button>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <script src="./assets/js/api.js" defer></script>
+    <script src="./assets/js/internal-ui.js" defer></script>
+    <script src="./assets/js/auth.js" defer></script>
+    <script src="./assets/js/conta-usuario.js" defer></script>
+</body>
+</html>
