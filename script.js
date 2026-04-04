@@ -146,7 +146,9 @@ document.addEventListener("DOMContentLoaded", () => {
     applyPayloadCsrf(payload);
 
     if (!response.ok || payload.success === false) {
-      throw new Error(payload.message || "Nao foi possivel processar a solicitacao.");
+      throw new Error(
+        payload.message || "Nao foi possivel processar a solicitacao.",
+      );
     }
 
     return payload.data || {};
@@ -189,8 +191,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (session?.authenticated) {
+      const nome = session.user?.name?.split(" ")[0] || "você";
       headerActions.innerHTML = `
-        <a href="${ROUTES.profile}" class="btn btn--ghost">Perfil</a>
+        <span class="btn btn--ghost">Olá, ${escapeHtml(nome)}!</span>
+        <a href="${ROUTES.profile}" class="btn btn--ghost">Painel</a>
         <button type="button" class="btn btn--primary" id="logoutBtn">Sair</button>
       `;
 
@@ -213,7 +217,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const mergeHomeMetadata = (metadata) => {
     const emojiMap = new Map(
-      fallbackSpecialties.map((item) => [normalizeText(item.label), item.emoji]),
+      fallbackSpecialties.map((item) => [
+        normalizeText(item.label),
+        item.emoji,
+      ]),
     );
 
     const mergedSpecialties = uniq([
@@ -365,7 +372,9 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll("[data-disabled-link]").forEach((link) => {
       link.addEventListener("click", (event) => {
         event.preventDefault();
-        window.alert(link.dataset.disabledLink || "Conteúdo disponível em breve.");
+        window.alert(
+          link.dataset.disabledLink || "Conteúdo disponível em breve.",
+        );
       });
     });
   };
@@ -385,7 +394,9 @@ document.addEventListener("DOMContentLoaded", () => {
     hamburger.addEventListener("click", () => {
       hamburger.classList.toggle("active");
       nav.classList.toggle("open");
-      document.body.style.overflow = nav.classList.contains("open") ? "hidden" : "";
+      document.body.style.overflow = nav.classList.contains("open")
+        ? "hidden"
+        : "";
     });
 
     nav.addEventListener("click", (event) => {
@@ -399,12 +410,19 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  setupSuggestions("searchSpecialty", "specialtySuggestions", () => specialties, false);
+  setupSuggestions(
+    "searchSpecialty",
+    "specialtySuggestions",
+    () => specialties,
+    false,
+  );
   setupSuggestions("searchLocation", "locationSuggestions", () => cities, true);
 
   document.querySelectorAll(".tag").forEach((tag) => {
     tag.addEventListener("click", () => {
-      document.querySelectorAll(".tag").forEach((item) => item.classList.remove("active"));
+      document
+        .querySelectorAll(".tag")
+        .forEach((item) => item.classList.remove("active"));
       tag.classList.add("active");
 
       if (specialtyInput) {
@@ -483,9 +501,11 @@ document.addEventListener("DOMContentLoaded", () => {
       const offset = currentIndex * (cardWidth + gap);
       track.style.transform = `translateX(-${offset}px)`;
 
-      dotsContainer.querySelectorAll(".carousel-dot").forEach((dot, dotIndex) => {
-        dot.classList.toggle("active", dotIndex === currentIndex);
-      });
+      dotsContainer
+        .querySelectorAll(".carousel-dot")
+        .forEach((dot, dotIndex) => {
+          dot.classList.toggle("active", dotIndex === currentIndex);
+        });
     }
 
     prevBtn.addEventListener("click", () => goToSlide(currentIndex - 1));
