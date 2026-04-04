@@ -41,20 +41,24 @@ document.addEventListener("DOMContentLoaded", async () => {
     backupCodesList.innerHTML = "";
   };
 
+  const btnAtivar2fa = document.querySelector("[data-btn-ativar-2fa]");
+
   const renderStatus = (twoFactor) => {
     if (!twoFactor) {
-      statusTarget.textContent = "Nao foi possivel carregar o status do 2FA.";
+      statusTarget.textContent = "Não foi possível carregar o status.";
       return;
     }
 
     const enabled = Boolean(twoFactor.enabled);
-    const remaining = Number(twoFactor.backup_codes_remaining || 0);
-    statusTarget.textContent = enabled
-      ? `2FA ativo. Backup codes restantes: ${remaining}.`
-      : "2FA inativo.";
+
+    statusTarget.textContent = enabled ? "Ativo" : "Inativo";
+
+    if (btnAtivar2fa) {
+      btnAtivar2fa.classList.toggle("hidden", enabled);
+    }
 
     if (setupSection) {
-      setupSection.classList.toggle("hidden", enabled);
+      setupSection.classList.add("hidden");
     }
 
     if (enabledSection) {
@@ -65,6 +69,13 @@ document.addEventListener("DOMContentLoaded", async () => {
       setupResult.classList.add("hidden");
     }
   };
+
+  if (btnAtivar2fa) {
+    btnAtivar2fa.addEventListener("click", () => {
+      if (setupSection) setupSection.classList.remove("hidden");
+      btnAtivar2fa.classList.add("hidden");
+    });
+  }
 
   const loadStatus = async () => {
     const response = await PortalVidaLivreApi.get("two-factor-status.php");
@@ -227,5 +238,61 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     });
   }
-});
 
+  const btnMostrarSenha  = document.querySelector("[data-btn-mostrar-alterar-senha]");
+  const secaoSenha       = document.querySelector("[data-alterar-senha-form]");
+  const formSenha        = document.querySelector("#form-alterar-senha");
+  const mensagemSenha    = document.querySelector("[data-alterar-senha-message]");
+  const botaoSalvarSenha = document.querySelector("[data-btn-alterar-senha]");
+
+  if (btnMostrarSenha && secaoSenha) {
+    btnMostrarSenha.addEventListener("click", () => {
+      secaoSenha.classList.remove("hidden");
+      btnMostrarSenha.classList.add("hidden");
+    });
+  }
+
+  if (formSenha) {
+    formSenha.addEventListener("submit", async (evento) => {
+      evento.preventDefault();
+      PortalVidaLivreAuth.clearFieldErrors(formSenha);
+      if (mensagemSenha) {
+        mensagemSenha.className = "message hidden";
+        mensagemSenha.textContent = "";
+      }
+
+      const dados = {
+        current_password:      formSenha.querySelector("[name='current_password']")?.value || "",
+        password:              formSenha.querySelector("[name='password']")?.value || "",
+        password_confirmation: formSenha.querySelector("[name='password_confirmation']")?.value || "",
+      };
+
+      if (botaoSalvarSenha) {
+        botaoSalvarSenha.disabled = true;
+        botaoSalvarSenha.textContent = "Salvando...";
+      }
+
+      try {
+        await PortalVidaLivreApi.post("alterar-senha.php", dados, { csrf: true });
+        if (mensagemSenha) {
+          mensagemSenha.textContent = "Senha alterada com sucesso.";
+          mensagemSenha.className = "message message-success";
+        }
+        formSenha.reset();
+        secaoSenha.classList.add("hidden");
+        btnMostrarSenha?.classList.remove("hidden");
+      } catch (erro) {
+        PortalVidaLivreAuth.applyErrors(formSenha, erro.errors || {});
+        if (mensagemSenha) {
+          mensagemSenha.textContent = erro.message || "Nao foi possivel alterar a senha.";
+          mensagemSenha.className = "message message-error";
+        }
+      } finally {
+        if (botaoSalvarSenha) {
+          botaoSalvarSenha.disabled = false;
+          botaoSalvarSenha.textContent = "Salvar nova senha";
+        }
+      }
+    });
+  }
+});
