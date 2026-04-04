@@ -11,6 +11,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
+  // ── Modal de política ─────────────────────────────────────────────────────
+
   if (btnVerPolitica) {
     btnVerPolitica.addEventListener("click", (e) => {
       e.preventDefault();
@@ -42,6 +44,30 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
+  // ── Botões ver/ocultar senha ──────────────────────────────────────────────
+
+  document.querySelectorAll("[data-toggle-password]").forEach((btn) => {
+    btn.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+
+      const fieldName = btn.dataset.togglePassword;
+      const input = form.querySelector(`[name="${fieldName}"]`);
+      const eyeOpen = btn.querySelector("[data-eye-open]");
+      const eyeClosed = btn.querySelector("[data-eye-closed]");
+
+      if (!input) return;
+
+      const visivel = input.type === "text";
+      input.type = visivel ? "password" : "text";
+
+      eyeOpen?.classList.toggle("hidden", !visivel);
+      eyeClosed?.classList.toggle("hidden", visivel);
+    });
+  });
+
+  // ── CSRF ──────────────────────────────────────────────────────────────────
+
   try {
     await PortalVidaLivreApi.getCsrfToken();
   } catch (error) {
@@ -51,6 +77,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     );
   }
 
+  // ── Submit ────────────────────────────────────────────────────────────────
+
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     PortalVidaLivreAuth.clearMessage();
@@ -58,24 +86,30 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const data = PortalVidaLivreAuth.formDataToObject(form);
     const errors = {};
-    data.name = (data.name || "").trim();
+
+    const firstName = (data.first_name || "").trim();
+    const lastName  = (data.last_name || "").trim();
+    const fullName  = `${firstName} ${lastName}`.trim();
+
     data.email = (data.email || "").trim().toLowerCase();
 
-    if (!data.name || data.name.length < 3) {
-      errors.name = ["Informe seu nome com pelo menos 3 caracteres."];
-    } else if (data.name.length > 120) {
-      errors.name = ["O nome deve ter no maximo 120 caracteres."];
-    } else if (!PortalVidaLivreAuth.isValidName(data.name)) {
-      errors.name = ["O nome deve conter apenas letras, espacos e hifens."];
+    if (!firstName || firstName.length < 2) {
+      errors.first_name = ["Informe seu nome com pelo menos 2 caracteres."];
+    } else if (!PortalVidaLivreAuth.isValidName(firstName)) {
+      errors.first_name = ["O nome deve conter apenas letras, espacos e hifens."];
+    }
+
+    if (!lastName || lastName.length < 2) {
+      errors.last_name = ["Informe seu sobrenome com pelo menos 2 caracteres."];
+    } else if (!PortalVidaLivreAuth.isValidName(lastName)) {
+      errors.last_name = ["O sobrenome deve conter apenas letras, espacos e hifens."];
     }
 
     if (!PortalVidaLivreAuth.isValidEmail(data.email || "")) {
       errors.email = ["Informe um e-mail valido."];
     }
 
-    const passwordErrors = PortalVidaLivreAuth.passwordStrengthErrors(
-      data.password || "",
-    );
+    const passwordErrors = PortalVidaLivreAuth.passwordStrengthErrors(data.password || "");
     if (passwordErrors.length > 0) {
       errors.password = passwordErrors;
     }
@@ -87,31 +121,25 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     if (!checkConsent || !checkConsent.checked) {
-      errors.lgpd_consent = [
-        "Voce precisa aceitar a Politica de Privacidade para continuar.",
-      ];
+      errors.lgpd_consent = ["Voce precisa aceitar a Politica de Privacidade para continuar."];
     }
 
     if (Object.keys(errors).length > 0) {
       PortalVidaLivreAuth.applyErrors(form, errors);
-      PortalVidaLivreAuth.showMessage(
-        "Verifique os campos informados.",
-        "error",
-      );
+      PortalVidaLivreAuth.showMessage("Verifique os campos informados.", "error");
       return;
     }
 
     try {
       const payload = {
-        name: data.name,
+        name: fullName,
         email: data.email,
         password: data.password,
         password_confirmation: data.password_confirmation,
         lgpd_consent: true,
       };
-      const response = await PortalVidaLivreApi.post("register.php", payload, {
-        csrf: true,
-      });
+
+      const response = await PortalVidaLivreApi.post("register.php", payload, { csrf: true });
       PortalVidaLivreAuth.showMessage(response.message, "success");
       form.reset();
       window.setTimeout(() => {

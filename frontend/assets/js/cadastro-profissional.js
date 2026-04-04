@@ -18,17 +18,16 @@
   };
 
   /* ─── DOM refs ───────────────────────────────────────── */
-  const form       = document.getElementById('directoryForm');
-  const btnNext    = document.getElementById('btnNext');
-  const btnBack    = document.getElementById('btnBack');
-  const formNav    = document.getElementById('formNav');
-  const successScr = document.getElementById('successScreen');
+  const form           = document.getElementById('directoryForm');
+  const btnNext        = document.getElementById('btnNext');
+  const btnBack        = document.getElementById('btnBack');
+  const formNav        = document.getElementById('formNav');
+  const successScr     = document.getElementById('successScreen');
   const globalAlert    = document.getElementById('globalAlert');
   const globalAlertMsg = document.getElementById('globalAlertMsg');
-  const bioCounter = document.getElementById('bioCounter');
-  const slugInput  = document.getElementById('slug');
-  const slugValue  = document.getElementById('slugValue');
-  const nameInput  = document.getElementById('name');
+  const bioCounter     = document.getElementById('bioCounter');
+  const slugInput      = document.getElementById('slug');
+  const nameInput      = document.getElementById('name');
 
   /* ─── Init ───────────────────────────────────────────── */
   function init() {
@@ -36,25 +35,6 @@
 
     btnNext.addEventListener('click', handleNext);
     btnBack.addEventListener('click', handleBack);
-
-    // Slug auto-generation from name
-    nameInput.addEventListener('input', () => {
-      const currentSlug = slugInput.value;
-      const generated   = toSlug(nameInput.value);
-      // Only auto-fill if user hasn't typed a custom slug
-      if (!slugInput.dataset.dirty) {
-        slugInput.value = generated;
-        updateSlugPreview(generated);
-      }
-    });
-
-    // Manual slug edit
-    slugInput.addEventListener('input', () => {
-      slugInput.dataset.dirty = 'true';
-      const cleaned = slugInput.value.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-');
-      slugInput.value = cleaned;
-      updateSlugPreview(cleaned);
-    });
 
     // Bio char counter
     const bioArea = document.getElementById('short_bio');
@@ -93,21 +73,17 @@
   }
 
   function renderStep(step) {
-    // Panels
     document.querySelectorAll('.form-step').forEach((el) => el.classList.remove('active'));
     document.getElementById(`step-${step}`).classList.add('active');
 
-    // Tabs
     document.querySelectorAll('.form-step-tab').forEach((tab, i) => {
       tab.classList.remove('active');
       if (i + 1 < step)  tab.classList.add('done');
       if (i + 1 === step) { tab.classList.add('active'); tab.classList.remove('done'); }
     });
 
-    // Back button
     btnBack.disabled = step === 1;
 
-    // Next button label
     if (step === TOTAL_STEPS) {
       btnNext.innerHTML = `
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
@@ -117,11 +93,9 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>`;
     }
 
-    // Extra per-step work
     if (step === 2) updateStep2Desc();
     if (step === 4) fillReviewSummary();
 
-    // Scroll to card top
     document.getElementById('formCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
@@ -135,36 +109,36 @@
     }
   }
 
-/* ─── Validation ─────────────────────────────────────── */
+  /* ─── Validation ─────────────────────────────────────── */
   const validators = {
-    1() { return true; /* radio always has a value */ },
+    1() { return true; },
 
     2() {
       let ok = true;
       // Regex: Letras (com acentos), espaços, pontos e apóstrofos (ex: Dra. D'Arc)
-      ok = requireRegex('name', 
-        'Informe o nome completo ou da organização.', 
-        /^[a-zA-ZÀ-ÿ\s\.\']+$/, 
+      ok = requireRegex('name',
+        'Informe o nome completo ou da organização.',
+        /^[a-zA-ZÀ-ÿ\s\.\']+$/,
         'O nome deve conter apenas letras, espaços, pontos ou apóstrofos.') && ok;
-      
+
       // Regex: Letras (com acentos), espaços, pontos, vírgulas e hífens
-      ok = requireRegex('specialty', 
-        'Informe a especialidade ou área de atuação.', 
-        /^[a-zA-ZÀ-ÿ\s\.\,\-]+$/, 
+      ok = requireRegex('specialty',
+        'Informe a especialidade ou área de atuação.',
+        /^[a-zA-ZÀ-ÿ\s\.\,\-]+$/,
         'A especialidade contém caracteres inválidos.') && ok;
-      
-      ok = requireSlug() && ok;
+
+      ok = requireUrl() && ok;
       return ok;
     },
 
     3() {
       let ok = true;
       // Regex: Letras (com acentos), espaços, apóstrofos e hífens
-      ok = requireRegex('city',  
-        'Informe a cidade.', 
-        /^[a-zA-ZÀ-ÿ\s\'\-]+$/, 
+      ok = requireRegex('city',
+        'Informe a cidade.',
+        /^[a-zA-ZÀ-ÿ\s\'\-]+$/,
         'A cidade deve conter apenas letras, espaços, hífens ou apóstrofos.') && ok;
-      
+
       ok = requireField('state', 'Selecione o estado.') && ok;
       return ok;
     },
@@ -206,19 +180,22 @@
     return true;
   }
 
-  function requireSlug() {
+  function requireUrl() {
     const el  = slugInput;
     const err = document.getElementById('slug-error');
     const val = el.value.trim();
 
     if (!val) {
-      showFieldError(el, err, 'Defina um endereço para o seu perfil.');
+      showFieldError(el, err, 'Informe a URL do seu site ou perfil profissional.');
       return false;
     }
-    if (!/^[a-z0-9][a-z0-9-]{1,}[a-z0-9]$/.test(val)) {
-      showFieldError(el, err, 'Use apenas letras minúsculas, números e hífens (mín. 3 caracteres).');
+
+    // Regex: URL válida com ou sem protocolo
+    if (!/^(https?:\/\/)?([\w\-]+\.)+[\w]{2,}(\/\S*)?$/.test(val)) {
+      showFieldError(el, err, 'Informe uma URL válida. Ex.: seusite.com.br');
       return false;
     }
+
     clearFieldError(el, err);
     return true;
   }
@@ -235,10 +212,10 @@
     }
     // Regex: Impede o uso de tags HTML (segurança contra XSS)
     if (/[<>]/.test(val)) {
-      showFieldError(el, err, 'A descrição não pode conter símbolos matemáticos ou tags HTML (< ou >).');
+      showFieldError(el, err, 'A descrição não pode conter tags HTML (< ou >).');
       return false;
     }
-    
+
     clearFieldError(el, err);
     return true;
   }
@@ -255,25 +232,10 @@
   }
 
   /* ─── Helpers ────────────────────────────────────────── */
-  function toSlug(str) {
-    return str
-      .toLowerCase()
-      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9\s-]/g, '')
-      .trim()
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-')
-      .substring(0, 160);
-  }
-
-  function updateSlugPreview(val) {
-    slugValue.textContent = val || '—';
-  }
-
   function updateBioCounter(len) {
     bioCounter.textContent = `${len} / 1200`;
     bioCounter.classList.toggle('warn', len > 900 && len <= 1200);
-    bioCounter.classList.toggle('over',  len > 1200);
+    bioCounter.classList.toggle('over', len > 1200);
   }
 
   function getRadioValue(name) {
@@ -284,9 +246,9 @@
   function updateStep2Desc() {
     const type = getRadioValue('entry_type');
     const map = {
-      professional: 'Informações que identificam você no diretório.',
-      clinic:       'Informações que identificam sua clínica no diretório.',
-      support_group:'Informações que identificam seu grupo de apoio no diretório.',
+      professional:  'Informações que identificam você no diretório.',
+      clinic:        'Informações que identificam sua clínica no diretório.',
+      support_group: 'Informações que identificam seu grupo de apoio no diretório.',
     };
     document.getElementById('step2Desc').textContent = map[type] || map.professional;
   }
@@ -295,7 +257,7 @@
     const type = getRadioValue('entry_type');
     const mode = getRadioValue('service_mode');
     document.getElementById('rev-type').textContent      = TYPE_LABELS[type] || type;
-    document.getElementById('rev-name').textContent      = document.getElementById('name').value.trim() || '—';
+    document.getElementById('rev-name').textContent      = nameInput.value.trim() || '—';
     document.getElementById('rev-specialty').textContent = document.getElementById('specialty').value.trim() || '—';
     document.getElementById('rev-location').textContent  =
       `${document.getElementById('city').value.trim()}, ${document.getElementById('state').value}`;
@@ -318,15 +280,14 @@
   async function submitForm() {
     btnNext.disabled = true;
     btnNext.innerHTML = `
-      <svg class="spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
-           style="animation:spin 0.8s linear infinite;">
+      <svg class="spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
       </svg>
       Enviando…`;
 
     const payload = {
       entry_type:   getRadioValue('entry_type'),
-      name:         document.getElementById('name').value.trim(),
+      name:         nameInput.value.trim(),
       specialty:    document.getElementById('specialty').value.trim(),
       slug:         slugInput.value.trim(),
       city:         document.getElementById('city').value.trim(),
@@ -336,7 +297,7 @@
     };
 
     try {
-      const res = await fetch('../backend/api/store.php', {
+      const res = await fetch('/backend/api/store.php', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify(payload),
@@ -348,7 +309,6 @@
         throw new Error(data.message || 'Erro ao enviar. Tente novamente.');
       }
 
-      // Show success
       form.style.display    = 'none';
       formNav.style.display = 'none';
       document.querySelector('.form-progress').style.display = 'none';
@@ -365,13 +325,7 @@
     }
   }
 
-  /* ─── Spin keyframe (injected) ───────────────────────── */
-  const style = document.createElement('style');
-  style.textContent = '@keyframes spin { to { transform: rotate(360deg); } }';
-  document.head.appendChild(style);
-
   /* ─── Boot ───────────────────────────────────────────── */
   document.addEventListener('DOMContentLoaded', init);
-  // If DOM already ready (script deferred / end of body)
   if (document.readyState !== 'loading') init();
 })();
