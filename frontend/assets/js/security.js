@@ -106,7 +106,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const response = await PortalVidaLivreApi.post("two-factor-setup.php", data, { csrf: true });
 
         if (qrImage) {
-          qrImage.src = response.data.qr_code_data_uri;
+          qrImage.src = response.data.qr_code_url;
         }
 
         if (manualSecret) {

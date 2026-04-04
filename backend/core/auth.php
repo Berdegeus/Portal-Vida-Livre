@@ -454,3 +454,16 @@ function update_user_password(int $userId, string $password): void
         'id' => $userId,
     ]);
 }
+
+function two_factor_status_array(array $user): array
+{
+    $userId = (int) ($user['id'] ?? 0);
+
+    return [
+        'enabled'                => (bool) ($user['two_factor_enabled'] ?? false),
+        'confirmed'              => !empty($user['two_factor_confirmed_at']),
+        'confirmed_at'           => $user['two_factor_confirmed_at'] ?? null,
+        'setup_pending'          => !empty($user['two_factor_temp_secret_encrypted']),
+        'backup_codes_remaining' => $userId > 0 ? count_remaining_backup_codes($userId) : 0,
+    ];
+}
