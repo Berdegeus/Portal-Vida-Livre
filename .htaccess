@@ -1,0 +1,13 @@
+# Não mostra o conteúdo das pastas para quem acessar pelo navegador
+Options -Indexes
+
+# Ativa o sistema de regras de URL
+RewriteEngine On
+
+# Se o arquivo ou pasta pedido existe no disco, entrega direto
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Se alguém acessar só o domínio raiz (portal-vida-livre.test/), manda pro index
+RewriteRule ^$ /frontend/index.html [L]

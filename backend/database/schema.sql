@@ -73,20 +73,27 @@ CREATE TABLE IF NOT EXISTS totp_secrets (
         ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-ALTER TABLE users
-    ADD COLUMN IF NOT EXISTS two_factor_enabled TINYINT(1) NOT NULL DEFAULT 0 AFTER updated_at;
+-- ATENÇÃOOOOOOOO: os ALTER TABLE não usam IF NOT EXISTS por conta da versão do MySQL,então se ela já tiver aí talvez ele dê erro!!!!!!!! --
+-- Rodar o schema SOMENTE em bancos novos ou remover manualmente as linhas já executadas acima. --
+-- VOU PAAGAR AQUI.. SE ELE FOR SÓ AJUSTAR O SCHEMA, VOU DEIXAR SÓ AS ALTER TABLE, MAS SE FOR MUDAR O SCHEMA MESMO, VOU DEIXAR TUDO COMO TAVA ANTES --
 
 ALTER TABLE users
-    ADD COLUMN IF NOT EXISTS two_factor_secret_encrypted TEXT NULL AFTER two_factor_enabled;
+    ADD COLUMN two_factor_enabled TINYINT(1) NOT NULL DEFAULT 0 AFTER updated_at;
 
 ALTER TABLE users
-    ADD COLUMN IF NOT EXISTS two_factor_temp_secret_encrypted TEXT NULL AFTER two_factor_secret_encrypted;
+    ADD COLUMN two_factor_secret_encrypted TEXT NULL AFTER two_factor_enabled;
 
 ALTER TABLE users
-    ADD COLUMN IF NOT EXISTS two_factor_confirmed_at DATETIME NULL AFTER two_factor_temp_secret_encrypted;
+    ADD COLUMN two_factor_temp_secret_encrypted TEXT NULL AFTER two_factor_secret_encrypted;
 
 ALTER TABLE users
-    ADD COLUMN IF NOT EXISTS two_factor_temp_secret_created_at DATETIME NULL AFTER two_factor_confirmed_at;
+    ADD COLUMN two_factor_confirmed_at DATETIME NULL AFTER two_factor_temp_secret_encrypted;
+
+ALTER TABLE users
+    ADD COLUMN two_factor_temp_secret_created_at DATETIME NULL AFTER two_factor_confirmed_at;
+
+ALTER TABLE users
+    ADD COLUMN lgpd_consent_at DATETIME NULL AFTER email_verified_at;
 
 CREATE TABLE IF NOT EXISTS password_reset_tokens (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -114,3 +121,5 @@ CREATE TABLE IF NOT EXISTS user_backup_codes (
         FOREIGN KEY (user_id) REFERENCES users(id)
         ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
