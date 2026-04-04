@@ -43,19 +43,45 @@
     <main class="container">
         <section class="panel">
             <h1>Painel</h1>
-            <p class="page-text">Sessao autenticada.</p>
+            <p class="page-text">Gerencie sua conta e acompanhe suas inscrições.</p>
             <div class="message hidden" data-message></div>
 
+            <!-- DADOS PESSOAIS -->
             <div class="info-list">
                 <p><strong>Nome:</strong> <span data-current-user-name>-</span></p>
                 <p><strong>E-mail:</strong> <span data-current-user-email>-</span></p>
+                <p><strong>E-mail verificado:</strong> <span data-conta-email-verificado>-</span></p>
                 <p><strong>2FA:</strong> <span data-current-user-2fa>-</span></p>
+                <p><strong>Consentimento LGPD registrado em:</strong> <span data-conta-lgpd-consentimento>-</span></p>
+                <p><strong>Conta criada em:</strong> <span data-conta-criada-em>-</span></p>
             </div>
 
+            <!-- MINHAS INSCRIÇÕES -->
             <div class="section-block">
-                <h2>Minhas inscricoes</h2>
-                <p class="page-text">Itens nos quais voce ja se inscreveu pela busca.</p>
+                <h2>Minhas inscrições</h2>
+                <p class="page-text">Itens nos quais você já se inscreveu pela busca.</p>
                 <div class="results-grid" data-dashboard-subscriptions></div>
+            </div>
+
+            <!-- EXCLUIR CONTA -->
+            <div class="section-block">
+                <h2>Excluir conta</h2>
+                <p class="page-text">
+                    Você tem o direito de solicitar a exclusão dos seus dados a qualquer momento,
+                    conforme previsto na Lei Geral de Proteção de Dados (LGPD).
+                    Essa ação é permanente e não pode ser desfeita.
+                </p>
+                <div class="message hidden" data-exclusao-message></div>
+                <form id="form-exclusao" class="form" novalidate>
+                    <div class="form-group">
+                        <label for="exclusao_senha">Confirme sua senha para continuar</label>
+                        <input id="exclusao_senha" name="password" type="password" autocomplete="current-password">
+                        <small class="field-error" data-error-for="password"></small>
+                    </div>
+                    <button type="submit" class="btn btn-danger" data-btn-exclusao>
+                        Solicitar exclusão da minha conta
+                    </button>
+                </form>
             </div>
         </section>
     </main>
