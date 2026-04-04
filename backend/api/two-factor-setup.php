@@ -45,19 +45,21 @@ if ((bool) ($user['two_factor_enabled'] ?? false)) {
 }
 
 try {
-    $secret = generate_totp_secret();
-    $encryptedSecret = encrypt_sensitive_value($secret);
-    store_pending_two_factor_secret((int) $user['id'], $encryptedSecret);
+    $secret     = totp_generate_secret();
     $otpauthUri = build_otpauth_uri((string) $user['email'], $secret);
-    $qrCodeDataUri = render_two_factor_qr_code($otpauthUri);
+
+    store_pending_two_factor_secret((int) $user['id'], $secret);
+
+    $qrCodeUrl = build_qr_code_url($otpauthUri);
+
 } catch (\Throwable $throwable) {
+    error_log('[2FA Setup] ' . $throwable->getMessage() . ' em ' . $throwable->getFile() . ':' . $throwable->getLine());
     error_response('Nao foi possivel iniciar a configuracao do 2FA.', [], 500);
 }
 
 success_response('Configuracao inicial do 2FA gerada com sucesso.', [
-    'secret' => $secret,
-    'otpauth_uri' => $otpauthUri,
-    'qr_code_data_uri' => $qrCodeDataUri,
+    'secret'        => $secret,
+    'otpauth_uri'   => $otpauthUri,
+    'qr_code_url'   => $qrCodeUrl,
     'setup_pending' => true,
 ]);
-

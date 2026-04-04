@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", async () => {
   const form = document.querySelector("#login-form");
-  const redirectTarget = PortalVidaLivreAuth.getRedirectTarget("/frontend/dashboard.html");
+  const redirectTarget = "/frontend/dashboard.html";
 
   if (!form) {
     return;
