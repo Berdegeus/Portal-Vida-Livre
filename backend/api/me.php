@@ -12,7 +12,7 @@ $user = current_user();
 
 $totpEnabled = false;
 if ($user !== null) {
-    $totpEnabled = user_has_totp_enabled((int) $user['id']);
+    $totpEnabled = !empty($user['two_factor_enabled']);
 }
 
 success_response('Sessao consultada com sucesso.', [

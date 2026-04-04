@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <base href="/frontend/">
-    <title>Painel | Portal Vida Livre</title>
+    <title>Minha Conta | Portal Vida Livre</title>
     <link rel="stylesheet" href="./assets/css/styles.css">
 </head>
-<body data-page="dashboard">
+<body data-page="minha-conta">
     <header class="header" id="header">
         <div class="container header__inner">
             <a href="/" class="logo">
@@ -23,8 +23,9 @@
 
             <nav class="nav" id="nav">
                 <ul class="nav__list">
-                    <li><a href="./dashboard.html" class="nav__link" aria-current="page">Painel</a></li>
+                    <li><a href="./dashboard.html" class="nav__link">Painel</a></li>
                     <li><a href="./security.html" class="nav__link">Segurança</a></li>
+                    <li><a href="./conta-usuario.html" class="nav__link" aria-current="page">Minha Conta</a></li>
                     <li><a href="/frontend/busca.html" class="nav__link">Buscar apoio</a></li>
                 </ul>
                 <div class="nav__actions">
@@ -42,40 +43,49 @@
 
     <main class="container">
         <section class="panel">
-            <h1>Painel</h1>
-            <p class="page-text">Gerencie sua conta e acompanhe suas inscrições.</p>
+            <h1>Minha Conta</h1>
+            <p class="page-text">Veja os dados que o Portal Vida Livre armazena sobre você.</p>
             <div class="message hidden" data-message></div>
 
-            <!-- DADOS PESSOAIS -->
-            <div class="info-list">
-                <p><strong>Nome:</strong> <span data-current-user-name>-</span></p>
-                <p><strong>E-mail:</strong> <span data-current-user-email>-</span></p>
-                <p><strong>E-mail verificado:</strong> <span data-conta-email-verificado>-</span></p>
-                <p><strong>2FA:</strong> <span data-current-user-2fa>-</span></p>
-                <p><strong>Consentimento LGPD registrado em:</strong> <span data-conta-lgpd-consentimento>-</span></p>
-                <p><strong>Conta criada em:</strong> <span data-conta-criada-em>-</span></p>
+            <div class="section-block">
+                <h2>Dados pessoais</h2>
+                <div class="info-list" data-conta-carregando>
+                    <p>Carregando dados...</p>
+                </div>
+                <div class="info-list hidden" data-conta-dados>
+                    <p><strong>Nome:</strong> <span data-conta-nome>-</span></p>
+                    <p><strong>E-mail:</strong> <span data-conta-email>-</span></p>
+                    <p><strong>E-mail verificado:</strong> <span data-conta-email-verificado>-</span></p>
+                    <p><strong>Conta criada em:</strong> <span data-conta-criada-em>-</span></p>
+                </div>
             </div>
 
-            <!-- MINHAS INSCRIÇÕES -->
             <div class="section-block">
-                <h2>Minhas inscrições</h2>
-                <p class="page-text">Itens nos quais você já se inscreveu pela busca.</p>
-                <div class="results-grid" data-dashboard-subscriptions></div>
+                <h2>Privacidade e consentimento</h2>
+                <div class="info-list">
+                    <p><strong>Consentimento LGPD registrado em:</strong> <span data-conta-lgpd-consentimento>-</span></p>
+                    <p><strong>Autenticação em dois fatores:</strong> <span data-conta-2fa>-</span></p>
+                </div>
             </div>
 
-            <!-- EXCLUIR CONTA -->
             <div class="section-block">
-                <h2>Excluir conta</h2>
+                <h2>Exclusão de dados</h2>
                 <p class="page-text">
                     Você tem o direito de solicitar a exclusão dos seus dados a qualquer momento,
                     conforme previsto na Lei Geral de Proteção de Dados (LGPD).
                     Essa ação é permanente e não pode ser desfeita.
                 </p>
                 <div class="message hidden" data-exclusao-message></div>
-                <form id="form-exclusao" class="form" novalidate>
+                <form id="form-exclusao" novalidate>
                     <div class="form-group">
                         <label for="exclusao_senha">Confirme sua senha para continuar</label>
-                        <input id="exclusao_senha" name="password" type="password" autocomplete="current-password">
+                        <input
+                            id="exclusao_senha"
+                            name="password"
+                            type="password"
+                            autocomplete="current-password"
+                            placeholder="Sua senha atual"
+                        >
                         <small class="field-error" data-error-for="password"></small>
                     </div>
                     <button type="submit" class="btn btn-danger" data-btn-exclusao>
@@ -89,6 +99,6 @@
     <script src="./assets/js/api.js" defer></script>
     <script src="./assets/js/internal-ui.js" defer></script>
     <script src="./assets/js/auth.js" defer></script>
-    <script src="./assets/js/dashboard.js" defer></script>
+    <script src="./assets/js/conta-usuario.js" defer></script>
 </body>
 </html>

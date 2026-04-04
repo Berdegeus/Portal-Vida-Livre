@@ -15,6 +15,7 @@ $name = sanitize_name((string) ($data['name'] ?? ''));
 $email = normalize_email((string) ($data['email'] ?? ''));
 $password = (string) ($data['password'] ?? '');
 $passwordConfirmation = (string) ($data['password_confirmation'] ?? '');
+$lgpdConsent = filter_var($data['lgpd_consent'] ?? false, FILTER_VALIDATE_BOOLEAN);
 $errors = [];
 
 if ($name === '' || string_length($name) < 3) {
@@ -49,6 +50,10 @@ if ($email !== '') {
     }
 }
 
+if (!$lgpdConsent) {
+    add_error($errors, 'lgpd_consent', 'Voce precisa aceitar os termos para continuar.');
+}
+
 if (has_errors($errors)) {
     error_response('Verifique os campos informados.', $errors, 422);
 }
@@ -57,7 +62,7 @@ try {
     $userId = register_user_and_send_verification_email($name, $email, $password);
     $user = find_user_by_id($userId);
 } catch (\Throwable $throwable) {
-    error_response('Nao foi possivel concluir o cadastro agora.', [], 500);
+    error_response('Nao foi possivel concluir o cadastro agora. ' . $throwable->getMessage(), [], 500);
 }
 
 success_response('Cadastro realizado. Enviamos um link de confirmacao para seu e-mail.', [

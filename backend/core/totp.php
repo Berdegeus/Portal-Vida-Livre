@@ -1,98 +1,201 @@
 <?php
 
 declare(strict_types=1);
+
 use OTPHP\TOTP;
 
-/* gera nova chave aleatória e retorna o TOTP correspondente */
-function totp_create(): TOTP
-{
-    $totp = TOTP::generate();
-    $totp->setIssuer('Portal Vida Livre');
+// ─── Geração e verificação TOTP ──────────────────────────────────────────────
 
-    return $totp;
+function totp_generate_secret(): string
+{
+    return TOTP::generate()->getSecret();
 }
 
-/* recria o TOTP a partir de uma chave secreta já existente no banco */
-function totp_from_secret(string $secret): TOTP
-{
-    return TOTP::createFromSecret($secret);
-}
-
-/*verifica se o código do usuário é válido */
-function totp_verify(string $secret, string $code): bool
+function verify_totp_code(string $secret, string $code): bool
 {
     if (!preg_match('/^\d{6}$/', $code)) {
         return false;
     }
-    return totp_from_secret($secret)->verify($code, null, 1);
+
+    $totp = TOTP::createFromSecret($secret);
+
+    // Janela de 1 permite 30s de tolerância para frente e para trás
+    return $totp->verify($code, null, 1);
 }
 
-/* gera a URL do QR code para o app de autenticação */
-function totp_otpauth_url(string $secret, string $email): string
+function build_otpauth_uri(string $email, string $secret): string
 {
-    $totp = totp_from_secret($secret);
+    $totp = TOTP::createFromSecret($secret);
     $totp->setIssuer('Portal Vida Livre');
     $totp->setLabel($email);
 
     return $totp->getProvisioningUri();
 }
 
-/* nova chave aleatória em base32 para armazenar no banco */
-function totp_generate_secret(): string
+function build_qr_code_url(string $otpauthUri): string
 {
-    return totp_create()->getSecret();
+    return 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data='
+        . urlencode($otpauthUri);
 }
 
-/*banco tem uma coluna 'totp_secret' que armazena a chave secreta do usuário.
-Se for null, o TOTP não ta habilitado */
-function find_totp_secret(int $userId): ?array
+// ─── Setup pendente (antes de confirmar) ─────────────────────────────────────
+
+function store_pending_two_factor_secret(int $userId, string $secret): void
 {
+    $encrypted = encrypt_sensitive_value($secret);
+
     $statement = db()->prepare(
-        'SELECT id, user_id, secret, verified_at
-        FROM totp_secrets
-        WHERE user_id = :user_id
-        LIMIT 1'
-    );
-    $statement->execute(['user_id' => $userId]);
-    $record = $statement->fetch();
-
-    return is_array($record) ? $record : null;
-}
-
-function user_has_totp_enabled(int $userId): bool
-{
-    $record = find_totp_secret($userId);
-
-    return $record !== null && $record['verified_at'] !== null;
-}
-
-function save_totp_secret(int $userId, string $secret): void
-{
-    $statement = db()->prepare(
-        'INSERT INTO totp_secrets (user_id, secret, verified_at)
-        VALUES (:user_id, :secret, NULL)
-        ON DUPLICATE KEY UPDATE secret = :secret, verified_at = NULL'
+        'UPDATE users
+         SET two_factor_temp_secret_encrypted = :secret,
+             two_factor_temp_secret_created_at = NOW(),
+             updated_at = NOW()
+         WHERE id = :id'
     );
     $statement->execute([
-        'user_id' => $userId,
-        'secret'  => $secret,
+        'secret' => $encrypted,
+        'id'     => $userId,
     ]);
 }
 
-function activate_totp(int $userId): void
+function get_pending_two_factor_secret(array $user): ?string
 {
-    $statement = db()->prepare(
-        'UPDATE totp_secrets
-        SET verified_at = NOW()
-        WHERE user_id = :user_id'
-    );
-    $statement->execute(['user_id' => $userId]);
+    $encrypted = $user['two_factor_temp_secret_encrypted'] ?? null;
+
+    if (empty($encrypted)) {
+        return null;
+    }
+
+    return decrypt_sensitive_value((string) $encrypted);
 }
 
-function remove_totp(int $userId): void
+// ─── Ativação ────────────────────────────────────────────────────────────────
+
+function enable_two_factor_for_user(int $userId, string $encryptedTempSecret): void
 {
     $statement = db()->prepare(
-        'DELETE FROM totp_secrets WHERE user_id = :user_id'
+        'UPDATE users
+         SET two_factor_enabled = 1,
+             two_factor_secret_encrypted = :secret,
+             two_factor_confirmed_at = NOW(),
+             two_factor_temp_secret_encrypted = NULL,
+             two_factor_temp_secret_created_at = NULL,
+             updated_at = NOW()
+         WHERE id = :id'
+    );
+    $statement->execute([
+        'secret' => $encryptedTempSecret,
+        'id'     => $userId,
+    ]);
+}
+
+// ─── Desativação ─────────────────────────────────────────────────────────────
+
+function disable_two_factor_for_user(int $userId): void
+{
+    $pdo = db();
+    $pdo->beginTransaction();
+
+    try {
+        $pdo->prepare(
+            'UPDATE users
+             SET two_factor_enabled = 0,
+                 two_factor_secret_encrypted = NULL,
+                 two_factor_confirmed_at = NULL,
+                 two_factor_temp_secret_encrypted = NULL,
+                 two_factor_temp_secret_created_at = NULL,
+                 updated_at = NOW()
+             WHERE id = :id'
+        )->execute(['id' => $userId]);
+
+        $pdo->prepare(
+            'DELETE FROM user_backup_codes WHERE user_id = :user_id'
+        )->execute(['user_id' => $userId]);
+
+        $pdo->commit();
+    } catch (\Throwable $throwable) {
+        $pdo->rollBack();
+        throw $throwable;
+    }
+}
+
+// ─── Backup codes ─────────────────────────────────────────────────────────────
+
+function generate_backup_codes(int $count = 8): array
+{
+    $codes = [];
+    for ($i = 0; $i < $count; $i++) {
+        // Formato legível: xxxxxxxx-xxxxxxxx
+        $codes[] = bin2hex(random_bytes(4)) . '-' . bin2hex(random_bytes(4));
+    }
+    return $codes;
+}
+
+function replace_backup_codes(int $userId): array
+{
+    $codes = generate_backup_codes();
+    $pdo   = db();
+
+    $pdo->beginTransaction();
+
+    try {
+        $pdo->prepare(
+            'DELETE FROM user_backup_codes WHERE user_id = :user_id'
+        )->execute(['user_id' => $userId]);
+
+        $insert = $pdo->prepare(
+            'INSERT INTO user_backup_codes (user_id, code_hash)
+             VALUES (:user_id, :code_hash)'
+        );
+
+        foreach ($codes as $code) {
+            $insert->execute([
+                'user_id'   => $userId,
+                'code_hash' => password_hash($code, PASSWORD_DEFAULT),
+            ]);
+        }
+
+        $pdo->commit();
+    } catch (\Throwable $throwable) {
+        $pdo->rollBack();
+        throw $throwable;
+    }
+
+    // Retorna em texto puro só desta vez para exibir ao usuário
+    return $codes;
+}
+
+function verify_and_consume_backup_code(int $userId, string $code): bool
+{
+    $statement = db()->prepare(
+        'SELECT id, code_hash
+         FROM user_backup_codes
+         WHERE user_id = :user_id AND used_at IS NULL'
     );
     $statement->execute(['user_id' => $userId]);
+    $rows = $statement->fetchAll();
+
+    foreach ($rows as $row) {
+        if (password_verify($code, (string) $row['code_hash'])) {
+            db()->prepare(
+                'UPDATE user_backup_codes
+                 SET used_at = NOW()
+                 WHERE id = :id'
+            )->execute(['id' => $row['id']]);
+
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function count_remaining_backup_codes(int $userId): int
+{
+    $statement = db()->prepare(
+        'SELECT COUNT(*) FROM user_backup_codes
+         WHERE user_id = :user_id AND used_at IS NULL'
+    );
+    $statement->execute(['user_id' => $userId]);
+
+    return (int) $statement->fetchColumn();
 }

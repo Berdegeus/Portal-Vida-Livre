@@ -100,13 +100,15 @@ function find_user_auth_by_id(int $id): ?array
 function create_user(string $name, string $email, string $password): int
 {
     $statement = db()->prepare(
-        'INSERT INTO users (name, email, password_hash)
-         VALUES (:name, :email, :password_hash)'
+        'INSERT INTO users (name, email, password_hash, lgpd_consent_at)
+        VALUES (:name, :email, :password_hash, :lgpd_consent_at)'
     );
     $statement->execute([
         'name' => $name,
         'email' => $email,
         'password_hash' => password_hash($password, PASSWORD_DEFAULT),
+        'lgpd_consent_at' => date('Y-m-d H:i:s'),
+
     ]);
 
     return (int) db()->lastInsertId();
@@ -453,4 +455,17 @@ function update_user_password(int $userId, string $password): void
         'password_hash' => password_hash($password, PASSWORD_DEFAULT),
         'id' => $userId,
     ]);
+}
+
+function two_factor_status_array(array $user): array
+{
+    $userId = (int) ($user['id'] ?? 0);
+
+    return [
+        'enabled'                => (bool) ($user['two_factor_enabled'] ?? false),
+        'confirmed'              => !empty($user['two_factor_confirmed_at']),
+        'confirmed_at'           => $user['two_factor_confirmed_at'] ?? null,
+        'setup_pending'          => !empty($user['two_factor_temp_secret_encrypted']),
+        'backup_codes_remaining' => $userId > 0 ? count_remaining_backup_codes($userId) : 0,
+    ];
 }

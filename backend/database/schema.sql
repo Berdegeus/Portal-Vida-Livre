@@ -88,6 +88,9 @@ ALTER TABLE users
 ALTER TABLE users
     ADD COLUMN IF NOT EXISTS two_factor_temp_secret_created_at DATETIME NULL AFTER two_factor_confirmed_at;
 
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS lgpd_consent_at DATETIME NULL AFTER email_verified_at;
+
 CREATE TABLE IF NOT EXISTS password_reset_tokens (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     user_id BIGINT UNSIGNED NOT NULL,
@@ -114,3 +117,5 @@ CREATE TABLE IF NOT EXISTS user_backup_codes (
         FOREIGN KEY (user_id) REFERENCES users(id)
         ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
