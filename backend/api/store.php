@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+require_once __DIR__ . '/../core/bootstrap.php';
 
 // ── CORS / Headers ────────────────────────────────────────────────────────────
 header('Content-Type: application/json; charset=utf-8');
@@ -114,16 +115,10 @@ if (preg_match('/[<>]/', $shortBio)) {
 }
 
 // ── Database ──────────────────────────────────────────────────────────────────
-$dsn = 'mysql:host=localhost;dbname=portal_vida_livre;charset=utf8mb4';
 
 try {
-    $pdo = new PDO($dsn, 'root', '', [
-        PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-        PDO::ATTR_EMULATE_PREPARES   => false,
-    ]);
-} catch (PDOException $e) {
-    // Agora, se der erro, ele vai mostrar na tela o motivo exato!
+    $pdo = db();
+} catch (Throwable $e) {
     jsonError('Erro do Banco: ' . $e->getMessage(), 500);
 }
 
