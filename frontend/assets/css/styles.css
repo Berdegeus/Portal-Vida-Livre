@@ -791,8 +791,30 @@ code {
     box-shadow: none;
 }
 
-.btn-danger:hover { color: var(--gray-900); background: var(--gray-100); border-color: var(--gray-400); }
+.btn-danger:hover {
+    color: var(--gray-900);
+    background: var(--gray-100);
+    border-color: var(--gray-400); 
+}
 
+.btn-danger--destructive {
+    color: #A32D2D;
+    background: transparent;
+    border-color: #F09595;
+    box-shadow: none;
+}
+
+.btn-danger--destructive:hover {
+    color: #791F1F;
+    background: #FCEBEB;
+    border-color: #E24B4A;
+    transform: none;
+    box-shadow: none;
+}
+
+[data-dashboard-subscriptions]:not(:empty) [data-subscriptions-empty] {
+    display: none;
+}
 
 /* ========================================
    UTILITÁRIOS GERAIS
