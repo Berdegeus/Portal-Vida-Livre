@@ -488,7 +488,7 @@ button:focus-visible,
 .nav__link:focus-visible,
 .btn:focus-visible,
 a:focus-visible {
-    outline: 3px solid rgba(253, 230, 138, 0.7);
+    outline: 3px solid var(--amber-400);
     outline-offset: 3px;
 }
 
@@ -563,12 +563,13 @@ a:focus-visible {
 }
 
 .label-checkbox input[type="checkbox"] {
-    width: 1.1rem;
+    width: 1.5rem;
     height: 1.1rem;
-    margin-top: 0.15rem;
+    margin-top: 0.1rem;
     flex-shrink: 0;
     accent-color: var(--color-primary);
     box-shadow: none;
+    cursor: pointer;
 }
 
 .label-checkbox a {
