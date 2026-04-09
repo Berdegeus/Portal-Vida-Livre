@@ -17,6 +17,10 @@
     hibrido: 'Híbrido',
   };
 
+  const SLUG_REGEX = /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])$/;
+  const MIN_SLUG_LENGTH = 3;
+  const MAX_SLUG_LENGTH = 160;
+
   /* ─── DOM refs ───────────────────────────────────────── */
   const form           = document.getElementById('directoryForm');
   const btnNext        = document.getElementById('btnNext');
@@ -35,6 +39,19 @@
 
     btnNext.addEventListener('click', handleNext);
     btnBack.addEventListener('click', handleBack);
+
+    nameInput.addEventListener('input', () => {
+      if (slugInput.dataset.dirty === 'true') {
+        return;
+      }
+
+      slugInput.value = slugFromName(nameInput.value);
+    });
+
+    slugInput.addEventListener('input', () => {
+      slugInput.dataset.dirty = 'true';
+      slugInput.value = normalizeSlugInput(slugInput.value);
+    });
 
     // Bio char counter
     const bioArea = document.getElementById('short_bio');
@@ -127,7 +144,7 @@
         /^[a-zA-ZÀ-ÿ\s\.\,\-]+$/,
         'A especialidade contém caracteres inválidos.') && ok;
 
-      ok = requireUrl() && ok;
+      ok = requireSlug() && ok;
       return ok;
     },
 
@@ -180,19 +197,20 @@
     return true;
   }
 
-  function requireUrl() {
+  function requireSlug() {
     const el  = slugInput;
     const err = document.getElementById('slug-error');
-    const val = el.value.trim();
+    const val = normalizeSlugInput(el.value.trim());
+
+    el.value = val;
 
     if (!val) {
-      showFieldError(el, err, 'Informe a URL do seu site ou perfil profissional.');
+      showFieldError(el, err, 'Informe o endereço do perfil no diretório.');
       return false;
     }
 
-    // Regex: URL válida com ou sem protocolo
-    if (!/^(https?:\/\/)?([\w\-]+\.)+[\w]{2,}(\/\S*)?$/.test(val)) {
-      showFieldError(el, err, 'Informe uma URL válida. Ex.: seusite.com.br');
+    if (val.length < MIN_SLUG_LENGTH || val.length > MAX_SLUG_LENGTH || !SLUG_REGEX.test(val)) {
+      showFieldError(el, err, 'Use apenas letras minúsculas, números e hífens (mínimo 3 caracteres).');
       return false;
     }
 
@@ -232,6 +250,28 @@
   }
 
   /* ─── Helpers ────────────────────────────────────────── */
+  function stripAccents(value) {
+    return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  }
+
+  function slugFromName(value) {
+    return stripAccents(String(value || ''))
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, MAX_SLUG_LENGTH);
+  }
+
+  function normalizeSlugInput(value) {
+    return stripAccents(String(value || ''))
+      .toLowerCase()
+      .replace(/[\s_]+/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, MAX_SLUG_LENGTH);
+  }
+
   function updateBioCounter(len) {
     bioCounter.textContent = `${len} / 1200`;
     bioCounter.classList.toggle('warn', len > 900 && len <= 1200);
@@ -289,7 +329,7 @@
       entry_type:   getRadioValue('entry_type'),
       name:         nameInput.value.trim(),
       specialty:    document.getElementById('specialty').value.trim(),
-      slug:         slugInput.value.trim(),
+      slug:         normalizeSlugInput(slugInput.value.trim()),
       city:         document.getElementById('city').value.trim(),
       state:        document.getElementById('state').value,
       service_mode: getRadioValue('service_mode'),
@@ -326,6 +366,9 @@
   }
 
   /* ─── Boot ───────────────────────────────────────────── */
-  document.addEventListener('DOMContentLoaded', init);
-  if (document.readyState !== 'loading') init();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init, { once: true });
+  } else {
+    init();
+  }
 })();

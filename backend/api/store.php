@@ -43,6 +43,29 @@ function sanitize(mixed $value): string
     return trim((string) ($value ?? ''));
 }
 
+function normalizeSlug(mixed $value): string
+{
+    $slug = sanitize($value);
+
+    if ($slug === '') {
+        return '';
+    }
+
+    if (function_exists('iconv')) {
+        $ascii = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $slug);
+
+        if (is_string($ascii) && $ascii !== '') {
+            $slug = $ascii;
+        }
+    }
+
+    $slug = strtolower($slug);
+    $slug = preg_replace('/[\s_]+/', '-', $slug) ?? '';
+    $slug = preg_replace('/-+/', '-', $slug) ?? '';
+
+    return trim($slug, '-');
+}
+
 // ── Parse body ────────────────────────────────────────────────────────────────
 $raw = file_get_contents('php://input');
 $body = json_decode($raw, true);
@@ -55,7 +78,7 @@ if (json_last_error() !== JSON_ERROR_NONE) {
 $entryType   = sanitize($body['entry_type']   ?? '');
 $name        = sanitize($body['name']         ?? '');
 $specialty   = sanitize($body['specialty']    ?? '');
-$slug        = sanitize($body['slug']         ?? '');
+$slug        = normalizeSlug($body['slug']    ?? '');
 $city        = sanitize($body['city']         ?? '');
 $state       = strtoupper(sanitize($body['state'] ?? ''));
 $serviceMode = sanitize($body['service_mode'] ?? '');
@@ -81,8 +104,8 @@ if (!preg_match('/^[a-zA-ZÀ-ÿ\s\.\,\-]+$/u', $specialty)) {
     jsonError('A especialidade contém caracteres inválidos.');
 }
 
-if (!preg_match('/^[a-z0-9][a-z0-9\-]{1,}[a-z0-9]$/', $slug) || mb_strlen($slug) > 160) {
-    jsonError('Slug inválido. Use apenas letras minúsculas, números e hífens (mínimo 3 caracteres).');
+if (mb_strlen($slug) < 3 || mb_strlen($slug) > 160 || !preg_match('/^[a-z0-9](?:[a-z0-9\-]*[a-z0-9])$/', $slug)) {
+    jsonError('Endereço do perfil inválido. Use apenas letras minúsculas, números e hífens (mínimo 3 caracteres).');
 }
 
 if (mb_strlen($city) < 2 || mb_strlen($city) > 120) {
@@ -130,7 +153,7 @@ try {
     $stmtCheck->execute([':slug' => $slug]);
 
     if ($stmtCheck->fetch()) {
-        jsonError('Este endereço de perfil (slug) já está em uso. Escolha outro.');
+        jsonError('Este endereço de perfil já está em uso. Escolha outro.');
     }
 } catch (PDOException $e) {
     jsonError('Erro ao verificar disponibilidade do endereço. ' . $e->getMessage(), 500);
