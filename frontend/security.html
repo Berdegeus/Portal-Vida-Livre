@@ -94,27 +94,47 @@
                 </form>
             </div>
 
-            <!-- 2FA ATIVO -->
-            <div class="section-block hidden" data-enabled-section>
-                <p class="page-text">Seu 2FA está ativo. Você pode regenerar backup codes ou desativar abaixo.</p>
+        <!-- 2FA ATIVO -->
+        <div class="section-block hidden" data-enabled-section>
+            <h2>Verificação em duas etapas</h2>
+            <p class="page-text">
+                Sua conta está protegida com verificação em duas etapas. Isso significa que, além da senha,
+                você precisa de um código do seu aplicativo autenticador para entrar.
+            </p>
+
+            <div class="section-block">
+                <h3>Códigos de recuperação</h3>
+                <p class="page-text">
+                    Códigos de recuperação são usados quando você não tem acesso ao seu aplicativo autenticador.
+                    Cada código funciona uma única vez. Se você já usou os seus ou acha que alguém teve acesso,
+                    gere novos abaixo.
+                </p>
                 <form id="two-factor-backup-form" class="form" novalidate>
                     <div class="form-group">
-                        <label for="backup_current_password">Senha atual</label>
+                        <label for="backup_current_password">Confirme sua senha para continuar</label>
                         <input id="backup_current_password" name="current_password" type="password" autocomplete="current-password">
                         <small class="field-error" data-error-for="current_password"></small>
                     </div>
-                    <button type="submit">Regenerar backup codes</button>
+                    <button type="submit">Gerar novos códigos de recuperação</button>
                 </form>
+            </div>
+
+            <div class="section-block">
+                <h3>Desativar verificação em duas etapas</h3>
+                <p class="page-text">
+                    Ao desativar, sua conta ficará protegida apenas pela sua senha.
+                    Recomendamos manter a verificação ativa sempre que possível.
+                </p>
                 <form id="two-factor-disable-form" class="form" novalidate>
                     <div class="form-group">
-                        <label for="disable_current_password">Senha atual</label>
+                        <label for="disable_current_password">Confirme sua senha para continuar</label>
                         <input id="disable_current_password" name="current_password" type="password" autocomplete="current-password">
                         <small class="field-error" data-error-for="current_password"></small>
                     </div>
-                    <button type="submit">Desativar 2FA</button>
+                    <button type="submit" class="btn--danger">Desativar verificação em duas etapas</button>
                 </form>
             </div>
-            
+        </div>
             <!-- ALTERAR SENHA -->
             <div class="section-block">
                 <h2>Alterar senha</h2>
@@ -147,9 +167,8 @@
             </div>
 
             <div class="section-block hidden" data-backup-codes-section>
-                <h2>Backup codes</h2>
-                <p class="page-text">Guarde estes codigos em local seguro. Eles aparecem em texto puro apenas nesta
-                    tela.</p>
+                <h2>Códigos de recuperação</h2>
+                <p class="page-text">Guarde estes códigos em local seguro. Eles aparecem apenas uma vez.</p>
                 <ul class="code-list" data-backup-codes-list></ul>
             </div>
         </section>

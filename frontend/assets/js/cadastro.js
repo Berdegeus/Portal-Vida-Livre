@@ -65,7 +65,39 @@ document.addEventListener("DOMContentLoaded", async () => {
       eyeClosed?.classList.toggle("hidden", visivel);
     });
   });
+// ── Validação em tempo real da senha ──────────────────────────────────────
 
+  const inputSenha = form.querySelector('[name="password"]');
+  const inputConfirmacao = form.querySelector('[name="password_confirmation"]');
+
+  if (inputSenha) {
+    inputSenha.addEventListener("input", () => {
+      const erros = PortalVidaLivreAuth.passwordStrengthErrors(inputSenha.value);
+      if (erros.length > 0) {
+        PortalVidaLivreAuth.setFieldError(form, "password", erros[0]);
+      } else {
+        PortalVidaLivreAuth.setFieldError(form, "password", "");
+      }
+      if (inputConfirmacao && inputConfirmacao.value) {
+        if (inputSenha.value !== inputConfirmacao.value) {
+          PortalVidaLivreAuth.setFieldError(form, "password_confirmation", "A confirmação deve ser igual à senha.");
+        } else {
+          PortalVidaLivreAuth.setFieldError(form, "password_confirmation", "");
+        }
+      }
+    });
+  }
+
+  if (inputConfirmacao) {
+    inputConfirmacao.addEventListener("input", () => {
+      if (!inputSenha) return;
+      if (inputConfirmacao.value && inputSenha.value !== inputConfirmacao.value) {
+        PortalVidaLivreAuth.setFieldError(form, "password_confirmation", "A confirmação de senha deve ser igual à senha.");
+      } else {
+        PortalVidaLivreAuth.setFieldError(form, "password_confirmation", "");
+      }
+    });
+  }
   // ── CSRF ──────────────────────────────────────────────────────────────────
 
   try {

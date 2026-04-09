@@ -1305,3 +1305,17 @@ code {
     .reveal,
     .reveal.visible { opacity: 1; transform: none; }
 }
+
+.btn--danger {
+    color: #fff;
+    background: var(--orange-500);
+    border-color: var(--orange-500);
+    box-shadow: 0 2px 8px rgba(249, 115, 22, 0.25);
+}
+
+.btn--danger:hover {
+    background: var(--orange-600);
+    border-color: var(--orange-600);
+    box-shadow: 0 4px 16px rgba(249, 115, 22, 0.35);
+    transform: translateY(-1px);
+}
