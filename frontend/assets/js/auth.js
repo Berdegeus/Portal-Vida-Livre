@@ -268,6 +268,7 @@ const isValidTotpCode = (code) => /^\d{6}$/.test(code);
     showMessage,
     clearMessage,
     clearFieldErrors,
+    setFieldError,
     applyErrors,
     isValidEmail,
     isValidName,
