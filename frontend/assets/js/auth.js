@@ -78,8 +78,8 @@ const isValidTotpCode = (code) => /^\d{6}$/.test(code);
   const passwordStrengthErrors = (password) => {
     const errors = [];
 
-    if (password.length < 8) {
-      errors.push("A senha deve ter pelo menos 8 caracteres.");
+    if (password.length < 12) {
+      errors.push("A senha deve ter pelo menos 12 caracteres.");
     }
 
     if (!/[A-Z]/.test(password)) {
