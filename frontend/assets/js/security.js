@@ -3,7 +3,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   const setupSection = document.querySelector("[data-setup-section]");
   const setupResult = document.querySelector("[data-setup-result]");
   const enabledSection = document.querySelector("[data-enabled-section]");
-  const backupCodesSection = document.querySelector("[data-backup-codes-section]");
+  const backupCodesSection = document.querySelector(
+    "[data-backup-codes-section]",
+  );
   const backupCodesList = document.querySelector("[data-backup-codes-list]");
   const qrImage = document.querySelector("[data-qr-image]");
   const manualSecret = document.querySelector("[data-manual-secret]");
@@ -11,6 +13,34 @@ document.addEventListener("DOMContentLoaded", async () => {
   const confirmForm = document.querySelector("#two-factor-confirm-form");
   const disableForm = document.querySelector("#two-factor-disable-form");
   const backupForm = document.querySelector("#two-factor-backup-form");
+
+  // ── Modal de confirmação ──────────────────────────────────────────────────
+  const modalOverlay = document.querySelector("#modal-confirmacao");
+  const modalTitulo = document.querySelector("#modal-titulo");
+  const modalMensagem = document.querySelector("#modal-mensagem");
+  const modalCancelar = document.querySelector("#modal-cancelar");
+  const modalConfirmar = document.querySelector("#modal-confirmar");
+
+  const confirmarModal = (titulo, mensagem) => {
+    return new Promise((resolve) => {
+      modalTitulo.textContent = titulo;
+      modalMensagem.textContent = mensagem;
+      modalOverlay.classList.remove("hidden");
+
+      const fechar = (resultado) => {
+        modalOverlay.classList.add("hidden");
+        modalConfirmar.removeEventListener("click", onConfirmar);
+        modalCancelar.removeEventListener("click", onCancelar);
+        resolve(resultado);
+      };
+
+      const onConfirmar = () => fechar(true);
+      const onCancelar = () => fechar(false);
+
+      modalConfirmar.addEventListener("click", onConfirmar);
+      modalCancelar.addEventListener("click", onCancelar);
+    });
+  };
 
   if (!statusTarget) {
     return;
@@ -52,6 +82,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     const enabled = Boolean(twoFactor.enabled);
 
     statusTarget.textContent = enabled ? "Ativo" : "Inativo";
+    statusTarget.className = enabled
+      ? "badge badge--success"
+      : "badge badge--warning";
 
     if (btnAtivar2fa) {
       btnAtivar2fa.classList.toggle("hidden", enabled);
@@ -93,8 +126,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     await PortalVidaLivreApi.getCsrfToken();
     await loadStatus();
   } catch (error) {
-    PortalVidaLivreAuth.showMessage(error.message || "Nao foi possivel carregar o 2FA.", "error");
+    PortalVidaLivreAuth.showMessage(
+      error.message || "Nao foi possivel carregar o 2FA.",
+      "error",
+    );
   }
+
+  // toggle password --------------------
+  document.querySelectorAll("form").forEach((f) => {
+    PortalVidaLivreAuth.bindTogglePassword(f);
+  });
 
   if (setupForm) {
     setupForm.addEventListener("submit", async (event) => {
@@ -109,12 +150,25 @@ document.addEventListener("DOMContentLoaded", async () => {
         PortalVidaLivreAuth.applyErrors(setupForm, {
           current_password: ["Informe sua senha atual."],
         });
-        PortalVidaLivreAuth.showMessage("Verifique os campos informados.", "error");
+        PortalVidaLivreAuth.showMessage(
+          "Verifique os campos informados.",
+          "error",
+        );
         return;
       }
 
+      const btnSetup = setupForm.querySelector("[type='submit']");
+      if (btnSetup) {
+        btnSetup.disabled = true;
+        btnSetup.textContent = "Aguarde...";
+      }
+
       try {
-        const response = await PortalVidaLivreApi.post("two-factor-setup.php", data, { csrf: true });
+        const response = await PortalVidaLivreApi.post(
+          "two-factor-setup.php",
+          data,
+          { csrf: true },
+        );
 
         if (qrImage) {
           qrImage.src = response.data.qr_code_url;
@@ -131,7 +185,15 @@ document.addEventListener("DOMContentLoaded", async () => {
         PortalVidaLivreAuth.showMessage(response.message, "success");
       } catch (error) {
         PortalVidaLivreAuth.applyErrors(setupForm, error.errors || {});
-        PortalVidaLivreAuth.showMessage(error.message || "Nao foi possivel iniciar o 2FA.", "error");
+        PortalVidaLivreAuth.showMessage(
+          error.message || "Nao foi possivel iniciar o 2FA.",
+          "error",
+        );
+      } finally {
+        if (btnSetup) {
+          btnSetup.disabled = false;
+          btnSetup.textContent = "Iniciar configuração";
+        }
       }
     });
   }
@@ -157,12 +219,25 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       if (Object.keys(errors).length > 0) {
         PortalVidaLivreAuth.applyErrors(confirmForm, errors);
-        PortalVidaLivreAuth.showMessage("Verifique os campos informados.", "error");
+        PortalVidaLivreAuth.showMessage(
+          "Verifique os campos informados.",
+          "error",
+        );
         return;
       }
 
+      const btnConfirm = confirmForm.querySelector("[type='submit']");
+      if (btnConfirm) {
+        btnConfirm.disabled = true;
+        btnConfirm.textContent = "Aguarde...";
+      }
+
       try {
-        const response = await PortalVidaLivreApi.post("two-factor-confirm.php", data, { csrf: true });
+        const response = await PortalVidaLivreApi.post(
+          "two-factor-confirm.php",
+          data,
+          { csrf: true },
+        );
         PortalVidaLivreAuth.showMessage(response.message, "success");
         renderBackupCodes(response.data.backup_codes || []);
 
@@ -175,7 +250,15 @@ document.addEventListener("DOMContentLoaded", async () => {
         await loadStatus();
       } catch (error) {
         PortalVidaLivreAuth.applyErrors(confirmForm, error.errors || {});
-        PortalVidaLivreAuth.showMessage(error.message || "Nao foi possivel confirmar o 2FA.", "error");
+        PortalVidaLivreAuth.showMessage(
+          error.message || "Nao foi possivel confirmar o 2FA.",
+          "error",
+        );
+      } finally {
+        if (btnConfirm) {
+          btnConfirm.disabled = false;
+          btnConfirm.textContent = "Confirmar ativação";
+        }
       }
     });
   }
@@ -193,19 +276,47 @@ document.addEventListener("DOMContentLoaded", async () => {
         PortalVidaLivreAuth.applyErrors(disableForm, {
           current_password: ["Informe sua senha atual."],
         });
-        PortalVidaLivreAuth.showMessage("Verifique os campos informados.", "error");
+        PortalVidaLivreAuth.showMessage(
+          "Verifique os campos informados.",
+          "error",
+        );
         return;
       }
 
+      const confirmacao = await confirmarModal(
+        "Desativar verificação em dois fatores",
+        "Tem certeza? Sua conta ficará protegida apenas pela senha. Recomendamos manter o 2FA ativo.",
+      );
+
+      if (!confirmacao) return;
+
+      const btnDisable = disableForm.querySelector("[type='submit']");
+      if (btnDisable) {
+        btnDisable.disabled = true;
+        btnDisable.textContent = "Aguarde...";
+      }
+
       try {
-        const response = await PortalVidaLivreApi.post("two-factor-disable.php", data, { csrf: true });
+        const response = await PortalVidaLivreApi.post(
+          "two-factor-disable.php",
+          data,
+          { csrf: true },
+        );
         PortalVidaLivreAuth.showMessage(response.message, "success");
         disableForm.reset();
         backupForm?.reset();
         await loadStatus();
       } catch (error) {
         PortalVidaLivreAuth.applyErrors(disableForm, error.errors || {});
-        PortalVidaLivreAuth.showMessage(error.message || "Nao foi possivel desativar o 2FA.", "error");
+        PortalVidaLivreAuth.showMessage(
+          error.message || "Nao foi possivel desativar o 2FA.",
+          "error",
+        );
+      } finally {
+        if (btnDisable) {
+          btnDisable.disabled = false;
+          btnDisable.textContent = "Desativar verificação em dois fatores";
+        }
       }
     });
   }
@@ -222,27 +333,74 @@ document.addEventListener("DOMContentLoaded", async () => {
         PortalVidaLivreAuth.applyErrors(backupForm, {
           current_password: ["Informe sua senha atual."],
         });
-        PortalVidaLivreAuth.showMessage("Verifique os campos informados.", "error");
+        PortalVidaLivreAuth.showMessage(
+          "Verifique os campos informados.",
+          "error",
+        );
         return;
       }
 
+      const btnBackup = backupForm.querySelector("[type='submit']");
+      if (btnBackup) {
+        btnBackup.disabled = true;
+        btnBackup.textContent = "Aguarde...";
+      }
+
       try {
-        const response = await PortalVidaLivreApi.post("two-factor-backup-codes.php", data, { csrf: true });
+        const response = await PortalVidaLivreApi.post(
+          "two-factor-backup-codes.php",
+          data,
+          { csrf: true },
+        );
         PortalVidaLivreAuth.showMessage(response.message, "success");
         renderBackupCodes(response.data.backup_codes || []);
         backupForm.reset();
         await loadStatus();
       } catch (error) {
         PortalVidaLivreAuth.applyErrors(backupForm, error.errors || {});
-        PortalVidaLivreAuth.showMessage(error.message || "Nao foi possivel regenerar os backup codes.", "error");
+        PortalVidaLivreAuth.showMessage(
+          error.message ||
+            "Nao foi possivel regenerar os códigos de recuperação.",
+          "error",
+        );
+      } finally {
+        if (btnBackup) {
+          btnBackup.disabled = false;
+          btnBackup.textContent = "Gerar novos códigos de recuperação";
+        }
       }
     });
   }
 
-  const btnMostrarSenha  = document.querySelector("[data-btn-mostrar-alterar-senha]");
-  const secaoSenha       = document.querySelector("[data-alterar-senha-form]");
-  const formSenha        = document.querySelector("#form-alterar-senha");
-  const mensagemSenha    = document.querySelector("[data-alterar-senha-message]");
+  const btnMostrarBackup = document.querySelector("[data-btn-mostrar-backup]");
+  const backupFormSection = document.querySelector(
+    "[data-backup-form-section]",
+  );
+  const btnMostrarDisable = document.querySelector(
+    "[data-btn-mostrar-disable]",
+  );
+  const disableFormSection = document.querySelector(
+    "[data-disable-form-section]",
+  );
+
+  if (btnMostrarBackup && backupFormSection) {
+    btnMostrarBackup.addEventListener("click", () => {
+      backupFormSection.classList.toggle("hidden");
+    });
+  }
+
+  if (btnMostrarDisable && disableFormSection) {
+    btnMostrarDisable.addEventListener("click", () => {
+      disableFormSection.classList.toggle("hidden");
+    });
+  }
+
+  const btnMostrarSenha = document.querySelector(
+    "[data-btn-mostrar-alterar-senha]",
+  );
+  const secaoSenha = document.querySelector("[data-alterar-senha-form]");
+  const formSenha = document.querySelector("#form-alterar-senha");
+  const mensagemSenha = document.querySelector("[data-alterar-senha-message]");
   const botaoSalvarSenha = document.querySelector("[data-btn-alterar-senha]");
 
   if (btnMostrarSenha && secaoSenha) {
@@ -262,18 +420,23 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
 
       const dados = {
-        current_password:      formSenha.querySelector("[name='current_password']")?.value || "",
-        password:              formSenha.querySelector("[name='password']")?.value || "",
-        password_confirmation: formSenha.querySelector("[name='password_confirmation']")?.value || "",
+        current_password:
+          formSenha.querySelector("[name='current_password']")?.value || "",
+        password: formSenha.querySelector("[name='password']")?.value || "",
+        password_confirmation:
+          formSenha.querySelector("[name='password_confirmation']")?.value ||
+          "",
       };
 
       if (botaoSalvarSenha) {
         botaoSalvarSenha.disabled = true;
-        botaoSalvarSenha.textContent = "Salvando...";
+        botaoSalvarSenha.textContent = "Salvando sua nova senha...";
       }
 
       try {
-        await PortalVidaLivreApi.post("alterar-senha.php", dados, { csrf: true });
+        await PortalVidaLivreApi.post("alterar-senha.php", dados, {
+          csrf: true,
+        });
         if (mensagemSenha) {
           mensagemSenha.textContent = "Senha alterada com sucesso.";
           mensagemSenha.className = "message message-success";
@@ -284,7 +447,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       } catch (erro) {
         PortalVidaLivreAuth.applyErrors(formSenha, erro.errors || {});
         if (mensagemSenha) {
-          mensagemSenha.textContent = erro.message || "Nao foi possivel alterar a senha.";
+          mensagemSenha.textContent =
+            erro.message || "Nao foi possivel alterar a senha.";
           mensagemSenha.className = "message message-error";
         }
       } finally {
