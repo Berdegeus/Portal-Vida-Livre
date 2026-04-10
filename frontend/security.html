@@ -56,7 +56,7 @@
             <div class="section-block">
                 <h2>Autenticação em dois fatores</h2>
                 <p class="page-text">Adicione uma camada extra de segurança à sua conta.</p>
-                <p><strong>Status:</strong> <span data-two-factor-status>Verificando...</span></p>
+                <p><strong>Status:</strong> <span class="badge" data-two-factor-status>Verificando...</span></p>
                 <button type="button" class="hidden" data-btn-ativar-2fa>Ativar autenticação em dois fatores</button>
             </div>
 
@@ -67,7 +67,26 @@
                 <form id="two-factor-setup-form" class="form" novalidate>
                     <div class="form-group">
                         <label for="setup_current_password">Senha atual</label>
-                        <input id="setup_current_password" name="current_password" type="password" autocomplete="current-password">
+                        <div class="input-password-wrap">
+                            <input id="setup_current_password" name="current_password" type="password"
+                                autocomplete="current-password">
+                            <button type="button" class="btn-ver-senha" data-toggle-password="setup_current_password"
+                                aria-label="Ver senha">
+                                <svg data-eye-open width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                </svg>
+                                <svg data-eye-closed width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" class="hidden">
+                                    <path
+                                        d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                                    <line x1="1" y1="1" x2="23" y2="23" />
+                                </svg>
+                            </button>
+                        </div>
                         <small class="field-error" data-error-for="current_password"></small>
                     </div>
                     <button type="submit">Iniciar configuração</button>
@@ -76,65 +95,131 @@
 
             <div class="section-block hidden" data-setup-result>
                 <h2>Configurar app autenticador</h2>
-                <p class="page-text">Escaneie o QR Code no Google Authenticator, Microsoft Authenticator, Authy ou app equivalente.</p>
+                <p class="page-text">Escaneie o QR Code no Google Authenticator, Microsoft Authenticator, Authy ou app
+                    equivalente.</p>
                 <img alt="QR Code do 2FA" class="qr-image" data-qr-image>
                 <p><strong>Chave manual:</strong> <code data-manual-secret></code></p>
                 <form id="two-factor-confirm-form" class="form" novalidate>
                     <div class="form-group">
                         <label for="confirm_current_password">Senha atual</label>
-                        <input id="confirm_current_password" name="current_password" type="password" autocomplete="current-password">
+                        <div class="input-password-wrap">
+                            <input id="confirm_current_password" name="current_password" type="password"
+                                autocomplete="current-password">
+                            <button type="button" class="btn-ver-senha" data-toggle-password="confirm_current_password"
+                                aria-label="Ver senha">
+                                <svg data-eye-open width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                </svg>
+                                <svg data-eye-closed width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" class="hidden">
+                                    <path
+                                        d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                                    <line x1="1" y1="1" x2="23" y2="23" />
+                                </svg>
+                            </button>
+                        </div>
                         <small class="field-error" data-error-for="current_password"></small>
                     </div>
                     <div class="form-group">
                         <label for="confirm_code">Código de 6 dígitos</label>
-                        <input id="confirm_code" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6">
+                        <input id="confirm_code" name="code" type="text" inputmode="numeric"
+                            autocomplete="one-time-code" maxlength="6">
                         <small class="field-error" data-error-for="code"></small>
                     </div>
                     <button type="submit">Confirmar ativação</button>
                 </form>
             </div>
 
-        <!-- 2FA ATIVO -->
-        <div class="section-block hidden" data-enabled-section>
-            <h2>Verificação em dois fatores</h2>
-            <p class="page-text">
-                Sua conta está protegida com verificação em dois fatores. Isso significa que, além da senha,
-                você precisa de um código do seu aplicativo autenticador para entrar.
-            </p>
-
-            <div class="section-block">
-                <h3>Códigos de recuperação</h3>
+            <!-- 2FA ATIVO -->
+            <div class="section-block hidden" data-enabled-section>
+                <h2>Verificação em dois fatores</h2>
                 <p class="page-text">
-                    Códigos de recuperação são usados quando você não tem acesso ao seu aplicativo autenticador.
-                    Cada código funciona uma única vez. Se você já usou os seus ou acha que alguém teve acesso,
-                    gere novos abaixo.
+                    Sua conta está protegida com verificação em dois fatores. Isso significa que, além da senha,
+                    você precisa de um código do seu aplicativo autenticador para entrar.
                 </p>
-                <form id="two-factor-backup-form" class="form" novalidate>
-                    <div class="form-group">
-                        <label for="backup_current_password">Confirme sua senha para continuar</label>
-                        <input id="backup_current_password" name="current_password" type="password" autocomplete="current-password">
-                        <small class="field-error" data-error-for="current_password"></small>
-                    </div>
-                    <button type="submit">Gerar novos códigos de recuperação</button>
-                </form>
-            </div>
 
-            <div class="section-block">
-                <h3>Desativar verificação em dois fatores</h3>
-                <p class="page-text">
-                    Ao desativar, sua conta ficará protegida apenas pela sua senha.
-                    Recomendamos manter a verificação ativa sempre que possível.
-                </p>
-                <form id="two-factor-disable-form" class="form" novalidate>
-                    <div class="form-group">
-                        <label for="disable_current_password">Confirme sua senha para continuar</label>
-                        <input id="disable_current_password" name="current_password" type="password" autocomplete="current-password">
-                        <small class="field-error" data-error-for="current_password"></small>
+                <!-- Backup codes -->
+                <div class="section-block">
+                    <h3>Códigos de recuperação</h3>
+                    <p class="page-text">
+                        Códigos de recuperação são usados quando você não tem acesso ao seu aplicativo autenticador.
+                        Cada código funciona uma única vez.
+                    </p>
+                    <button type="button" data-btn-mostrar-backup>Gerenciar códigos de recuperação</button>
+                    <div class="hidden" data-backup-form-section>
+                        <form id="two-factor-backup-form" class="form" novalidate>
+                            <div class="form-group">
+                                <label for="backup_current_password">Confirme sua senha para continuar</label>
+                                <div class="input-password-wrap">
+                                    <input id="backup_current_password" name="current_password" type="password"
+                                        autocomplete="current-password">
+                                    <button type="button" class="btn-ver-senha"
+                                        data-toggle-password="backup_current_password" aria-label="Ver senha">
+                                        <svg data-eye-open width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                            <circle cx="12" cy="12" r="3" />
+                                        </svg>
+                                        <svg data-eye-closed width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round" class="hidden">
+                                            <path
+                                                d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                                            <line x1="1" y1="1" x2="23" y2="23" />
+                                        </svg>
+                                    </button>
+                                </div>
+                                <small class="field-error" data-error-for="current_password"></small>
+                            </div>
+                            <button type="submit">Gerar novos códigos de recuperação</button>
+                        </form>
                     </div>
-                    <button type="submit" class="btn--danger">Desativar verificação em dois fatores</button>
-                </form>
+                </div>
+
+                <!-- Desativar 2FA -->
+                <div class="section-block">
+                    <h3>Desativar verificação em dois fatores</h3>
+                    <p class="page-text">
+                        Ao desativar, sua conta ficará protegida apenas pela sua senha.
+                        Recomendamos manter a verificação ativa sempre que possível.
+                    </p>
+                    <button type="button" data-btn-mostrar-disable>Configurar desativação</button>
+                    <div class="hidden" data-disable-form-section>
+                        <form id="two-factor-disable-form" class="form" novalidate>
+                            <div class="form-group">
+                                <label for="disable_current_password">Confirme sua senha para continuar</label>
+                                <div class="input-password-wrap">
+                                    <input id="disable_current_password" name="current_password" type="password"
+                                        autocomplete="current-password">
+                                    <button type="button" class="btn-ver-senha"
+                                        data-toggle-password="disable_current_password" aria-label="Ver senha">
+                                        <svg data-eye-open width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                            <circle cx="12" cy="12" r="3" />
+                                        </svg>
+                                        <svg data-eye-closed width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round" class="hidden">
+                                            <path
+                                                d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                                            <line x1="1" y1="1" x2="23" y2="23" />
+                                        </svg>
+                                    </button>
+                                </div>
+                                <small class="field-error" data-error-for="current_password"></small>
+                            </div>
+                            <button type="submit" class="btn--danger">Desativar verificação em dois fatores</button>
+                        </form>
+                    </div>
+                </div>
             </div>
-        </div>
             <!-- ALTERAR SENHA -->
             <div class="section-block">
                 <h2>Alterar senha</h2>
@@ -146,19 +231,73 @@
                     <form id="form-alterar-senha" class="form" novalidate>
                         <div class="form-group">
                             <label for="senha_atual">Senha atual</label>
-                            <input id="senha_atual" name="current_password" type="password"
-                                autocomplete="current-password">
+                            <div class="input-password-wrap">
+                                <input id="senha_atual" name="current_password" type="password"
+                                    autocomplete="current-password">
+                                <button type="button" class="btn-ver-senha" data-toggle-password="senha_atual"
+                                    aria-label="Ver senha">
+                                    <svg data-eye-open width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                        <circle cx="12" cy="12" r="3" />
+                                    </svg>
+                                    <svg data-eye-closed width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round" class="hidden">
+                                        <path
+                                            d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                                        <line x1="1" y1="1" x2="23" y2="23" />
+                                    </svg>
+                                </button>
+                            </div>
                             <small class="field-error" data-error-for="current_password"></small>
                         </div>
                         <div class="form-group">
                             <label for="nova_senha">Nova senha</label>
-                            <input id="nova_senha" name="password" type="password" autocomplete="new-password">
+                            <div class="input-password-wrap">
+                                <input id="nova_senha" name="password" type="password" autocomplete="new-password">
+                                <button type="button" class="btn-ver-senha" data-toggle-password="nova_senha"
+                                    aria-label="Ver senha">
+                                    <svg data-eye-open width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                        <circle cx="12" cy="12" r="3" />
+                                    </svg>
+                                    <svg data-eye-closed width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round" class="hidden">
+                                        <path
+                                            d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                                        <line x1="1" y1="1" x2="23" y2="23" />
+                                    </svg>
+                                </button>
+                            </div>
                             <small class="field-error" data-error-for="password"></small>
                         </div>
                         <div class="form-group">
                             <label for="confirmacao_senha">Confirmar nova senha</label>
-                            <input id="confirmacao_senha" name="password_confirmation" type="password"
-                                autocomplete="new-password">
+                            <div class="input-password-wrap">
+                                <input id="confirmacao_senha" name="password_confirmation" type="password"
+                                    autocomplete="new-password">
+                                <button type="button" class="btn-ver-senha" data-toggle-password="confirmacao_senha"
+                                    aria-label="Ver senha">
+                                    <svg data-eye-open width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                        <circle cx="12" cy="12" r="3" />
+                                    </svg>
+                                    <svg data-eye-closed width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round" class="hidden">
+                                        <path
+                                            d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                                        <line x1="1" y1="1" x2="23" y2="23" />
+                                    </svg>
+                                </button>
+                            </div>
                             <small class="field-error" data-error-for="password_confirmation"></small>
                         </div>
                         <button type="submit" data-btn-alterar-senha>Salvar nova senha</button>
@@ -169,10 +308,29 @@
             <div class="section-block hidden" data-backup-codes-section>
                 <h2>Códigos de recuperação</h2>
                 <p class="page-text">Guarde estes códigos em local seguro. Eles aparecem apenas uma vez.</p>
+                <div class="message message-warning" data-backup-codes-aviso>
+                    Salve estes códigos agora. Eles não serão exibidos novamente. Cada código funciona uma única vez.
+                </div>
                 <ul class="code-list" data-backup-codes-list></ul>
             </div>
         </section>
     </main>
+
+    <!-- MODAL DE CONFIRMAÇÃO -->
+    <div class="modal-overlay hidden" id="modal-confirmacao">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2 id="modal-titulo">Confirmar ação</h2>
+            </div>
+            <div class="modal-corpo">
+                <p id="modal-mensagem"></p>
+            </div>
+            <div class="modal-rodape">
+                <button type="button" class="btn btn--ghost" id="modal-cancelar">Cancelar</button>
+                <button type="button" class="btn btn--danger" id="modal-confirmar">Confirmar</button>
+            </div>
+        </div>
+    </div>
 
     <script src="./assets/js/api.js" defer></script>
     <script src="./assets/js/internal-ui.js" defer></script>

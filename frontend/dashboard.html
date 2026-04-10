@@ -57,7 +57,7 @@
                 <p><strong>Nome:</strong> <span data-current-user-name>-</span></p>
                 <p><strong>E-mail:</strong> <span data-current-user-email>-</span></p>
                 <p><strong>E-mail verificado:</strong> <span data-conta-email-verificado>-</span></p>
-                <p><strong>2FA:</strong> <span data-current-user-2fa>-</span></p>
+                <p><strong>2FA:</strong> <span class="badge" data-current-user-2fa>-</span></p>
                 <p><strong>Consentimento LGPD registrado em:</strong> <span data-conta-lgpd-consentimento>-</span></p>
                 <p><strong>Conta criada em:</strong> <span data-conta-criada-em>-</span></p>
             </div>
@@ -76,24 +76,48 @@
             </div>
 
             <!-- EXCLUIR CONTA -->
-            <div class="section-block">
+            <div class="section-block section-block--danger">
                 <h2>Excluir conta</h2>
                 <p class="page-text">
                     Você tem o direito de solicitar a exclusão dos seus dados a qualquer momento,
                     conforme previsto na Lei Geral de Proteção de Dados (LGPD).
                     Essa ação é permanente e não pode ser desfeita.
                 </p>
-                <div class="message hidden" data-exclusao-message></div>
-                <form id="form-exclusao" class="form" novalidate>
-                    <div class="form-group">
-                        <label for="exclusao_senha">Confirme sua senha para continuar</label>
-                        <input id="exclusao_senha" name="password" type="password" autocomplete="current-password">
-                        <small class="field-error" data-error-for="password"></small>
-                    </div>
-                    <button type="submit" class="btn btn-danger--destructive" data-btn-exclusao>
-                        Solicitar exclusão da minha conta
-                    </button>
-                </form>
+
+                <button type="button" class="btn btn-danger--destructive" data-btn-mostrar-exclusao>Excluir minha conta</button>
+
+                <div class="hidden" data-exclusao-form>
+                    <div class="message hidden" data-exclusao-message></div>
+                    <form id="form-exclusao" class="form" novalidate>
+                        <div class="form-group">
+                            <label for="exclusao_senha">Confirme sua senha para continuar</label>
+                            <div class="input-password-wrap">
+                                <input id="exclusao_senha" name="password" type="password"
+                                    autocomplete="current-password">
+                                <button type="button" class="btn-ver-senha" data-toggle-password="exclusao_senha"
+                                    aria-label="Ver senha">
+                                    <svg data-eye-open width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                        <circle cx="12" cy="12" r="3" />
+                                    </svg>
+                                    <svg data-eye-closed width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round" class="hidden">
+                                        <path
+                                            d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                                        <line x1="1" y1="1" x2="23" y2="23" />
+                                    </svg>
+                                </button>
+                            </div>
+                            <small class="field-error" data-error-for="password"></small>
+                        </div>
+                        <button type="submit" class="btn btn--danger" data-btn-exclusao>
+                            Solicitar exclusão da minha conta
+                        </button>
+                    </form>
+                </div>
             </div>
         </section>
     </main>

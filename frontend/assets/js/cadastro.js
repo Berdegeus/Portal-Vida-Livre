@@ -44,28 +44,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  // ── Botões ver/ocultar senha ──────────────────────────────────────────────
+  // ── Toggle para mostrar/ocultar senha ───────────────────────────────────
+  PortalVidaLivreAuth.bindTogglePassword(form);
 
-  document.querySelectorAll("[data-toggle-password]").forEach((btn) => {
-    btn.addEventListener("click", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-
-      const fieldName = btn.dataset.togglePassword;
-      const input = form.querySelector(`[name="${fieldName}"]`);
-      const eyeOpen = btn.querySelector("[data-eye-open]");
-      const eyeClosed = btn.querySelector("[data-eye-closed]");
-
-      if (!input) return;
-
-      const visivel = input.type === "text";
-      input.type = visivel ? "password" : "text";
-
-      eyeOpen?.classList.toggle("hidden", !visivel);
-      eyeClosed?.classList.toggle("hidden", visivel);
-    });
-  });
-  
 // ── Validação em tempo real da senha ──────────────────────────────────────
 
   const inputSenha = form.querySelector('[name="password"]');
