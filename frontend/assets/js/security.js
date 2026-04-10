@@ -234,7 +234,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         await loadStatus();
       } catch (error) {
         PortalVidaLivreAuth.applyErrors(backupForm, error.errors || {});
-        PortalVidaLivreAuth.showMessage(error.message || "Nao foi possivel regenerar os backup codes.", "error");
+        PortalVidaLivreAuth.showMessage(error.message || "Nao foi possivel regenerar os códigos de recuperação.", "error");
       }
     });
   }
@@ -269,7 +269,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       if (botaoSalvarSenha) {
         botaoSalvarSenha.disabled = true;
-        botaoSalvarSenha.textContent = "Salvando...";
+        botaoSalvarSenha.textContent = "Salvando sua nova senha...";
       }
 
       try {

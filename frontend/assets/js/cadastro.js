@@ -65,6 +65,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       eyeClosed?.classList.toggle("hidden", visivel);
     });
   });
+  
 // ── Validação em tempo real da senha ──────────────────────────────────────
 
   const inputSenha = form.querySelector('[name="password"]');
