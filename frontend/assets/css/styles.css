@@ -492,7 +492,6 @@ a:focus-visible {
     outline-offset: 3px;
 }
 
-
 /* ========================================
    MENSAGENS E UTILITÁRIOS
    ======================================== */
@@ -513,11 +512,37 @@ a:focus-visible {
 .message-success {
     background: linear-gradient(180deg, var(--amber-50), rgba(255, 255, 255, 0.95));
     border-color: var(--amber-200);
+    color: var(--amber-700);
 }
 
 .message-error {
     background: linear-gradient(180deg, var(--orange-50), rgba(255, 255, 255, 0.95));
     border-color: var(--orange-100);
+    color: var(--orange-600);
+}
+
+.message-warning {
+    background: linear-gradient(180deg, var(--amber-100), rgba(255, 255, 255, 0.95));
+    border-color: var(--amber-300);
+    color: var(--amber-700);
+}
+
+.badge {
+    display: inline-block;
+    padding: 0.2rem 0.65rem;
+    border-radius: var(--radius-full);
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.badge--success {
+    background: var(--amber-100);
+    color: var(--amber-700);
+}
+
+.badge--warning {
+    background: var(--orange-100);
+    color: var(--orange-600);
 }
 
 .section-block {
@@ -528,6 +553,13 @@ a:focus-visible {
 
 .section-block h2 {
     margin-bottom: 0.65rem;
+}
+
+.section-block--danger {
+    padding: 1.25rem;
+    background: #FCEBEB;
+    border: 1px solid #F09595;
+    border-radius: var(--radius-md);
 }
 
 .hidden {
@@ -782,19 +814,6 @@ code {
     gap: 0.75rem;
     padding: 1rem 1.5rem 1.5rem;
     border-top: 1px solid var(--gray-200);
-}
-
-.btn-danger {
-    color: var(--gray-700);
-    background: transparent;
-    border-color: var(--gray-300);
-    box-shadow: none;
-}
-
-.btn-danger:hover {
-    color: var(--gray-900);
-    background: var(--gray-100);
-    border-color: var(--gray-400); 
 }
 
 .btn-danger--destructive {

@@ -12,6 +12,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     PortalVidaLivreAuth.showMessage("Nao foi possivel iniciar a sessao do formulario.", "error");
   }
 
+  // toggle password --------------------
+  PortalVidaLivreAuth.bindTogglePassword(form);
+
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     PortalVidaLivreAuth.clearMessage();

@@ -54,7 +54,9 @@
     clearFieldErrors(form);
 
     Object.entries(errors).forEach(([field, messages]) => {
-      const message = Array.isArray(messages) ? messages[0] : String(messages || "");
+      const message = Array.isArray(messages)
+        ? messages[0]
+        : String(messages || "");
 
       if (!message) {
         return;
@@ -69,11 +71,12 @@
     });
   };
 
-const isValidEmail = (email) => /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(email);
+  const isValidEmail = (email) =>
+    /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(email);
 
-const isValidName = (name) => /^[\p{L}\s\-]+$/u.test(name);
+  const isValidName = (name) => /^[\p{L}\s\-]+$/u.test(name);
 
-const isValidTotpCode = (code) => /^\d{6}$/.test(code);
+  const isValidTotpCode = (code) => /^\d{6}$/.test(code);
 
   const passwordStrengthErrors = (password) => {
     const errors = [];
@@ -159,10 +162,43 @@ const isValidTotpCode = (code) => /^\d{6}$/.test(code);
     const twoFactorTarget = document.querySelector("[data-current-user-2fa]");
 
     if (twoFactorTarget) {
-      twoFactorTarget.textContent = session.user?.two_factor_enabled ? "Ativo" : "Inativo";
-    }
+    twoFactorTarget.textContent = session.user?.two_factor_enabled ? "Ativo" : "Inativo";
+    twoFactorTarget.className = session.user?.two_factor_enabled
+    ? "badge badge--success"
+    : "badge badge--warning";
+}
 
     return session.user;
+  };
+
+  const bindTogglePassword = (container = document) => {
+    container
+      .querySelectorAll(".btn-ver-senha, .btn-toggle-password")
+      .forEach((btn) => {
+        btn.addEventListener("click", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+
+          const fieldName = btn.dataset.togglePassword;
+          const input =
+            container.querySelector(`[name="${fieldName}"]`) ||
+            document.getElementById(fieldName);
+          const eyeOpen = btn.querySelector("[data-eye-open]");
+          const eyeClosed = btn.querySelector("[data-eye-closed]");
+
+          if (!input) return;
+
+          const visivel = input.type === "text";
+          input.type = visivel ? "password" : "text";
+          btn.setAttribute(
+            "aria-label",
+            visivel ? "Ver senha" : "Ocultar senha",
+          );
+
+          eyeOpen?.classList.toggle("hidden", !visivel);
+          eyeClosed?.classList.toggle("hidden", visivel);
+        });
+      });
   };
 
   const bindLogout = () => {
@@ -179,7 +215,10 @@ const isValidTotpCode = (code) => /^\d{6}$/.test(code);
         await PortalVidaLivreApi.post("logout.php", {}, { csrf: true });
         window.location.assign("/frontend/login.html?status=logged-out");
       } catch (error) {
-        showMessage(error.message || "Nao foi possivel encerrar a sessao.", "error");
+        showMessage(
+          error.message || "Nao foi possivel encerrar a sessao.",
+          "error",
+        );
       }
     });
   };
@@ -190,10 +229,13 @@ const isValidTotpCode = (code) => /^\d{6}$/.test(code);
       registered: "Cadastro realizado com sucesso. Faca login para continuar.",
       "verification-pending":
         "Cadastro realizado. Verifique seu e-mail para confirmar a conta antes de entrar.",
-      "email-verified": "E-mail confirmado com sucesso. Agora voce pode entrar.",
-      "password-reset": "Senha redefinida com sucesso. Faca login com a nova senha.",
+      "email-verified":
+        "E-mail confirmado com sucesso. Agora voce pode entrar.",
+      "password-reset":
+        "Senha redefinida com sucesso. Faca login com a nova senha.",
       "logged-out": "Sessao encerrada com sucesso.",
-      "conta-excluida": "Sua conta foi excluida. Esperamos que tenha encontrado o apoio que precisava. Se precisar de ajuda no futuro, estaremos aqui para ajudar.",
+      "conta-excluida":
+        "Sua conta foi excluida. Esperamos que tenha encontrado o apoio que precisava. Se precisar de ajuda no futuro, estaremos aqui para ajudar.",
     };
 
     if (status && messages[status]) {
@@ -214,7 +256,9 @@ const isValidTotpCode = (code) => /^\d{6}$/.test(code);
         }
 
         window.location.replace(
-          session.authenticated ? "/frontend/dashboard.html" : "/frontend/login.html"
+          session.authenticated
+            ? "/frontend/dashboard.html"
+            : "/frontend/login.html",
         );
       } catch (error) {
         window.location.replace("/frontend/login.html");
@@ -280,5 +324,6 @@ const isValidTotpCode = (code) => /^\d{6}$/.test(code);
     redirectIfAuthenticated,
     requireAuth,
     bindLogout,
+    bindTogglePassword,
   };
 })();
