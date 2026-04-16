@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,15 +8,20 @@
     <title>Painel | Portal Vida Livre</title>
     <link rel="stylesheet" href="./assets/css/styles.css">
 </head>
+
 <body data-page="dashboard">
     <header class="header" id="header">
         <div class="container header__inner">
             <a href="/" class="logo">
                 <span class="logo__icon">
                     <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <circle cx="16" cy="16" r="14" stroke="currentColor" stroke-width="2.5"/>
-                        <path d="M16 8C16 8 10 14 10 18C10 21.3137 12.6863 24 16 24C19.3137 24 22 21.3137 22 18C22 14 16 8 16 8Z" fill="currentColor" opacity="0.3"/>
-                        <path d="M16 11C16 11 12 15.5 12 18C12 20.2091 13.7909 22 16 22C18.2091 22 20 20.2091 20 18C20 15.5 16 11 16 11Z" fill="currentColor"/>
+                        <circle cx="16" cy="16" r="14" stroke="currentColor" stroke-width="2.5" />
+                        <path
+                            d="M16 8C16 8 10 14 10 18C10 21.3137 12.6863 24 16 24C19.3137 24 22 21.3137 22 18C22 14 16 8 16 8Z"
+                            fill="currentColor" opacity="0.3" />
+                        <path
+                            d="M16 11C16 11 12 15.5 12 18C12 20.2091 13.7909 22 16 22C18.2091 22 20 20.2091 20 18C20 15.5 16 11 16 11Z"
+                            fill="currentColor" />
                     </svg>
                 </span>
                 <span class="logo__text">Vida<span class="logo__accent">Livre</span></span>
@@ -51,7 +57,7 @@
                 <p><strong>Nome:</strong> <span data-current-user-name>-</span></p>
                 <p><strong>E-mail:</strong> <span data-current-user-email>-</span></p>
                 <p><strong>E-mail verificado:</strong> <span data-conta-email-verificado>-</span></p>
-                <p><strong>2FA:</strong> <span data-current-user-2fa>-</span></p>
+                <p><strong>2FA:</strong> <span class="badge" data-current-user-2fa>-</span></p>
                 <p><strong>Consentimento LGPD registrado em:</strong> <span data-conta-lgpd-consentimento>-</span></p>
                 <p><strong>Conta criada em:</strong> <span data-conta-criada-em>-</span></p>
             </div>
@@ -60,28 +66,58 @@
             <div class="section-block">
                 <h2>Minhas inscrições</h2>
                 <p class="page-text">Itens nos quais você já se inscreveu pela busca.</p>
-                <div class="results-grid" data-dashboard-subscriptions></div>
+                <div class="results-grid" data-dashboard-subscriptions>
+                    <div class="empty-state" data-subscriptions-empty>
+                        <p>Você ainda não tem inscrições. Use a busca para encontrar profissionais e grupos de apoio.
+                        </p>
+                        <a href="/frontend/busca.html" class="btn btn--primary">Buscar apoio</a>
+                    </div>
+                </div>
             </div>
 
             <!-- EXCLUIR CONTA -->
-            <div class="section-block">
+            <div class="section-block section-block--danger">
                 <h2>Excluir conta</h2>
                 <p class="page-text">
                     Você tem o direito de solicitar a exclusão dos seus dados a qualquer momento,
                     conforme previsto na Lei Geral de Proteção de Dados (LGPD).
                     Essa ação é permanente e não pode ser desfeita.
                 </p>
-                <div class="message hidden" data-exclusao-message></div>
-                <form id="form-exclusao" class="form" novalidate>
-                    <div class="form-group">
-                        <label for="exclusao_senha">Confirme sua senha para continuar</label>
-                        <input id="exclusao_senha" name="password" type="password" autocomplete="current-password">
-                        <small class="field-error" data-error-for="password"></small>
-                    </div>
-                    <button type="submit" class="btn btn-danger" data-btn-exclusao>
-                        Solicitar exclusão da minha conta
-                    </button>
-                </form>
+
+                <button type="button" class="btn btn-danger--destructive" data-btn-mostrar-exclusao>Excluir minha conta</button>
+
+                <div class="hidden" data-exclusao-form>
+                    <div class="message hidden" data-exclusao-message></div>
+                    <form id="form-exclusao" class="form" novalidate>
+                        <div class="form-group">
+                            <label for="exclusao_senha">Confirme sua senha para continuar</label>
+                            <div class="input-password-wrap">
+                                <input id="exclusao_senha" name="password" type="password"
+                                    autocomplete="current-password">
+                                <button type="button" class="btn-ver-senha" data-toggle-password="exclusao_senha"
+                                    aria-label="Ver senha">
+                                    <svg data-eye-open width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                        <circle cx="12" cy="12" r="3" />
+                                    </svg>
+                                    <svg data-eye-closed width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round" class="hidden">
+                                        <path
+                                            d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                                        <line x1="1" y1="1" x2="23" y2="23" />
+                                    </svg>
+                                </button>
+                            </div>
+                            <small class="field-error" data-error-for="password"></small>
+                        </div>
+                        <button type="submit" class="btn btn--danger" data-btn-exclusao>
+                            Solicitar exclusão da minha conta
+                        </button>
+                    </form>
+                </div>
             </div>
         </section>
     </main>
@@ -91,4 +127,5 @@
     <script src="./assets/js/auth.js" defer></script>
     <script src="./assets/js/dashboard.js" defer></script>
 </body>
+
 </html>

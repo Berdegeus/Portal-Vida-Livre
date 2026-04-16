@@ -44,28 +44,42 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  // ── Botões ver/ocultar senha ──────────────────────────────────────────────
+  // ── Toggle para mostrar/ocultar senha ───────────────────────────────────
+  PortalVidaLivreAuth.bindTogglePassword(form);
 
-  document.querySelectorAll("[data-toggle-password]").forEach((btn) => {
-    btn.addEventListener("click", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
+// ── Validação em tempo real da senha ──────────────────────────────────────
 
-      const fieldName = btn.dataset.togglePassword;
-      const input = form.querySelector(`[name="${fieldName}"]`);
-      const eyeOpen = btn.querySelector("[data-eye-open]");
-      const eyeClosed = btn.querySelector("[data-eye-closed]");
+  const inputSenha = form.querySelector('[name="password"]');
+  const inputConfirmacao = form.querySelector('[name="password_confirmation"]');
 
-      if (!input) return;
-
-      const visivel = input.type === "text";
-      input.type = visivel ? "password" : "text";
-
-      eyeOpen?.classList.toggle("hidden", !visivel);
-      eyeClosed?.classList.toggle("hidden", visivel);
+  if (inputSenha) {
+    inputSenha.addEventListener("input", () => {
+      const erros = PortalVidaLivreAuth.passwordStrengthErrors(inputSenha.value);
+      if (erros.length > 0) {
+        PortalVidaLivreAuth.setFieldError(form, "password", erros[0]);
+      } else {
+        PortalVidaLivreAuth.setFieldError(form, "password", "");
+      }
+      if (inputConfirmacao && inputConfirmacao.value) {
+        if (inputSenha.value !== inputConfirmacao.value) {
+          PortalVidaLivreAuth.setFieldError(form, "password_confirmation", "A confirmação deve ser igual à senha.");
+        } else {
+          PortalVidaLivreAuth.setFieldError(form, "password_confirmation", "");
+        }
+      }
     });
-  });
+  }
 
+  if (inputConfirmacao) {
+    inputConfirmacao.addEventListener("input", () => {
+      if (!inputSenha) return;
+      if (inputConfirmacao.value && inputSenha.value !== inputConfirmacao.value) {
+        PortalVidaLivreAuth.setFieldError(form, "password_confirmation", "A confirmação de senha deve ser igual à senha.");
+      } else {
+        PortalVidaLivreAuth.setFieldError(form, "password_confirmation", "");
+      }
+    });
+  }
   // ── CSRF ──────────────────────────────────────────────────────────────────
 
   try {

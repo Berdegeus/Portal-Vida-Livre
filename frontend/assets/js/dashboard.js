@@ -2,14 +2,18 @@ document.addEventListener("DOMContentLoaded", async () => {
   const container = document.querySelector("[data-dashboard-subscriptions]");
 
   // ── Elementos de dados da conta ──────────────────────────────────────────
-  const campoEmailVerificado    = document.querySelector("[data-conta-email-verificado]");
-  const campoLgpdConsentimento  = document.querySelector("[data-conta-lgpd-consentimento]");
-  const campoCriadaEm           = document.querySelector("[data-conta-criada-em]");
+  const campoEmailVerificado = document.querySelector(
+    "[data-conta-email-verificado]",
+  );
+  const campoLgpdConsentimento = document.querySelector(
+    "[data-conta-lgpd-consentimento]",
+  );
+  const campoCriadaEm = document.querySelector("[data-conta-criada-em]");
 
   // ── Elementos do formulário de exclusão ───────────────────────────────────
-  const formExclusao            = document.querySelector("#form-exclusao");
-  const mensagemExclusao        = document.querySelector("[data-exclusao-message]");
-  const botaoExclusao           = document.querySelector("[data-btn-exclusao]");
+  const formExclusao = document.querySelector("#form-exclusao");
+  const mensagemExclusao = document.querySelector("[data-exclusao-message]");
+  const botaoExclusao = document.querySelector("[data-btn-exclusao]");
 
   // ── Utilitários ───────────────────────────────────────────────────────────
 
@@ -26,8 +30,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     const data = new Date(valor);
     if (isNaN(data.getTime())) return "Não informado";
     return data.toLocaleString("pt-BR", {
-      day: "2-digit", month: "2-digit", year: "numeric",
-      hour: "2-digit", minute: "2-digit",
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -45,20 +52,26 @@ document.addEventListener("DOMContentLoaded", async () => {
   };
 
   const limparErros = (form) => {
-    form.querySelectorAll(".field-error").forEach((el) => { el.textContent = ""; });
-    form.querySelectorAll("input").forEach((el) => { el.classList.remove("invalid"); });
+    form.querySelectorAll(".field-error").forEach((el) => {
+      el.textContent = "";
+    });
+    form.querySelectorAll("input").forEach((el) => {
+      el.classList.remove("invalid");
+    });
   };
 
   const exibirErroCampo = (form, campo, mensagem) => {
     const input = form.querySelector(`[name="${campo}"]`);
-    const erro  = form.querySelector(`[data-error-for="${campo}"]`);
+    const erro = form.querySelector(`[data-error-for="${campo}"]`);
     if (input) input.classList.add("invalid");
-    if (erro)  erro.textContent = mensagem;
+    if (erro) erro.textContent = mensagem;
   };
 
   const aplicarErros = (form, errors = {}) => {
     Object.entries(errors).forEach(([campo, mensagens]) => {
-      const mensagem = Array.isArray(mensagens) ? mensagens[0] : String(mensagens || "");
+      const mensagem = Array.isArray(mensagens)
+        ? mensagens[0]
+        : String(mensagens || "");
       if (mensagem) exibirErroCampo(form, campo, mensagem);
     });
   };
@@ -78,22 +91,33 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     container.innerHTML = subscriptions
-      .map((item) => `
-        <article class="result-card">
-          <div class="result-card__top">
-            <span class="result-card__badge">${escapeHtml(item.entry_type_label)}</span>
-            <span class="result-card__mode">${escapeHtml(item.service_mode_label)}</span>
-          </div>
-          <div>
-            <h2 class="result-card__title">${escapeHtml(item.name)}</h2>
-            <div class="result-card__meta">
-              <span>🧭 ${escapeHtml(item.specialty)}</span>
-              <span>📍 ${escapeHtml(item.location)}</span>
-            </div>
-          </div>
-          <p class="result-card__text">${escapeHtml(item.short_bio)}</p>
-        </article>
-      `)
+      .map(
+        (item) => `
+    <article class="result-card">
+      <div class="result-card__top">
+        <span class="result-card__badge">${escapeHtml(item.entry_type_label)}</span>
+        <span class="result-card__mode">${escapeHtml(item.service_mode_label)}</span>
+      </div>
+      <div>
+        <h2 class="result-card__title">${escapeHtml(item.name)}</h2>
+        <div class="result-card__meta">
+          <span>🧭 ${escapeHtml(item.specialty)}</span>
+          <span>📍 ${escapeHtml(item.location)}</span>
+        </div>
+      </div>
+      <p class="result-card__text">${escapeHtml(item.short_bio)}</p>
+      <div class="result-card__actions">
+        <button
+          type="button"
+          class="result-card__button result-card__button--secondary"
+          data-cancelar-inscricao="${item.id}"
+        >
+          Cancelar inscrição
+        </button>
+      </div>
+    </article>
+  `,
+      )
       .join("");
   };
 
@@ -102,7 +126,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const carregarDadosConta = async () => {
     try {
       const resposta = await PortalVidaLivreApi.get("conta-usuario.php");
-      const usuario  = resposta.data.user;
+      const usuario = resposta.data.user;
 
       if (campoEmailVerificado) {
         campoEmailVerificado.textContent = usuario.email_verified
@@ -124,6 +148,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   };
 
+  // -── open exclusão da conta ───────────────────────────────────────────────────
+  const btnMostrarExclusao = document.querySelector(
+    "[data-btn-mostrar-exclusao]",
+  );
+  const exclusaoForm = document.querySelector("[data-exclusao-form]");
+
+  if (btnMostrarExclusao && exclusaoForm) {
+    btnMostrarExclusao.addEventListener("click", () => {
+      exclusaoForm.classList.remove("hidden");
+      btnMostrarExclusao.classList.add("hidden");
+    });
+  }
   // ── Excluir conta ─────────────────────────────────────────────────────────
 
   if (formExclusao) {
@@ -132,15 +168,20 @@ document.addEventListener("DOMContentLoaded", async () => {
       limparErros(formExclusao);
       limparMensagem(mensagemExclusao);
 
-      const senha = formExclusao.querySelector("[name='password']")?.value || "";
+      const senha =
+        formExclusao.querySelector("[name='password']")?.value || "";
 
       if (senha === "") {
-        exibirErroCampo(formExclusao, "password", "Informe sua senha para confirmar a exclusão.");
+        exibirErroCampo(
+          formExclusao,
+          "password",
+          "Informe sua senha para confirmar a exclusão.",
+        );
         return;
       }
 
       const confirmacao = window.confirm(
-        "Tem certeza que deseja excluir sua conta? Todos os seus dados serão removidos permanentemente. Essa ação não pode ser desfeita."
+        "Tem certeza que deseja excluir sua conta? Todos os seus dados serão removidos permanentemente. Essa ação não pode ser desfeita.",
       );
 
       if (!confirmacao) return;
@@ -151,13 +192,21 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
 
       try {
-        await PortalVidaLivreApi.post("solicitar-exclusao.php", { password: senha }, { csrf: true });
+        await PortalVidaLivreApi.post(
+          "solicitar-exclusao.php",
+          { password: senha },
+          { csrf: true },
+        );
         window.location.assign("/frontend/login.html?status=conta-excluida");
       } catch (erro) {
         if (erro.errors && Object.keys(erro.errors).length > 0) {
           aplicarErros(formExclusao, erro.errors);
         } else {
-          exibirMensagem(mensagemExclusao, erro.message || "Não foi possível processar a solicitação.", "error");
+          exibirMensagem(
+            mensagemExclusao,
+            erro.message || "Não foi possível processar a solicitação.",
+            "error",
+          );
         }
 
         if (botaoExclusao) {
@@ -167,6 +216,50 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     });
   }
+
+// ── Cancelar inscrição ────────────────────────────────────────────────────
+
+  const cancelarInscricao = async (entryId, button) => {
+    button.disabled = true;
+    button.textContent = "Cancelando...";
+
+    try {
+      await PortalVidaLivreApi.post(
+        "directory-subscriptions.php",
+        { entry_id: entryId, action: "unsubscribe" },
+        { csrf: true }
+      );
+
+      const card = button.closest("article");
+      if (card) card.remove();
+
+      const restantes = container.querySelectorAll("article");
+      if (restantes.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <p>Você ainda não se inscreveu em nenhum especialista, clínica ou grupo.</p>
+          </div>
+        `;
+      }
+    } catch (erro) {
+      PortalVidaLivreAuth.showMessage(
+        erro.message || "Não foi possível cancelar a inscrição.",
+        "error"
+      );
+      button.disabled = false;
+      button.textContent = "Cancelar inscrição";
+    }
+  };
+
+  container.addEventListener("click", async (evento) => {
+    const button = evento.target.closest("[data-cancelar-inscricao]");
+    if (!button) return;
+
+    const entryId = Number(button.dataset.cancelarInscricao);
+    if (entryId <= 0) return;
+
+    await cancelarInscricao(entryId, button);
+  });
 
   // ── Inicialização ─────────────────────────────────────────────────────────
 
@@ -180,10 +273,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     ]);
 
     renderSubscriptions(subscriptionsResponse.data?.subscriptions || []);
+    PortalVidaLivreAuth.bindTogglePassword(
+      document.querySelector("#form-exclusao"),
+    );
   } catch (erro) {
     PortalVidaLivreAuth.showMessage(
       erro.message || "Não foi possível carregar o painel.",
-      "error"
+      "error",
     );
     if (container) container.innerHTML = "";
   }
