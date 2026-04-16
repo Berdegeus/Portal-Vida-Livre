@@ -108,15 +108,31 @@ function email_template(string $title, string $body): string
 function send_password_reset_email(array $user, string $token): void
 {
     $resetUrl = frontend_url('redefinir-senha.html?token=' . urlencode($token));
+    $name = htmlspecialchars((string) $user['name'], ENT_QUOTES, 'UTF-8');
+    $url  = htmlspecialchars($resetUrl, ENT_QUOTES, 'UTF-8');
+
     $subject = 'Redefinicao de senha - Portal Vida Livre';
-    $html = '
-        <p>Ola, ' . htmlspecialchars((string) $user['name'], ENT_QUOTES, 'UTF-8') . '.</p>
-        <p>Recebemos um pedido para redefinir sua senha.</p>
-        <p><a href="' . htmlspecialchars($resetUrl, ENT_QUOTES, 'UTF-8') . '">Redefinir senha</a></p>
-        <p>Se voce nao fez essa solicitacao, ignore este e-mail.</p>
-        <p>O link expira em 1 hora.</p>
+
+    $body = '
+        <p style="margin:0 0 16px;">Olá, <strong>' . $name . '</strong>.</p>
+        <p style="margin:0 0 16px;">Recebemos um pedido para redefinir a senha da sua conta no Portal Vida Livre.</p>
+        <p style="margin:0 0 24px;">Clique no botão abaixo para criar uma nova senha:</p>
+        <p style="text-align:center;margin:0 0 24px;">
+            <a href="' . $url . '" style="display:inline-block;background:#f59e0b;color:#1a1a2e;text-decoration:none;font-weight:bold;font-size:15px;padding:14px 32px;border-radius:8px;">
+                Redefinir senha
+            </a>
+        </p>
+        <p style="margin:0 0 8px;font-size:13px;color:#666666;">Se o botão não funcionar, copie e cole o link abaixo no navegador:</p>
+        <p style="margin:0 0 24px;font-size:13px;word-break:break-all;">
+            <a href="' . $url . '" style="color:#f59e0b;">' . $url . '</a>
+        </p>
+        <hr style="border:none;border-top:1px solid #eeeeee;margin:24px 0;">
+        <p style="margin:0;font-size:13px;color:#888888;">Se você não solicitou a redefinição de senha, ignore este e-mail.</p>
+        <p style="margin:8px 0 0;font-size:13px;color:#888888;">O link expira em <strong>1 hora</strong>.</p>
     ';
-    $text = "Ola, {$user['name']}.\n\nAcesse o link para redefinir sua senha:\n{$resetUrl}\n\nO link expira em 1 hora.";
+
+    $html = email_template($subject, $body);
+    $text = "Olá, {$user['name']}.\n\nAcesse o link para redefinir sua senha:\n{$resetUrl}\n\nO link expira em 1 hora.";
 
     deliver_email($user, $subject, $html, $text);
 }
