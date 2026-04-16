@@ -1,35 +1,14 @@
 document.addEventListener("DOMContentLoaded", async () => {
   const codeForm = document.querySelector("#two-factor-code-form");
   const backupForm = document.querySelector("#two-factor-backup-login-form");
-  const redirectTarget = PortalVidaLivreAuth.getRedirectTarget("/frontend/dashboard.html");
+  const redirectTarget = "/frontend/dashboard.html";
 
   if (!codeForm || !backupForm) {
     return;
   }
 
-  const ensurePendingChallenge = async () => {
-    const status = await PortalVidaLivreAuth.loadTwoFactorStatus();
-
-    if (status.authenticated) {
-      window.location.replace(redirectTarget);
-      return false;
-    }
-
-    if (!status.login_pending) {
-      window.location.replace("/frontend/login.html");
-      return false;
-    }
-
-    return true;
-  };
-
   try {
     await PortalVidaLivreApi.getCsrfToken();
-    const challengeReady = await ensurePendingChallenge();
-
-    if (!challengeReady) {
-      return;
-    }
   } catch (error) {
     PortalVidaLivreAuth.showMessage("Nao foi possivel iniciar a verificacao 2FA.", "error");
     return;
