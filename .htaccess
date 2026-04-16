@@ -11,3 +11,8 @@ RewriteRule ^ - [L]
 
 # Se alguém acessar só o domínio raiz (portal-vida-livre.test/), manda pro index
 RewriteRule ^$ /frontend/index.html [L]
+
+# Bloqueia acesso direto ao .env pelo navegador
+<Files ".env">
+    Require all denied
+</Files>

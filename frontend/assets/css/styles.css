@@ -488,10 +488,9 @@ button:focus-visible,
 .nav__link:focus-visible,
 .btn:focus-visible,
 a:focus-visible {
-    outline: 3px solid rgba(253, 230, 138, 0.7);
+    outline: 3px solid var(--amber-400);
     outline-offset: 3px;
 }
-
 
 /* ========================================
    MENSAGENS E UTILITÁRIOS
@@ -513,11 +512,37 @@ a:focus-visible {
 .message-success {
     background: linear-gradient(180deg, var(--amber-50), rgba(255, 255, 255, 0.95));
     border-color: var(--amber-200);
+    color: var(--amber-700);
 }
 
 .message-error {
     background: linear-gradient(180deg, var(--orange-50), rgba(255, 255, 255, 0.95));
     border-color: var(--orange-100);
+    color: var(--orange-600);
+}
+
+.message-warning {
+    background: linear-gradient(180deg, var(--amber-100), rgba(255, 255, 255, 0.95));
+    border-color: var(--amber-300);
+    color: var(--amber-700);
+}
+
+.badge {
+    display: inline-block;
+    padding: 0.2rem 0.65rem;
+    border-radius: var(--radius-full);
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.badge--success {
+    background: var(--amber-100);
+    color: var(--amber-700);
+}
+
+.badge--warning {
+    background: var(--orange-100);
+    color: var(--orange-600);
 }
 
 .section-block {
@@ -528,6 +553,13 @@ a:focus-visible {
 
 .section-block h2 {
     margin-bottom: 0.65rem;
+}
+
+.section-block--danger {
+    padding: 1.25rem;
+    background: #FCEBEB;
+    border: 1px solid #F09595;
+    border-radius: var(--radius-md);
 }
 
 .hidden {
@@ -563,12 +595,13 @@ a:focus-visible {
 }
 
 .label-checkbox input[type="checkbox"] {
-    width: 1.1rem;
+    width: 1.5rem;
     height: 1.1rem;
-    margin-top: 0.15rem;
+    margin-top: 0.1rem;
     flex-shrink: 0;
     accent-color: var(--color-primary);
     box-shadow: none;
+    cursor: pointer;
 }
 
 .label-checkbox a {
@@ -783,15 +816,24 @@ code {
     border-top: 1px solid var(--gray-200);
 }
 
-.btn-danger {
-    color: var(--gray-700);
+.btn-danger--destructive {
+    color: #A32D2D;
     background: transparent;
-    border-color: var(--gray-300);
+    border-color: #F09595;
     box-shadow: none;
 }
 
-.btn-danger:hover { color: var(--gray-900); background: var(--gray-100); border-color: var(--gray-400); }
+.btn-danger--destructive:hover {
+    color: #791F1F;
+    background: #FCEBEB;
+    border-color: #E24B4A;
+    transform: none;
+    box-shadow: none;
+}
 
+[data-dashboard-subscriptions]:not(:empty) [data-subscriptions-empty] {
+    display: none;
+}
 
 /* ========================================
    UTILITÁRIOS GERAIS
@@ -1281,4 +1323,18 @@ code {
 
     .reveal,
     .reveal.visible { opacity: 1; transform: none; }
+}
+
+.btn--danger {
+    color: #fff;
+    background: var(--orange-500);
+    border-color: var(--orange-500);
+    box-shadow: 0 2px 8px rgba(249, 115, 22, 0.25);
+}
+
+.btn--danger:hover {
+    background: var(--orange-600);
+    border-color: var(--orange-600);
+    box-shadow: 0 4px 16px rgba(249, 115, 22, 0.35);
+    transform: translateY(-1px);
 }
