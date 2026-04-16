@@ -424,9 +424,34 @@ document.addEventListener("DOMContentLoaded", async () => {
           formSenha.querySelector("[name='current_password']")?.value || "",
         password: formSenha.querySelector("[name='password']")?.value || "",
         password_confirmation:
-          formSenha.querySelector("[name='password_confirmation']")?.value ||
-          "",
+          formSenha.querySelector("[name='password_confirmation']")?.value || "",
       };
+
+      const errosSenha = {};
+
+      if (!dados.current_password) {
+        errosSenha.current_password = ["Informe sua senha atual."];
+      }
+
+      const errosNovaSenha = PortalVidaLivreAuth.passwordStrengthErrors(dados.password || "");
+      if (errosNovaSenha.length > 0) {
+        errosSenha.password = errosNovaSenha;
+      }
+
+      if (!dados.password_confirmation) {
+        errosSenha.password_confirmation = ["Confirme sua nova senha."];
+      } else if (dados.password !== dados.password_confirmation) {
+        errosSenha.password_confirmation = ["A confirmação deve ser igual à nova senha."];
+      }
+
+      if (Object.keys(errosSenha).length > 0) {
+        PortalVidaLivreAuth.applyErrors(formSenha, errosSenha);
+        if (mensagemSenha) {
+          mensagemSenha.textContent = "Verifique os campos informados.";
+          mensagemSenha.className = "message message-error";
+        }
+        return;
+      }
 
       if (botaoSalvarSenha) {
         botaoSalvarSenha.disabled = true;
@@ -434,7 +459,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
 
       try {
-        await PortalVidaLivreApi.post("alterar-senha.php", dados, {
+        await PortalVidaLivreApi.post("alterar-senha-logado.php", dados, {
           csrf: true,
         });
         if (mensagemSenha) {

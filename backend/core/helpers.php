@@ -78,12 +78,12 @@ function string_length(string $value): int
     return function_exists('mb_strlen') ? mb_strlen($value) : strlen($value);
 }
 
-function password_strength_errors(string $password): array
+function password_strength_errors(string $password, string $name = ''): array
 {
     $errors = [];
 
-    if (string_length($password) < 8) {
-        $errors[] = 'A senha deve ter pelo menos 8 caracteres.';
+    if (string_length($password) < 12) {
+        $errors[] = 'A senha deve ter pelo menos 12 caracteres.';
     }
 
     if (!preg_match('/[A-Z]/', $password)) {
@@ -100,6 +100,10 @@ function password_strength_errors(string $password): array
 
     if (!preg_match('/[^A-Za-z0-9]/', $password)) {
         $errors[] = 'A senha deve ter ao menos um caractere especial.';
+    }
+
+    if ($name !== '' && mb_stripos($password, $name) !== false) {
+        $errors[] = 'A senha nao pode conter seu nome.';
     }
 
     return $errors;
