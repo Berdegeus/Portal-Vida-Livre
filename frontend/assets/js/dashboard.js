@@ -217,51 +217,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-// ── Cancelar inscrição ────────────────────────────────────────────────────
-
-  const cancelarInscricao = async (entryId, button) => {
-    button.disabled = true;
-    button.textContent = "Cancelando...";
-
-    try {
-      await PortalVidaLivreApi.post(
-        "directory-subscriptions.php",
-        { entry_id: entryId, action: "unsubscribe" },
-        { csrf: true }
-      );
-
-      const card = button.closest("article");
-      if (card) card.remove();
-
-      const restantes = container.querySelectorAll("article");
-      if (restantes.length === 0) {
-        container.innerHTML = `
-          <div class="empty-state">
-            <p>Você ainda não se inscreveu em nenhum especialista, clínica ou grupo.</p>
-          </div>
-        `;
-      }
-    } catch (erro) {
-      PortalVidaLivreAuth.showMessage(
-        erro.message || "Não foi possível cancelar a inscrição.",
-        "error"
-      );
-      button.disabled = false;
-      button.textContent = "Cancelar inscrição";
-    }
-  };
-
-  container.addEventListener("click", async (evento) => {
-    const button = evento.target.closest("[data-cancelar-inscricao]");
-    if (!button) return;
-
-    const entryId = Number(button.dataset.cancelarInscricao);
-    if (entryId <= 0) return;
-
-    await cancelarInscricao(entryId, button);
-  });
-
-  // ── Inicialização ─────────────────────────────────────────────────────────
+// ── Inicialização ─────────────────────────────────────────────────────────
 
   try {
     const session = await PortalVidaLivreAuth.loadSession();
@@ -273,9 +229,46 @@ document.addEventListener("DOMContentLoaded", async () => {
     ]);
 
     renderSubscriptions(subscriptionsResponse.data?.subscriptions || []);
-    PortalVidaLivreAuth.bindTogglePassword(
-      document.querySelector("#form-exclusao"),
-    );
+    PortalVidaLivreAuth.bindTogglePassword(document.querySelector("#form-exclusao"));
+
+    if (container) {
+      container.addEventListener("click", async (evento) => {
+        const button = evento.target.closest("[data-cancelar-inscricao]");
+        if (!button) return;
+
+        const entryId = Number(button.dataset.cancelarInscricao);
+        if (entryId <= 0) return;
+
+        button.disabled = true;
+        button.textContent = "Cancelando...";
+
+        try {
+          await PortalVidaLivreApi.post(
+            "directory-subscriptions.php",
+            { entry_id: entryId, action: "unsubscribe" },
+            { csrf: true },
+          );
+
+          const card = button.closest("article");
+          if (card) card.remove();
+
+          if (container.querySelectorAll("article").length === 0) {
+            container.innerHTML = `
+              <div class="empty-state">
+                <p>Você ainda não se inscreveu em nenhum especialista, clínica ou grupo.</p>
+              </div>
+            `;
+          }
+        } catch (erro) {
+          PortalVidaLivreAuth.showMessage(
+            erro.message || "Não foi possível cancelar a inscrição.",
+            "error",
+          );
+          button.disabled = false;
+          button.textContent = "Cancelar inscrição";
+        }
+      });
+    }
   } catch (erro) {
     PortalVidaLivreAuth.showMessage(
       erro.message || "Não foi possível carregar o painel.",
