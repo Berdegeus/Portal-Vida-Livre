@@ -62,7 +62,8 @@ try {
     $userId = register_user_and_send_verification_email($name, $email, $password);
     $user = find_user_by_id($userId);
 } catch (\Throwable $throwable) {
-    error_response('Nao foi possivel concluir o cadastro agora. ' . $throwable->getMessage(), [], 500);
+    error_log('[Register] ' . $throwable->getMessage() . ' em ' . $throwable->getFile() . ':' . $throwable->getLine());
+    error_response('Nao foi possivel concluir o cadastro agora.', [], 500);
 }
 
 success_response('Cadastro realizado. Enviamos um link de confirmacao para seu e-mail.', [
