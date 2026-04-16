@@ -317,7 +317,7 @@
   }
 
   /* ─── Submission ─────────────────────────────────────── */
-  async function submitForm() {
+async function submitForm() {
     btnNext.disabled = true;
     btnNext.innerHTML = `
       <svg class="spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -326,44 +326,30 @@
       Enviando…`;
 
     const payload = {
-      entry_type:   getRadioValue('entry_type'),
-      name:         nameInput.value.trim(),
-      specialty:    document.getElementById('specialty').value.trim(),
-      slug:         normalizeSlugInput(slugInput.value.trim()),
-      city:         document.getElementById('city').value.trim(),
-      state:        document.getElementById('state').value,
-      service_mode: getRadioValue('service_mode'),
-      short_bio:    document.getElementById('short_bio').value.trim(),
+        entry_type:   getRadioValue('entry_type'),
+        name:         nameInput.value.trim(),
+        specialty:    document.getElementById('specialty').value.trim(),
+        slug:         normalizeSlugInput(slugInput.value.trim()),
+        city:         document.getElementById('city').value.trim(),
+        state:        document.getElementById('state').value,
+        service_mode: getRadioValue('service_mode'),
+        short_bio:    document.getElementById('short_bio').value.trim(),
     };
 
     try {
-      const res = await fetch('/backend/api/store.php', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify(payload),
-      });
+        await PortalVidaLivreApi.getCsrfToken();
+        const data = await PortalVidaLivreApi.post('store.php', payload, { csrf: true });
 
-      const data = await res.json();
+        form.classList.add('hidden');
+        formNav.classList.add('hidden');
+        successScr.classList.remove('hidden');
 
-      if (!res.ok || !data.success) {
-        throw new Error(data.message || 'Erro ao enviar. Tente novamente.');
-      }
-
-      form.style.display    = 'none';
-      formNav.style.display = 'none';
-      document.querySelector('.form-progress').style.display = 'none';
-      const alertEl = document.getElementById('globalAlert');
-      if (alertEl) alertEl.style.display = 'none';
-      successScr.classList.add('show');
-
-    } catch (err) {
-      showAlert(err.message || 'Erro inesperado. Por favor tente novamente.');
-      btnNext.disabled = false;
-      btnNext.innerHTML = `
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-        Enviar cadastro`;
+    } catch (erro) {
+        showAlert(erro.message || 'Erro ao enviar. Tente novamente.');
+        btnNext.disabled = false;
+        btnNext.textContent = 'Enviar cadastro';
     }
-  }
+}
 
   /* ─── Boot ───────────────────────────────────────────── */
   if (document.readyState === 'loading') {
