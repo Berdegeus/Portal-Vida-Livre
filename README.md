@@ -28,3 +28,11 @@ php serve.php
 
 5. O `serve.php` cria o banco se necessario, aplica `backend/database/schema.sql` e sobe o servidor PHP.
 6. Acesse `http://localhost:8000/frontend/`.
+
+## Criando um usuário administrador
+
+O sistema usa uma tabela separada (`admins`) para administradores. Não há interface de cadastro — o registro deve ser feito diretamente no banco de dados:
+
+```sql
+INSERT INTO admins (name, email) VALUES ('Nome do Admin', 'admin@exemplo.com');
+```
