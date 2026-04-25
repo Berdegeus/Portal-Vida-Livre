@@ -137,6 +137,37 @@ function send_password_reset_email(array $user, string $token): void
     deliver_email($user, $subject, $html, $text);
 }
 
+function send_admin_magic_link_email(array $admin, string $token): void
+{
+    $verifyUrl = frontend_url('admin-verify.html?token=' . urlencode($token));
+    $name = htmlspecialchars((string) $admin['name'], ENT_QUOTES, 'UTF-8');
+    $url  = htmlspecialchars($verifyUrl, ENT_QUOTES, 'UTF-8');
+
+    $subject = 'Acesso administrativo - Portal Vida Livre';
+
+    $body = '
+        <p style="margin:0 0 16px;">Olá, <strong>' . $name . '</strong>.</p>
+        <p style="margin:0 0 16px;">Foi solicitado acesso à área administrativa do Portal Vida Livre.</p>
+        <p style="margin:0 0 24px;">Clique no botão abaixo para entrar. O link expira em <strong>15 minutos</strong> e é de uso único.</p>
+        <p style="text-align:center;margin:0 0 24px;">
+            <a href="' . $url . '" style="display:inline-block;background:#292524;color:#FFFFFF;text-decoration:none;font-weight:bold;font-size:15px;padding:14px 32px;border-radius:8px;">
+                Acessar painel administrativo
+            </a>
+        </p>
+        <p style="margin:0 0 8px;font-size:13px;color:#666666;">Se o botão não funcionar, copie e cole o link abaixo no navegador:</p>
+        <p style="margin:0 0 24px;font-size:13px;word-break:break-all;">
+            <a href="' . $url . '" style="color:#f59e0b;">' . $url . '</a>
+        </p>
+        <hr style="border:none;border-top:1px solid #eeeeee;margin:24px 0;">
+        <p style="margin:0;font-size:13px;color:#888888;">Se você não solicitou este acesso, ignore este e-mail com segurança.</p>
+    ';
+
+    $html = email_template($subject, $body);
+    $text = "Olá, {$admin['name']}.\n\nAcesse o link abaixo para entrar no painel administrativo:\n{$verifyUrl}\n\nO link expira em 15 minutos e é de uso único.";
+
+    deliver_email($admin, $subject, $html, $text);
+}
+
 function send_email_verification_email(array $user, string $token): void
 {
     $verificationUrl = frontend_url('confirmar-email.html?token=' . urlencode($token));
