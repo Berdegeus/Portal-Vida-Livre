@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="/frontend/">
+    <title>Acesso Administrativo | Portal Vida Livre</title>
+    <link rel="stylesheet" href="./assets/css/styles.css">
+    <style>
+        body {
+            background: var(--gray-900);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .admin-card {
+            background: var(--gray-800);
+            border: 1px solid var(--gray-700);
+            border-radius: var(--radius-lg);
+            padding: 48px 40px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: var(--shadow-xl);
+        }
+
+        .admin-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(245, 158, 11, 0.15);
+            border: 1px solid rgba(245, 158, 11, 0.35);
+            color: var(--amber-400);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            padding: 4px 10px;
+            border-radius: var(--radius-full);
+            margin-bottom: 24px;
+        }
+
+        .admin-badge svg {
+            flex-shrink: 0;
+        }
+
+        .admin-card h1 {
+            font-family: var(--font-display);
+            font-size: 28px;
+            color: #FFFFFF;
+            margin: 0 0 8px;
+        }
+
+        .admin-card .subtitle {
+            color: var(--gray-400);
+            font-size: 14px;
+            margin: 0 0 32px;
+            line-height: 1.6;
+        }
+
+        .admin-card label {
+            color: var(--gray-300);
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .admin-card input[type="email"] {
+            background: var(--gray-900);
+            border: 1px solid var(--gray-600);
+            color: #FFFFFF;
+            border-radius: var(--radius-sm);
+            padding: 12px 14px;
+            width: 100%;
+            font-size: 15px;
+            font-family: var(--font-body);
+            transition: border-color 0.2s;
+            box-sizing: border-box;
+        }
+
+        .admin-card input[type="email"]:focus {
+            outline: none;
+            border-color: var(--amber-500);
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+        }
+
+        .admin-card input[type="email"]::placeholder {
+            color: var(--gray-600);
+        }
+
+        .admin-card input[type="email"].invalid {
+            border-color: #f87171;
+        }
+
+        .admin-card .field-error {
+            color: #f87171;
+            font-size: 12px;
+            margin-top: 4px;
+            display: block;
+        }
+
+        .admin-card button[type="submit"] {
+            width: 100%;
+            background: var(--amber-500);
+            color: var(--gray-900);
+            border: none;
+            border-radius: var(--radius-sm);
+            padding: 13px;
+            font-size: 15px;
+            font-weight: 700;
+            font-family: var(--font-body);
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            margin-top: 8px;
+        }
+
+        .admin-card button[type="submit"]:hover {
+            background: var(--amber-600);
+        }
+
+        .admin-card button[type="submit"]:active {
+            transform: scale(0.98);
+        }
+
+        .admin-card button[type="submit"]:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .admin-message {
+            border-radius: var(--radius-sm);
+            padding: 12px 16px;
+            font-size: 14px;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .admin-message.hidden {
+            display: none;
+        }
+
+        .admin-message-error {
+            background: rgba(248, 113, 113, 0.12);
+            border: 1px solid rgba(248, 113, 113, 0.3);
+            color: #fca5a5;
+        }
+
+        .admin-message-success {
+            background: rgba(52, 211, 153, 0.1);
+            border: 1px solid rgba(52, 211, 153, 0.25);
+            color: #6ee7b7;
+        }
+
+        .admin-footer {
+            margin-top: 32px;
+            padding-top: 20px;
+            border-top: 1px solid var(--gray-700);
+            text-align: center;
+        }
+
+        .admin-footer a {
+            color: var(--gray-500);
+            font-size: 13px;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .admin-footer a:hover {
+            color: var(--gray-300);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="admin-card">
+        <span class="admin-badge">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+            Área restrita
+        </span>
+
+        <h1>Acesso Administrativo</h1>
+        <p class="subtitle">Informe seu e-mail de administrador. Você receberá um link de acesso seguro.</p>
+
+        <div class="admin-message hidden" data-message></div>
+
+        <form id="admin-login-form" novalidate>
+            <div class="form-group">
+                <label for="email">E-mail</label>
+                <input id="email" name="email" type="email" autocomplete="email"
+                    placeholder="seu@email.com">
+                <small class="field-error" data-error-for="email"></small>
+            </div>
+
+            <button type="submit" id="submit-btn">Enviar link de acesso</button>
+        </form>
+
+        <div class="admin-footer">
+            <a href="/frontend/login.html">&larr; Voltar ao portal</a>
+        </div>
+    </div>
+
+    <script src="./assets/js/api.js" defer></script>
+    <script src="./assets/js/admin-login.js" defer></script>
+</body>
+
+</html>

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="/frontend/">
+    <title>Painel Admin | Portal Vida Livre</title>
+    <link rel="stylesheet" href="./assets/css/styles.css">
+    <style>
+        body {
+            background: var(--gray-900);
+            min-height: 100vh;
+            color: #FFFFFF;
+        }
+
+        .admin-topbar {
+            background: var(--gray-800);
+            border-bottom: 1px solid var(--gray-700);
+            padding: 0 32px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .admin-topbar .logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            color: #FFFFFF;
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .admin-topbar .logo span {
+            color: var(--amber-400);
+        }
+
+        .admin-topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .admin-user {
+            color: var(--gray-400);
+            font-size: 14px;
+        }
+
+        .btn-logout {
+            background: transparent;
+            border: 1px solid var(--gray-600);
+            color: var(--gray-300);
+            border-radius: var(--radius-sm);
+            padding: 6px 14px;
+            font-size: 13px;
+            font-family: var(--font-body);
+            cursor: pointer;
+            transition: border-color 0.2s, color 0.2s;
+        }
+
+        .btn-logout:hover {
+            border-color: var(--gray-400);
+            color: #FFFFFF;
+        }
+
+        .admin-main {
+            padding: 40px 32px;
+            max-width: 960px;
+            margin: 0 auto;
+        }
+
+        .admin-main h1 {
+            font-family: var(--font-display);
+            font-size: 32px;
+            margin: 0 0 8px;
+        }
+
+        .admin-main .subtitle {
+            color: var(--gray-400);
+            margin: 0 0 40px;
+        }
+
+        .admin-notice {
+            background: var(--gray-800);
+            border: 1px solid var(--gray-700);
+            border-radius: var(--radius-md);
+            padding: 24px 28px;
+            color: var(--gray-300);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .hidden { display: none; }
+    </style>
+</head>
+
+<body>
+    <header class="admin-topbar">
+        <div class="logo">
+            Vida<span>Livre</span>
+            <span style="color: var(--gray-600); font-weight: 400; font-size: 13px; margin-left: 4px;">Admin</span>
+        </div>
+        <div class="admin-topbar-right">
+            <span class="admin-user" data-admin-email></span>
+            <button class="btn-logout" data-admin-logout>Sair</button>
+        </div>
+    </header>
+
+    <main class="admin-main">
+        <h1>Painel Administrativo</h1>
+        <p class="subtitle">Bem-vindo, <span data-admin-name></span>.</p>
+
+        <div class="admin-notice">
+            Painel em construção. Funcionalidades administrativas serão adicionadas aqui.
+        </div>
+    </main>
+
+    <script src="./assets/js/api.js" defer></script>
+    <script src="./assets/js/admin-dashboard.js" defer></script>
+</body>
+
+</html>
