@@ -16,7 +16,20 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   try {
     await PortalVidaLivreApi.getCsrfToken();
-    await PortalVidaLivreApi.post("admin-verify-token.php", { token }, { csrf: true });
+    const result = await PortalVidaLivreApi.post("admin-verify-token.php", { token }, { csrf: true });
+    const data = result.data;
+
+    if (data.requires_2fa) {
+      if (data.step === "vinculacao") {
+        sessionStorage.setItem("admin_2fa_codigo", data.codigo);
+        sessionStorage.setItem("admin_2fa_bot", data.bot_username);
+        window.location.replace("/frontend/admin-vinculacao.html");
+      } else {
+        window.location.replace("/frontend/admin-2fa.html");
+      }
+      return;
+    }
+
     show("state-success");
     setTimeout(() => window.location.replace("/frontend/admin-dashboard.html"), 1200);
   } catch (error) {

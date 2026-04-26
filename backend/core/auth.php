@@ -596,6 +596,143 @@ function logout_admin(): void
     session_regenerate_id(true);
 }
 
+// ─── Admin com dados Telegram ─────────────────────────────────────────────────
+
+function find_admin_full_by_id(int $id): ?array
+{
+    $stmt = db()->prepare(
+        'SELECT id, name, email, telegram_chat_id, created_at
+         FROM admins WHERE id = :id LIMIT 1'
+    );
+    $stmt->execute(['id' => $id]);
+    $admin = $stmt->fetch();
+
+    return is_array($admin) ? $admin : null;
+}
+
+// ─── Sessão intermediária de 2FA ──────────────────────────────────────────────
+
+function start_admin_2fa_pending(int $adminId): void
+{
+    ensure_session_started();
+    unset($_SESSION['admin_id']);
+    $_SESSION['admin_2fa_pending'] = [
+        'admin_id'   => $adminId,
+        'expires_at' => time() + 300,
+    ];
+}
+
+function get_admin_2fa_pending(): ?array
+{
+    ensure_session_started();
+    $pending = $_SESSION['admin_2fa_pending'] ?? null;
+
+    if (!is_array($pending)) {
+        return null;
+    }
+
+    if (time() > (int) $pending['expires_at']) {
+        unset($_SESSION['admin_2fa_pending']);
+        return null;
+    }
+
+    return $pending;
+}
+
+function require_admin_2fa_pending(): array
+{
+    $pending = get_admin_2fa_pending();
+
+    if ($pending === null) {
+        error_response('Sessao expirada. Solicite um novo link de acesso.', [], 401);
+    }
+
+    return $pending;
+}
+
+function clear_admin_2fa_pending(): void
+{
+    ensure_session_started();
+    unset($_SESSION['admin_2fa_pending'], $_SESSION['admin_2fa_last_reenviar']);
+}
+
+// ─── Códigos Telegram ─────────────────────────────────────────────────────────
+
+function create_telegram_codigo(int $adminId, string $tipo): string
+{
+    // Remove código anterior deste tipo para este admin
+    db()->prepare('DELETE FROM telegram_codigos WHERE admin_id = :admin_id AND tipo = :tipo')
+        ->execute(['admin_id' => $adminId, 'tipo' => $tipo]);
+
+    $digits = $tipo === 'vinculacao' ? 4 : 6;
+    $max    = (int) str_repeat('9', $digits);
+    $codigo = str_pad((string) random_int(0, $max), $digits, '0', STR_PAD_LEFT);
+
+    db()->prepare(
+        'INSERT INTO telegram_codigos (admin_id, codigo, tipo) VALUES (:admin_id, :codigo, :tipo)'
+    )->execute(['admin_id' => $adminId, 'codigo' => $codigo, 'tipo' => $tipo]);
+
+    return $codigo;
+}
+
+// Usada pelo bot para encontrar o admin que enviou o código de vinculação
+function find_telegram_codigo_vinculacao(string $codigo): ?array
+{
+    $stmt = db()->prepare(
+        'SELECT tc.id, tc.admin_id, a.name
+         FROM telegram_codigos tc
+         JOIN admins a ON a.id = tc.admin_id
+         WHERE tc.codigo    = :codigo
+           AND tc.tipo      = \'vinculacao\'
+           AND tc.usado     = 0
+           AND tc.criado_em > NOW() - INTERVAL 5 MINUTE
+         LIMIT 1'
+    );
+    $stmt->execute(['codigo' => $codigo]);
+    $record = $stmt->fetch();
+
+    return is_array($record) ? $record : null;
+}
+
+// Usada pelo site para validar o código de login digitado pelo admin
+function find_telegram_codigo_login(int $adminId, string $codigo): ?array
+{
+    $stmt = db()->prepare(
+        'SELECT id FROM telegram_codigos
+         WHERE admin_id  = :admin_id
+           AND codigo    = :codigo
+           AND tipo      = \'login\'
+           AND usado     = 0
+           AND criado_em > NOW() - INTERVAL 5 MINUTE
+         LIMIT 1'
+    );
+    $stmt->execute(['admin_id' => $adminId, 'codigo' => $codigo]);
+    $record = $stmt->fetch();
+
+    return is_array($record) ? $record : null;
+}
+
+function marcar_codigo_usado(int $id): void
+{
+    db()->prepare('UPDATE telegram_codigos SET usado = 1 WHERE id = :id')
+        ->execute(['id' => $id]);
+}
+
+function link_admin_telegram(int $adminId, int $chatId): void
+{
+    db()->prepare(
+        'UPDATE admins SET telegram_chat_id = :chat_id WHERE id = :id'
+    )->execute(['chat_id' => $chatId, 'id' => $adminId]);
+}
+
+function cleanup_telegram_codigos(): void
+{
+    // Remove códigos com mais de 10 minutos (expirados + margem)
+    db()->prepare(
+        'DELETE FROM telegram_codigos WHERE criado_em < NOW() - INTERVAL 10 MINUTE'
+    )->execute();
+}
+
 function two_factor_status_array(array $user): array
 {
     $userId = (int) ($user['id'] ?? 0);

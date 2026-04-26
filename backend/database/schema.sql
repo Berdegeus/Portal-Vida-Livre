@@ -142,3 +142,19 @@ CREATE TABLE IF NOT EXISTS admin_login_tokens (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
+
+ALTER TABLE admins
+    ADD COLUMN IF NOT EXISTS telegram_chat_id BIGINT NULL;
+
+CREATE TABLE IF NOT EXISTS telegram_codigos (
+    id        INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    admin_id  BIGINT UNSIGNED NOT NULL,
+    codigo    VARCHAR(6) NOT NULL,
+    tipo      ENUM('vinculacao','login') NOT NULL,
+    criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    usado     TINYINT(1) NOT NULL DEFAULT 0,
+    KEY idx_tc_admin_tipo (admin_id, tipo),
+    CONSTRAINT fk_tc_admin
+        FOREIGN KEY (admin_id) REFERENCES admins(id)
+        ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
