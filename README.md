@@ -36,3 +36,24 @@ O sistema usa uma tabela separada (`admins`) para administradores. Não há inte
 ```sql
 INSERT INTO admins (name, email) VALUES ('Nome do Admin', 'admin@exemplo.com');
 ```
+
+## Criar o bot do Telegram (para o 2FA administrativo)
+1. Abra o Telegram e inicie uma conversa com [@BotFather](https://t.me/botfather)
+2. Envie `/newbot` e siga as instruções (escolha nome e username)
+3. O BotFather vai retornar um token no formato `123456789:AAE...` — guarde-o
+4. Adicione o token e o username do bot em `backend/.env`:
+
+```env
+TELEGRAM_BOT_TOKEN=123456789:AAE...
+TELEGRAM_BOT_USERNAME=seubot
+```
+
+## Rodando o bot do Telegram
+
+O bot precisa rodar como um processo separado do servidor web. Em um terminal adicional, execute:
+
+```bash
+php backend/bot/telegram-bot.php
+```
+
+Mantenha esse processo ativo enquanto o sistema estiver em uso. Ele fica em loop aguardando mensagens e é responsável por vincular o Telegram dos administradores na primeira autenticação.
