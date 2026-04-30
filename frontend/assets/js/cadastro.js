@@ -47,6 +47,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   // ── Toggle para mostrar/ocultar senha ───────────────────────────────────
   PortalVidaLivreAuth.bindTogglePassword(form);
 
+  const captchaWidget = CaptchaWidget.init(document.getElementById("captcha-widget"));
+
 // ── Validação em tempo real da senha ──────────────────────────────────────
 
   const inputSenha = form.querySelector('[name="password"]');
@@ -138,6 +140,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       errors.lgpd_consent = ["Voce precisa aceitar a Politica de Privacidade para continuar."];
     }
 
+    const humanCheck = document.getElementById("captcha_human");
+    if (!humanCheck || !humanCheck.checked) {
+      PortalVidaLivreAuth.showMessage("Confirme que voce nao e um robo marcando a caixa.", "error");
+      return;
+    }
+
     if (Object.keys(errors).length > 0) {
       PortalVidaLivreAuth.applyErrors(form, errors);
       PortalVidaLivreAuth.showMessage("Verifique os campos informados.", "error");
@@ -151,6 +159,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         password: data.password,
         password_confirmation: data.password_confirmation,
         lgpd_consent: true,
+        captcha_answer: captchaWidget ? captchaWidget.getAnswer() : "",
       };
 
       const response = await PortalVidaLivreApi.post("register.php", payload, { csrf: true });
@@ -165,6 +174,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         error.message || "Nao foi possivel concluir o cadastro.",
         "error",
       );
+      if (error.errors?.captcha && captchaWidget) captchaWidget.reset();
     }
   });
 });
