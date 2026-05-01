@@ -19,18 +19,26 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // --- Tab switching ---
   const tabs = document.querySelectorAll(".admin-tab");
-  const tabUsers = document.getElementById("tab-users");
-  const tabDirectory = document.getElementById("tab-directory");
+  const tabPanels = {
+    users: document.getElementById("tab-users"),
+    directory: document.getElementById("tab-directory"),
+    logs: document.getElementById("tab-logs"),
+  };
 
   tabs.forEach((tab) => {
     tab.addEventListener("click", () => {
       tabs.forEach((t) => t.classList.remove("active"));
       tab.classList.add("active");
-      const isUsers = tab.dataset.tab === "users";
-      tabUsers.classList.toggle("hidden", !isUsers);
-      tabDirectory.classList.toggle("hidden", isUsers);
+      Object.entries(tabPanels).forEach(([key, el]) => {
+        el.classList.toggle("hidden", key !== tab.dataset.tab);
+      });
+      if (tab.dataset.tab === "logs" && !logsLoaded) {
+        loadLogs();
+      }
     });
   });
+
+  let logsLoaded = false;
 
   // --- Toast ---
   const toastEl = document.getElementById("toast");
@@ -213,6 +221,150 @@ document.addEventListener("DOMContentLoaded", async () => {
         "Erro ao carregar diretório.";
     }
   }
+
+  // --- Audit log ---
+  const ACTION_LABELS = {
+    "user.register": "Cadastro de usuário",
+    "user.login": "Login",
+    "user.login_failed": "Tentativa de login falhou",
+    "user.login_2fa_required": "Login (2FA necessário)",
+    "user.login_2fa_completed": "Login (2FA concluído)",
+    "user.login_2fa_failed": "Código 2FA inválido",
+    "user.logout": "Logout",
+    "user.email_verified": "E-mail verificado",
+    "user.password_reset_requested": "Redefinição de senha solicitada",
+    "user.password_reset": "Senha redefinida",
+    "user.password_changed": "Senha alterada",
+    "user.2fa_enabled": "2FA ativado",
+    "user.2fa_disabled": "2FA desativado",
+    "user.account_deleted": "Conta excluída",
+    "admin.login": "Login administrativo",
+    "admin.logout": "Logout administrativo",
+    "admin.users_viewed": "Usuários visualizados",
+    "admin.directory_viewed": "Diretório visualizado",
+    "admin.user_deleted": "Usuário excluído pelo admin",
+    "admin.directory_deleted": "Entrada excluída pelo admin",
+  };
+
+  const ACTOR_BADGE = {
+    user: "badge-blue",
+    admin: "badge-amber",
+    system: "badge-gray",
+  };
+
+  const ALERT_ACTIONS = new Set([
+    "user.login_failed",
+    "user.login_2fa_failed",
+    "user.account_deleted",
+    "admin.user_deleted",
+    "admin.directory_deleted",
+  ]);
+
+  let logPage = 1;
+  const LOG_PER_PAGE = 50;
+  let logTotal = 0;
+
+  function buildLogParams() {
+    const action = document.getElementById("log-filter-action").value;
+    const actor = document.getElementById("log-filter-actor").value;
+    const params = new URLSearchParams({ page: logPage, per_page: LOG_PER_PAGE });
+    if (action) params.set("action", action);
+    if (actor) params.set("actor_type", actor);
+    return params.toString();
+  }
+
+  async function loadLogs(resetPage = false) {
+    if (resetPage) logPage = 1;
+    logsLoaded = true;
+
+    const loading = document.getElementById("logs-loading");
+    const table = document.getElementById("logs-table");
+    const empty = document.getElementById("logs-empty");
+    const pagination = document.getElementById("log-pagination");
+
+    loading.classList.remove("hidden");
+    table.classList.add("hidden");
+    empty.classList.add("hidden");
+    pagination.classList.add("hidden");
+
+    try {
+      const res = await PortalVidaLivreApi.get(`admin-audit-log.php?${buildLogParams()}`);
+      const logs = res.data.logs || [];
+      logTotal = res.data.total || 0;
+
+      loading.classList.add("hidden");
+
+      document.getElementById("log-total").textContent =
+        logTotal > 0 ? `${logTotal} registro${logTotal !== 1 ? "s" : ""}` : "";
+
+      if (logs.length === 0) {
+        empty.classList.remove("hidden");
+        return;
+      }
+
+      const tbody = document.getElementById("logs-tbody");
+      tbody.innerHTML = logs
+        .map((log) => {
+          const actionLabel = ACTION_LABELS[log.action] ?? log.action;
+          const actorBadge = ACTOR_BADGE[log.actor_type] ?? "badge-gray";
+          const isAlert = ALERT_ACTIONS.has(log.action);
+          const actionClass = isAlert ? "badge badge-red" : "badge badge-gray";
+
+          const actorDisplay = log.actor_email
+            ? escapeHtml(log.actor_email)
+            : log.actor_id
+            ? `#${log.actor_id}`
+            : "—";
+
+          const targetDisplay = log.target_label
+            ? escapeHtml(log.target_label)
+            : "—";
+
+          const dateDisplay = log.created_at
+            ? new Date(log.created_at).toLocaleString("pt-BR", {
+                day: "2-digit", month: "2-digit", year: "numeric",
+                hour: "2-digit", minute: "2-digit", second: "2-digit",
+              })
+            : "—";
+
+          return `
+            <tr>
+              <td style="color: var(--gray-400); white-space: nowrap; font-size: 13px;">${dateDisplay}</td>
+              <td>
+                <span class="badge ${actorBadge}" style="margin-right: 6px;">${escapeHtml(log.actor_type)}</span>
+                <span style="font-size: 13px; color: var(--gray-300);">${actorDisplay}</span>
+              </td>
+              <td><span class="${actionClass}">${escapeHtml(actionLabel)}</span></td>
+              <td style="color: var(--gray-400); font-size: 13px;">${targetDisplay}</td>
+              <td style="color: var(--gray-500); font-size: 13px; font-family: monospace;">${escapeHtml(log.ip ?? "—")}</td>
+            </tr>`;
+        })
+        .join("");
+
+      table.classList.remove("hidden");
+
+      const totalPages = Math.ceil(logTotal / LOG_PER_PAGE);
+      if (totalPages > 1) {
+        document.getElementById("log-page-info").textContent =
+          `Página ${logPage} de ${totalPages}`;
+        document.getElementById("log-prev").disabled = logPage <= 1;
+        document.getElementById("log-next").disabled = logPage >= totalPages;
+        pagination.classList.remove("hidden");
+      }
+    } catch {
+      loading.textContent = "Erro ao carregar logs.";
+    }
+  }
+
+  document.getElementById("log-filter-btn").addEventListener("click", () => loadLogs(true));
+
+  document.getElementById("log-prev").addEventListener("click", () => {
+    if (logPage > 1) { logPage--; loadLogs(); }
+  });
+
+  document.getElementById("log-next").addEventListener("click", () => {
+    if (logPage < Math.ceil(logTotal / LOG_PER_PAGE)) { logPage++; loadLogs(); }
+  });
 
   Promise.all([loadUsers(), loadDirectory()]);
 });

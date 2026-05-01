@@ -58,5 +58,10 @@ try {
     error_response('Nao foi possivel redefinir a senha agora.', [], 500);
 }
 
+log_audit('user.password_reset', [
+    'actor_type' => 'user',
+    'actor_id'   => $record['user_id'],
+]);
+
 success_response('Senha redefinida com sucesso.');
 

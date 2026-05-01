@@ -8,7 +8,13 @@ if (request_method() !== 'GET') {
     error_response('Metodo nao permitido.', [], 405);
 }
 
-require_admin();
+$admin = require_admin();
+
+log_audit('admin.directory_viewed', [
+    'actor_type'  => 'admin',
+    'actor_id'    => $admin['id'],
+    'actor_email' => $admin['email'],
+]);
 
 $stmt = db()->query(
     'SELECT id, slug, entry_type, name, specialty, city, state, service_mode, is_active, created_at

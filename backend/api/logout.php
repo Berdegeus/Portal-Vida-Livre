@@ -10,6 +10,13 @@ if (request_method() !== 'POST') {
 
 require_csrf();
 
+$_sessionUser = current_user();
+log_audit('user.logout', [
+    'actor_type'  => $_sessionUser !== null ? 'user' : 'system',
+    'actor_id'    => $_sessionUser['id']    ?? null,
+    'actor_email' => $_sessionUser['email'] ?? null,
+]);
+
 logout_user();
 
 success_response('Sessao encerrada com sucesso.', [

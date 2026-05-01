@@ -63,4 +63,10 @@ try {
     error_response('Nao foi possivel alterar a senha agora.', [], 500);
 }
 
+log_audit('user.password_changed', [
+    'actor_type'  => 'user',
+    'actor_id'    => $user['id'],
+    'actor_email' => $user['email'],
+]);
+
 success_response('Senha alterada com sucesso.');

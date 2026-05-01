@@ -50,6 +50,12 @@ try {
     error_response('Nao foi possivel desativar o 2FA.', [], 500);
 }
 
+log_audit('user.2fa_disabled', [
+    'actor_type'  => 'user',
+    'actor_id'    => $user['id'],
+    'actor_email' => $user['email'],
+]);
+
 success_response('2FA desativado com sucesso.', [
     'two_factor' => [
         'enabled' => false,

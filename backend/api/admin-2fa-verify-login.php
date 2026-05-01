@@ -37,6 +37,12 @@ if ($admin === null) {
 
 $publicAdmin = login_admin($admin);
 
+log_audit('admin.login', [
+    'actor_type'  => 'admin',
+    'actor_id'    => $admin['id'],
+    'actor_email' => $admin['email'],
+]);
+
 success_response('Acesso autorizado.', [
     'admin'      => $publicAdmin,
     'csrf_token' => rotate_csrf_token(),

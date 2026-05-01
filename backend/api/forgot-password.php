@@ -31,6 +31,12 @@ if ($user !== null) {
     } catch (\Throwable $throwable) {
         error_response('Nao foi possivel processar sua solicitacao agora.', [], 500);
     }
+
+    log_audit('user.password_reset_requested', [
+        'actor_type'  => 'user',
+        'actor_id'    => $user['id'],
+        'actor_email' => $user['email'],
+    ]);
 }
 
 success_response('Se o e-mail estiver cadastrado, enviaremos um link para redefinicao de senha.');

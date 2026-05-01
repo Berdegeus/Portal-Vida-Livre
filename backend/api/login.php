@@ -30,6 +30,10 @@ if (has_errors($errors)) {
 $user = find_user_by_email($email);
 
 if ($user === null || !password_verify($password, (string) $user['password_hash'])) {
+    log_audit('user.login_failed', [
+        'actor_type'  => 'system',
+        'actor_email' => $email,
+    ]);
     error_response('E-mail ou senha invalidos.', [
         '_general' => ['E-mail ou senha invalidos.'],
     ], 401);
@@ -52,6 +56,12 @@ if (!user_email_is_verified($user)) {
 if ((bool) ($user['two_factor_enabled'] ?? false) && !empty($user['two_factor_secret_encrypted'])) {
     start_two_factor_pending((int) $user['id']);
 
+    log_audit('user.login_2fa_required', [
+        'actor_type'  => 'user',
+        'actor_id'    => $user['id'],
+        'actor_email' => $user['email'],
+    ]);
+
     success_response('Codigo de verificacao necessario.', [
         'requires_2fa' => true,
         'csrf_token' => rotate_csrf_token(),
@@ -59,6 +69,12 @@ if ((bool) ($user['two_factor_enabled'] ?? false) && !empty($user['two_factor_se
 }
 
 $publicUser = login_user($user);
+
+log_audit('user.login', [
+    'actor_type'  => 'user',
+    'actor_id'    => $user['id'],
+    'actor_email' => $user['email'],
+]);
 
 success_response('Login realizado com sucesso.', [
     'user' => $publicUser,
