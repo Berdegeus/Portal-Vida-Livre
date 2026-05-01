@@ -9,7 +9,13 @@ if (request_method() !== 'POST') {
 }
 
 require_csrf();
-require_admin();
+$_adminLogout = require_admin();
+
+log_audit('admin.logout', [
+    'actor_type'  => 'admin',
+    'actor_id'    => $_adminLogout['id'],
+    'actor_email' => $_adminLogout['email'],
+]);
 
 logout_admin();
 
