@@ -82,6 +82,42 @@
                     <small class="field-error" data-error-for="password"></small>
                 </div>
 
+                <!-- CAPTCHA -->
+                <div class="form-group captcha-widget" id="captcha-widget">
+                    <label>Verificacao de seguranca</label>
+                    <div class="captcha-widget__image-row">
+                        <img data-captcha-image src="" alt="Imagem com 5 digitos para verificacao"
+                             class="captcha-widget__img" width="180" height="60">
+                        <button type="button" class="captcha-widget__reload btn btn--ghost"
+                                data-captcha-reload aria-label="Recarregar imagem de verificacao">
+                            &#8635; Recarregar
+                        </button>
+                    </div>
+                    <div class="captcha-widget__checkbox-row form-group--checkbox">
+                        <label class="label-checkbox">
+                            <input id="captcha_human" type="checkbox" aria-required="true">
+                            <span>Nao sou um robo</span>
+                        </label>
+                    </div>
+                    <div class="captcha-widget__reference">
+                        <small>0=1&ordm;tom &nbsp; 1=2&ordm;tom &nbsp; 2=3&ordm;tom &nbsp; 3=4&ordm;tom &nbsp; 4=5&ordm;tom &nbsp; 5=6&ordm;tom &nbsp; 6=7&ordm;tom &nbsp; 7=8&ordm;tom &nbsp; 8=9&ordm;tom &nbsp; 9=10&ordm;tom</small>
+                        <small>(Grave &rarr; Agudo)</small>
+                    </div>
+                    <a data-captcha-audio href="" download="captcha.wav"
+                       class="captcha-widget__audio-link"
+                       aria-label="Baixar audio de verificacao para acessibilidade">
+                        &#128266; Ouvir codigo (acessibilidade)
+                    </a>
+                    <div class="form-group">
+                        <label for="captcha_answer">Digite os 5 digitos da imagem</label>
+                        <input id="captcha_answer" name="captcha_answer" type="text"
+                               inputmode="numeric" maxlength="5" autocomplete="off"
+                               placeholder="00000" data-captcha-input
+                               aria-describedby="captcha-error">
+                        <small class="field-error" id="captcha-error" data-error-for="captcha"></small>
+                    </div>
+                </div>
+
                 <button type="submit">Entrar</button>
             </form>
 
@@ -102,6 +138,7 @@
     <script src="./assets/js/api.js" defer></script>
     <script src="./assets/js/internal-ui.js" defer></script>
     <script src="./assets/js/auth.js" defer></script>
+    <script src="./assets/js/captcha.js" defer></script>
     <script src="./assets/js/login.js" defer></script>
 </body>
 

@@ -9,6 +9,7 @@ if (request_method() !== 'POST') {
 }
 
 require_csrf();
+require_captcha();
 
 $data = request_data();
 $name = sanitize_name((string) ($data['name'] ?? ''));
