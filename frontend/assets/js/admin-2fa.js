@@ -71,7 +71,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     btnReenviar.disabled = true;
 
     try {
-      await PortalVidaLivreApi.post("admin-2fa-reenviar.php", {}, { csrf: true });
+      const result = await PortalVidaLivreApi.post("admin-2fa-reenviar.php", {}, { csrf: true });
+
+      if (result.data?.fallback === "security_questions") {
+        window.location.replace("/frontend/admin-security-questions.html");
+        return;
+      }
+
       showSuccess("Novo código enviado pelo Telegram.");
 
       let segundos = 30;

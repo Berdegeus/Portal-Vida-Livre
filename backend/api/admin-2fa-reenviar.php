@@ -35,12 +35,31 @@ $tipo        = $temTelegram ? 'login' : 'vinculacao';
 $codigo      = create_telegram_codigo($adminId, $tipo);
 
 if ($temTelegram) {
-    try {
-        telegram_send_message(
-            (int) $admin['telegram_chat_id'],
-            "Novo código de acesso: {$codigo}\n\nVálido por 5 minutos."
-        );
-    } catch (\Throwable $e) {
+    $simulateFail = !empty($_SESSION['admin_simulate_3p_fail']);
+    $telegramErro = null;
+
+    if ($simulateFail) {
+        $telegramErro = true;
+    } else {
+        try {
+            telegram_send_message(
+                (int) $admin['telegram_chat_id'],
+                "Novo código de acesso: {$codigo}\n\nVálido por 5 minutos."
+            );
+        } catch (\Throwable $e) {
+            $telegramErro = true;
+        }
+    }
+
+    if ($telegramErro !== null) {
+        if (admin_has_security_questions($adminId) && !is_admin_security_questions_locked($adminId)) {
+            start_admin_security_questions_pending($adminId, 'telegram');
+            success_response('Telegram indisponivel. Use as perguntas de seguranca para acessar.', [
+                'fallback'   => 'security_questions',
+                'csrf_token' => rotate_csrf_token(),
+            ]);
+        }
+
         error_response('Nao foi possivel enviar o codigo pelo Telegram.', [], 503);
     }
 
