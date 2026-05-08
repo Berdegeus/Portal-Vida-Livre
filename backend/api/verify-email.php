@@ -48,6 +48,11 @@ try {
     error_response('Nao foi possivel confirmar seu cadastro agora.', [], 500);
 }
 
+log_audit('user.email_verified', [
+    'actor_type' => 'user',
+    'actor_id'   => $record['user_id'],
+]);
+
 success_response('Cadastro confirmado com sucesso. Agora voce pode entrar.', [
     'verified' => true,
 ]);
