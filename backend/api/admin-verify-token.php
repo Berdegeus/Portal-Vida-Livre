@@ -54,14 +54,42 @@ if (!$temTelegram) {
 }
 
 // Logins seguintes: envia código de 6 dígitos pelo Telegram
-$chatId = (int) $admin['telegram_chat_id'];
+$chatId       = (int) $admin['telegram_chat_id'];
+$simulateFail = !empty($_SESSION['admin_simulate_3p_fail']);
+$telegramErro = null;
 
-try {
-    telegram_send_message(
-        $chatId,
-        "Código de acesso ao Portal Vida Livre: {$codigo}\n\nVálido por 5 minutos. Não compartilhe."
-    );
-} catch (\Throwable $e) {
+if ($simulateFail) {
+    $telegramErro = true;
+} else {
+    try {
+        telegram_send_message(
+            $chatId,
+            "Código de acesso ao Portal Vida Livre: {$codigo}\n\nVálido por 5 minutos. Não compartilhe."
+        );
+    } catch (\Throwable $e) {
+        $telegramErro = true;
+    }
+}
+
+if ($telegramErro !== null) {
+    if (admin_has_security_questions((int) $admin['id'])) {
+        if (is_admin_security_questions_locked((int) $admin['id'])) {
+            $horas = (int) ceil(get_admin_security_question_lockout_seconds((int) $admin['id']) / 3600);
+            error_response(
+                "Telegram indisponivel e acesso via perguntas bloqueado. Tente novamente em {$horas} hora(s).",
+                [],
+                429
+            );
+        }
+
+        start_admin_security_questions_pending((int) $admin['id'], 'telegram');
+        success_response('Telegram indisponivel. Use as perguntas de seguranca para acessar.', [
+            'requires_2fa' => true,
+            'step'         => 'security_questions',
+            'csrf_token'   => rotate_csrf_token(),
+        ]);
+    }
+
     error_response('Nao foi possivel enviar o codigo pelo Telegram. Tente novamente.', [], 503);
 }
 

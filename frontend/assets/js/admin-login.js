@@ -51,6 +51,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     try {
       const response = await PortalVidaLivreApi.post("admin-request-login.php", { email }, { csrf: true });
+
+      if (response.data?.fallback === "security_questions") {
+        window.location.replace("/frontend/admin-security-questions.html");
+        return;
+      }
+
       showMessage(response.message || "Link enviado. Verifique sua caixa de entrada.", "success");
       form.reset();
     } catch (error) {

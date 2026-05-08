@@ -58,6 +58,54 @@ php backend/bot/telegram-bot.php
 
 Mantenha esse processo ativo enquanto o sistema estiver em uso. Ele fica em loop aguardando mensagens e é responsável por vincular o Telegram dos administradores na primeira autenticação.
 
+## Perguntas de segurança (fallback de login do admin)
+
+Quando o serviço de e-mail ou o Telegram estão indisponíveis, o sistema oferece um fallback: o admin responde 3 perguntas de segurança pré-configuradas para acessar o painel. Máximo de 2 tentativas erradas antes de bloquear por 24 horas.
+
+### Configurando as perguntas
+
+1. Abra `backend/scripts/admin-setup-security-questions.php` e edite o topo do arquivo com seu e-mail e as respostas que quiser usar:
+
+```php
+$EMAIL_DO_ADMIN = 'admin@exemplo.com';
+
+$PERGUNTAS = [
+    ['pergunta' => 'Qual é o nome da cidade onde você nasceu?',          'resposta' => 'Curitiba'],
+    ['pergunta' => 'Qual era o nome do seu primeiro animal de estimação?','resposta' => 'Bolinha'],
+    ['pergunta' => 'Qual é o nome da sua escola primária?',               'resposta' => 'Escola XYZ'],
+];
+```
+
+2. Acesse no navegador (com o servidor rodando):
+
+```
+http://localhost:8000/backend/scripts/admin-setup-security-questions.php
+```
+
+3. O script confirma o que foi salvo. **Delete o arquivo após usar** — ele não deve ficar acessível.
+
+> As respostas são comparadas sem diferença de maiúsculas/minúsculas. "Curitiba", "curitiba" e "CURITIBA" funcionam igualmente.
+
+### Testando o fallback
+
+Para simular a falha dos serviços externos sem precisar desligar e-mail ou Telegram de verdade:
+
+1. **Ative a simulação** abrindo esta URL no mesmo navegador que você vai usar para logar:
+
+```
+http://localhost:8000/backend/api/admin-simulate-3p-fail.php?enable=1
+```
+
+2. **Faça o login normalmente** em `/frontend/admin-login.html` — o e-mail vai "falhar" e você será redirecionado para a tela de perguntas de segurança.
+
+3. **Desative a simulação** após o teste:
+
+```
+http://localhost:8000/backend/api/admin-simulate-3p-fail.php?enable=0
+```
+
+> A simulação fica gravada na sessão do seu navegador e não afeta outros usuários.
+
 ## Logs de auditoria
 
 Todas as ações relevantes são registradas na tabela `audit_logs` do banco de dados e ficam visíveis no painel administrativo (aba "Logs de auditoria").
@@ -86,6 +134,8 @@ Todas as ações relevantes são registradas na tabela `audit_logs` do banco de 
 | Ação | Quando ocorre |
 |---|---|
 | `admin.login` | Login do admin concluído (após Telegram 2FA) |
+| `admin.login_via_security_questions` | Login do admin via perguntas de segurança (fallback) |
+| `admin.security_questions_locked` | Conta bloqueada por tentativas incorretas nas perguntas |
 | `admin.logout` | Logout do admin |
 | `admin.users_viewed` | Admin abriu a lista de usuários |
 | `admin.directory_viewed` | Admin abriu a lista do diretório |

@@ -159,6 +159,27 @@ CREATE TABLE IF NOT EXISTS telegram_codigos (
         ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS admin_security_questions (
+    id             BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    admin_id       BIGINT UNSIGNED NOT NULL,
+    question_order TINYINT UNSIGNED NOT NULL,
+    question       TEXT NOT NULL,
+    answer_hash    VARCHAR(255) NOT NULL,
+    created_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_asq_order (admin_id, question_order),
+    CONSTRAINT fk_asq_admin FOREIGN KEY (admin_id) REFERENCES admins(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS admin_security_question_lockouts (
+    id              BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    admin_id        BIGINT UNSIGNED NOT NULL,
+    failed_attempts TINYINT UNSIGNED NOT NULL DEFAULT 0,
+    locked_until    DATETIME NULL,
+    UNIQUE KEY uk_asql_admin (admin_id),
+    CONSTRAINT fk_asql_admin FOREIGN KEY (admin_id) REFERENCES admins(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS audit_logs (
     id           BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     actor_type   ENUM('user','admin','system') NOT NULL DEFAULT 'system',

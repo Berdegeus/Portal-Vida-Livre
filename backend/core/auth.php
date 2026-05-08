@@ -733,6 +733,173 @@ function cleanup_telegram_codigos(): void
     )->execute();
 }
 
+// ─── Sessão de perguntas de segurança (fallback de login admin) ───────────────
+
+function start_admin_security_questions_pending(int $adminId, string $from): void
+{
+    ensure_session_started();
+    unset($_SESSION['admin_id'], $_SESSION['admin_2fa_pending'], $_SESSION['admin_2fa_last_reenviar']);
+    $_SESSION['admin_security_questions_pending'] = [
+        'admin_id'   => $adminId,
+        'from'       => $from,
+        'expires_at' => time() + 600,
+    ];
+}
+
+function get_admin_security_questions_pending(): ?array
+{
+    ensure_session_started();
+    $pending = $_SESSION['admin_security_questions_pending'] ?? null;
+
+    if (!is_array($pending)) {
+        return null;
+    }
+
+    if (time() > (int) $pending['expires_at']) {
+        unset($_SESSION['admin_security_questions_pending']);
+        return null;
+    }
+
+    return $pending;
+}
+
+function require_admin_security_questions_pending(): array
+{
+    $pending = get_admin_security_questions_pending();
+
+    if ($pending === null) {
+        error_response('Sessao expirada. Solicite um novo acesso.', [], 401);
+    }
+
+    return $pending;
+}
+
+function clear_admin_security_questions_pending(): void
+{
+    ensure_session_started();
+    unset($_SESSION['admin_security_questions_pending']);
+}
+
+// ─── Perguntas de segurança ───────────────────────────────────────────────────
+
+function admin_has_security_questions(int $adminId): bool
+{
+    $stmt = db()->prepare(
+        'SELECT COUNT(*) FROM admin_security_questions WHERE admin_id = :admin_id'
+    );
+    $stmt->execute(['admin_id' => $adminId]);
+    return (int) $stmt->fetchColumn() >= 3;
+}
+
+function get_admin_security_questions(int $adminId): array
+{
+    $stmt = db()->prepare(
+        'SELECT question_order, question
+         FROM admin_security_questions
+         WHERE admin_id = :admin_id
+         ORDER BY question_order ASC'
+    );
+    $stmt->execute(['admin_id' => $adminId]);
+    return $stmt->fetchAll() ?: [];
+}
+
+function verify_admin_security_answers(int $adminId, array $answers): bool
+{
+    $stmt = db()->prepare(
+        'SELECT question_order, answer_hash
+         FROM admin_security_questions
+         WHERE admin_id = :admin_id
+         ORDER BY question_order ASC'
+    );
+    $stmt->execute(['admin_id' => $adminId]);
+    $rows = $stmt->fetchAll();
+
+    if (count($rows) !== 3 || count($answers) !== 3) {
+        return false;
+    }
+
+    foreach ($rows as $i => $row) {
+        $normalized = mb_strtolower(trim((string) ($answers[$i] ?? '')));
+        if ($normalized === '' || !password_verify($normalized, (string) $row['answer_hash'])) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+// ─── Bloqueio por tentativas incorretas nas perguntas de segurança ────────────
+
+function is_admin_security_questions_locked(int $adminId): bool
+{
+    $stmt = db()->prepare(
+        'SELECT locked_until FROM admin_security_question_lockouts
+         WHERE admin_id = :admin_id LIMIT 1'
+    );
+    $stmt->execute(['admin_id' => $adminId]);
+    $row = $stmt->fetch();
+
+    if (!is_array($row) || $row['locked_until'] === null) {
+        return false;
+    }
+
+    if (strtotime((string) $row['locked_until']) <= time()) {
+        clear_admin_security_question_lockout($adminId);
+        return false;
+    }
+
+    return true;
+}
+
+function get_admin_security_question_lockout_seconds(int $adminId): int
+{
+    $stmt = db()->prepare(
+        'SELECT locked_until FROM admin_security_question_lockouts
+         WHERE admin_id = :admin_id LIMIT 1'
+    );
+    $stmt->execute(['admin_id' => $adminId]);
+    $row = $stmt->fetch();
+
+    if (!is_array($row) || $row['locked_until'] === null) {
+        return 0;
+    }
+
+    return max(0, (int) strtotime((string) $row['locked_until']) - time());
+}
+
+function increment_admin_security_question_attempts(int $adminId): int
+{
+    $stmt = db()->prepare(
+        'SELECT failed_attempts FROM admin_security_question_lockouts
+         WHERE admin_id = :admin_id LIMIT 1'
+    );
+    $stmt->execute(['admin_id' => $adminId]);
+    $row = $stmt->fetch();
+
+    $attempts    = is_array($row) ? (int) $row['failed_attempts'] + 1 : 1;
+    $lockedUntil = $attempts >= 2 ? date('Y-m-d H:i:s', time() + 86400) : null;
+
+    db()->prepare(
+        'INSERT INTO admin_security_question_lockouts (admin_id, failed_attempts, locked_until)
+         VALUES (:admin_id, :attempts, :locked_until)
+         ON DUPLICATE KEY UPDATE failed_attempts = :attempts2, locked_until = :locked_until2'
+    )->execute([
+        'admin_id'      => $adminId,
+        'attempts'      => $attempts,
+        'locked_until'  => $lockedUntil,
+        'attempts2'     => $attempts,
+        'locked_until2' => $lockedUntil,
+    ]);
+
+    return $attempts;
+}
+
+function clear_admin_security_question_lockout(int $adminId): void
+{
+    db()->prepare('DELETE FROM admin_security_question_lockouts WHERE admin_id = :admin_id')
+        ->execute(['admin_id' => $adminId]);
+}
+
 function two_factor_status_array(array $user): array
 {
     $userId = (int) ($user['id'] ?? 0);

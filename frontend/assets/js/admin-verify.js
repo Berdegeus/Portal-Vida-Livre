@@ -24,6 +24,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         sessionStorage.setItem("admin_2fa_codigo", data.codigo);
         sessionStorage.setItem("admin_2fa_bot", data.bot_username);
         window.location.replace("/frontend/admin-vinculacao.html");
+      } else if (data.step === "security_questions") {
+        window.location.replace("/frontend/admin-security-questions.html");
       } else {
         window.location.replace("/frontend/admin-2fa.html");
       }
