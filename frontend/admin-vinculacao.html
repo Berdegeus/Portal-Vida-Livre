@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="/frontend/">
+    <title>Vincular Telegram | Portal Vida Livre</title>
+    <link rel="stylesheet" href="./assets/css/styles.css">
+    <style>
+        body {
+            background: var(--gray-900);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .admin-card {
+            background: var(--gray-800);
+            border: 1px solid var(--gray-700);
+            border-radius: var(--radius-lg);
+            padding: 48px 40px;
+            width: 100%;
+            max-width: 440px;
+            box-shadow: var(--shadow-xl);
+            text-align: center;
+        }
+
+        .admin-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(245, 158, 11, 0.15);
+            border: 1px solid rgba(245, 158, 11, 0.35);
+            color: var(--amber-400);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            padding: 4px 10px;
+            border-radius: var(--radius-full);
+            margin-bottom: 24px;
+        }
+
+        .admin-card h1 {
+            font-family: var(--font-display);
+            font-size: 24px;
+            color: #FFFFFF;
+            margin: 0 0 8px;
+        }
+
+        .admin-card .subtitle {
+            color: var(--gray-400);
+            font-size: 14px;
+            margin: 0;
+            line-height: 1.6;
+        }
+
+        .spinner {
+            width: 36px;
+            height: 36px;
+            border: 3px solid var(--gray-700);
+            border-top-color: var(--amber-500);
+            border-radius: 50%;
+            animation: spin 0.75s linear infinite;
+            margin: 0 auto 24px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .code-box {
+            background: var(--gray-900);
+            border: 2px solid var(--amber-500);
+            border-radius: var(--radius-md);
+            padding: 20px 32px;
+            margin: 28px 0 20px;
+            display: inline-block;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .code-box .code-label {
+            color: var(--gray-400);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .code-box .code-digits {
+            font-family: var(--font-mono, monospace);
+            font-size: 48px;
+            font-weight: 700;
+            color: var(--amber-400);
+            letter-spacing: 0.2em;
+            line-height: 1;
+        }
+
+        .instructions {
+            background: rgba(59, 130, 246, 0.08);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: var(--radius-sm);
+            padding: 16px 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .instructions ol {
+            margin: 0;
+            padding-left: 20px;
+            color: var(--gray-300);
+            font-size: 14px;
+            line-height: 1.8;
+        }
+
+        .bot-link {
+            color: #60a5fa;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .bot-link:hover {
+            text-decoration: underline;
+        }
+
+        .status-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+        }
+
+        .status-icon--success {
+            background: rgba(52, 211, 153, 0.15);
+            color: #34d399;
+        }
+
+        .status-icon--warning {
+            background: rgba(251, 191, 36, 0.15);
+            color: #fbbf24;
+        }
+
+        .status-icon--error {
+            background: rgba(248, 113, 113, 0.15);
+            color: #f87171;
+        }
+
+        .btn-secondary {
+            display: inline-block;
+            background: transparent;
+            border: 1px solid var(--gray-600);
+            color: var(--gray-300);
+            border-radius: var(--radius-sm);
+            padding: 11px 24px;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: var(--font-body);
+            cursor: pointer;
+            transition: border-color 0.2s, color 0.2s;
+            margin-top: 20px;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--gray-400);
+            color: #fff;
+        }
+
+        .btn-secondary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .admin-footer {
+            margin-top: 28px;
+        }
+
+        .admin-footer a {
+            color: var(--gray-500);
+            font-size: 13px;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .admin-footer a:hover {
+            color: var(--gray-300);
+        }
+
+        .poll-status {
+            color: var(--gray-500);
+            font-size: 12px;
+            margin-top: 16px;
+        }
+
+        .error-msg {
+            background: rgba(248, 113, 113, 0.12);
+            border: 1px solid rgba(248, 113, 113, 0.3);
+            color: #fca5a5;
+            border-radius: var(--radius-sm);
+            padding: 12px 16px;
+            font-size: 14px;
+            margin-top: 20px;
+        }
+
+        .hidden { display: none; }
+    </style>
+</head>
+
+<body>
+    <div class="admin-card">
+
+        <!-- Estado: aguardando vinculação -->
+        <div id="state-waiting">
+            <span class="admin-badge">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+                Verificação em 2 etapas
+            </span>
+            <h1>Vincule seu Telegram</h1>
+            <p class="subtitle">Esta é a primeira vez que você acessa. Abra o bot e envie o código abaixo.</p>
+
+            <div class="code-box">
+                <div class="code-label">Código de vinculação</div>
+                <div class="code-digits" id="codigo-display">----</div>
+            </div>
+
+            <div class="instructions">
+                <ol>
+                    <li>Abra o bot: <a class="bot-link" id="bot-link" href="#" target="_blank" rel="noopener">@bot</a></li>
+                    <li>Clique em <strong>Iniciar</strong> se necessário</li>
+                    <li>Envie o código de 4 dígitos acima</li>
+                </ol>
+            </div>
+
+            <div class="spinner"></div>
+            <p class="subtitle">Aguardando vinculação...</p>
+            <p class="poll-status" id="poll-status"></p>
+        </div>
+
+        <!-- Estado: sucesso -->
+        <div id="state-success" class="hidden">
+            <div class="status-icon status-icon--success">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                </svg>
+            </div>
+            <h1>Telegram vinculado!</h1>
+            <p class="subtitle">Vinculação concluída. Redirecionando para o painel...</p>
+        </div>
+
+        <!-- Estado: código expirado -->
+        <div id="state-expired" class="hidden">
+            <div class="status-icon status-icon--warning">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+            </div>
+            <h1>Código expirado</h1>
+            <p class="subtitle">O código de vinculação expirou. Gere um novo para continuar.</p>
+            <button class="btn-secondary" id="btn-reenviar">Gerar novo código</button>
+            <div class="error-msg hidden" id="reenviar-error"></div>
+        </div>
+
+        <!-- Estado: erro -->
+        <div id="state-error" class="hidden">
+            <div class="status-icon status-icon--error">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+            </div>
+            <h1>Sessão expirada</h1>
+            <p class="subtitle" id="error-message">Sua sessão expirou. Solicite um novo link de acesso.</p>
+            <div class="admin-footer">
+                <a href="/frontend/admin-login.html">Solicitar novo link</a>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="./assets/js/api.js" defer></script>
+    <script src="./assets/js/admin-vinculacao.js" defer></script>
+</body>
+
+</html>

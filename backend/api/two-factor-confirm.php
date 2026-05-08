@@ -69,6 +69,12 @@ try {
     error_response('Nao foi possivel ativar o 2FA.', [], 500);
 }
 
+log_audit('user.2fa_enabled', [
+    'actor_type'  => 'user',
+    'actor_id'    => $user['id'],
+    'actor_email' => $user['email'],
+]);
+
 success_response('2FA ativado com sucesso.', [
     'two_factor' => $updatedUser !== null ? two_factor_status_array($updatedUser) : null,
     'backup_codes' => $backupCodes,

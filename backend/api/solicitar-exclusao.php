@@ -34,11 +34,20 @@ if (!verify_current_password((int) $usuarioSessao['id'], $senha)) {
     error_response('Verifique os campos informados.', $errors, 422);
 }
 
+// Captura o e-mail antes de excluir para o log de auditoria
+$_userParaLog = find_user_by_id((int) $usuarioSessao['id']);
+
 // Exclui o usuário -> o ON DELETE CASCADE no schema remove todos os dados relacionados:
 // email_verification_tokens, password_reset_tokens, user_backup_codes,
 // totp_secrets, user_directory_subscriptions
 $statement = db()->prepare('DELETE FROM users WHERE id = :id');
 $statement->execute(['id' => (int) $usuarioSessao['id']]);
+
+log_audit('user.account_deleted', [
+    'actor_type'  => 'user',
+    'actor_id'    => $usuarioSessao['id'],
+    'actor_email' => $_userParaLog['email'] ?? ($usuarioSessao['email'] ?? null),
+]);
 
 // Encerra a sessão após excluir a conta
 logout_user();
