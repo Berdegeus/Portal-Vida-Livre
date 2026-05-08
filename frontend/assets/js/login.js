@@ -15,6 +15,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   // toggle password --------------------
   PortalVidaLivreAuth.bindTogglePassword(form);
 
+  const captchaWidget = CaptchaWidget.init(document.getElementById("captcha-widget"));
+
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     PortalVidaLivreAuth.clearMessage();
@@ -32,6 +34,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       errors.password = ["Informe sua senha."];
     }
 
+    const humanCheck = document.getElementById("captcha_human");
+    if (!humanCheck || !humanCheck.checked) {
+      PortalVidaLivreAuth.showMessage("Confirme que voce nao e um robo marcando a caixa.", "error");
+      return;
+    }
+
     if (Object.keys(errors).length > 0) {
       PortalVidaLivreAuth.applyErrors(form, errors);
       PortalVidaLivreAuth.showMessage("Verifique os campos informados.", "error");
@@ -39,7 +47,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     try {
-      const response = await PortalVidaLivreApi.post("login.php", data, { csrf: true });
+      const response = await PortalVidaLivreApi.post("login.php", {
+        ...data,
+        captcha_answer: captchaWidget ? captchaWidget.getAnswer() : "",
+      }, { csrf: true });
 
       if (response.data?.requires_2fa) {
         const twoFactorUrl = new URL("/frontend/two-factor.html", window.location.origin);
@@ -54,6 +65,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     } catch (error) {
       PortalVidaLivreAuth.applyErrors(form, error.errors || {});
       PortalVidaLivreAuth.showMessage(error.message || "Nao foi possivel realizar o login.", "error");
+      if (error.errors?.captcha && captchaWidget) captchaWidget.reset();
     }
   });
 });
