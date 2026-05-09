@@ -124,26 +124,29 @@ function hash_raw_token(string $rawToken): string
     return hash('sha256', $rawToken);
 }
 
-function store_email_verification_token(\PDO $pdo, int $userId): string
+function store_email_verification_token(\PDO $pdo, int $userId): array
 {
-    $rawToken = create_raw_token();
-    $tokenHash = hash_raw_token($rawToken);
-    $expiresAt = date('Y-m-d H:i:s', time() + 86400);
+    $rawToken   = create_raw_token();
+    $tokenHash  = hash_raw_token($rawToken);
+    $codigo     = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+    $codigoHash = hash('sha256', $codigo);
+    $expiresAt  = date('Y-m-d H:i:s', time() + 86400);
 
     $deleteStatement = $pdo->prepare('DELETE FROM email_verification_tokens WHERE user_id = :user_id');
     $deleteStatement->execute(['user_id' => $userId]);
 
     $insertStatement = $pdo->prepare(
-        'INSERT INTO email_verification_tokens (user_id, token_hash, expires_at)
-         VALUES (:user_id, :token_hash, :expires_at)'
+        'INSERT INTO email_verification_tokens (user_id, token_hash, codigo_hash, expires_at)
+         VALUES (:user_id, :token_hash, :codigo_hash, :expires_at)'
     );
     $insertStatement->execute([
-        'user_id' => $userId,
+        'user_id'    => $userId,
         'token_hash' => $tokenHash,
+        'codigo_hash' => $codigoHash,
         'expires_at' => $expiresAt,
     ]);
 
-    return $rawToken;
+    return ['token' => $rawToken, 'codigo' => $codigo];
 }
 
 function register_user_and_send_verification_email(string $name, string $email, string $password): int
@@ -152,14 +155,14 @@ function register_user_and_send_verification_email(string $name, string $email, 
     $pdo->beginTransaction();
 
     try {
-        $userId = create_user($name, $email, $password);
-        $token = store_email_verification_token($pdo, $userId);
+        $userId    = create_user($name, $email, $password);
+        $tokenData = store_email_verification_token($pdo, $userId);
 
         send_email_verification_email([
             'id' => $userId,
             'name' => $name,
             'email' => $email,
-        ], $token);
+        ], $tokenData['token'], $tokenData['codigo']);
 
         $pdo->commit();
     } catch (\Throwable $throwable) {
@@ -179,8 +182,8 @@ function send_fresh_email_verification_link(array $user): void
     $pdo->beginTransaction();
 
     try {
-        $token = store_email_verification_token($pdo, (int) $user['id']);
-        send_email_verification_email($user, $token);
+        $tokenData = store_email_verification_token($pdo, (int) $user['id']);
+        send_email_verification_email($user, $tokenData['token'], $tokenData['codigo']);
         $pdo->commit();
     } catch (\Throwable $throwable) {
         if ($pdo->inTransaction()) {
@@ -421,6 +424,38 @@ function find_email_verification_token_record(string $rawToken): ?array
     return is_array($record) ? $record : null;
 }
 
+function find_email_verification_token_by_codigo(string $codigo): ?array
+{
+    if (strlen($codigo) !== 6 || !ctype_digit($codigo)) {
+        return null;
+    }
+
+    $codigoHash = hash('sha256', $codigo);
+    $stmt = db()->prepare(
+        'SELECT evt.id, evt.user_id, evt.expires_at, evt.used_at, u.name, u.email, u.email_verified_at
+         FROM email_verification_tokens evt
+         INNER JOIN users u ON u.id = evt.user_id
+         WHERE evt.codigo_hash = :codigo_hash
+         LIMIT 1'
+    );
+    $stmt->execute(['codigo_hash' => $codigoHash]);
+    $record = $stmt->fetch();
+
+    if (!is_array($record)) {
+        return null;
+    }
+
+    if ($record['used_at'] !== null) {
+        return null;
+    }
+
+    if (strtotime((string) $record['expires_at']) < time()) {
+        return null;
+    }
+
+    return $record;
+}
+
 function invalidate_user_email_verification_tokens(int $userId): void
 {
     $statement = db()->prepare(
@@ -479,10 +514,12 @@ function find_admin_by_id(int $id): ?array
     return is_array($admin) ? $admin : null;
 }
 
-function create_admin_login_token(int $adminId): string
+function create_admin_login_token(int $adminId): array
 {
-    $rawToken = create_raw_token();
+    $rawToken  = create_raw_token();
     $tokenHash = hash_raw_token($rawToken);
+    $codigo    = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+    $codigoHash = hash('sha256', $codigo);
     $expiresAt = date('Y-m-d H:i:s', time() + 900); // 15 minutes
     $pdo = db();
 
@@ -490,15 +527,59 @@ function create_admin_login_token(int $adminId): string
         ->execute(['admin_id' => $adminId]);
 
     $pdo->prepare(
-        'INSERT INTO admin_login_tokens (admin_id, token_hash, expires_at)
-         VALUES (:admin_id, :token_hash, :expires_at)'
+        'INSERT INTO admin_login_tokens (admin_id, token_hash, codigo_hash, expires_at)
+         VALUES (:admin_id, :token_hash, :codigo_hash, :expires_at)'
     )->execute([
-        'admin_id' => $adminId,
+        'admin_id'   => $adminId,
         'token_hash' => $tokenHash,
+        'codigo_hash' => $codigoHash,
         'expires_at' => $expiresAt,
     ]);
 
-    return $rawToken;
+    return ['token' => $rawToken, 'codigo' => $codigo];
+}
+
+function find_admin_login_token_by_codigo(string $codigo): ?array
+{
+    if (strlen($codigo) !== 6 || !ctype_digit($codigo)) {
+        return null;
+    }
+
+    $codigoHash = hash('sha256', $codigo);
+    $stmt = db()->prepare(
+        'SELECT alt.id, alt.admin_id, alt.expires_at, alt.used_at, alt.codigo_attempts,
+                a.name, a.email
+         FROM admin_login_tokens alt
+         INNER JOIN admins a ON a.id = alt.admin_id
+         WHERE alt.codigo_hash = :codigo_hash
+         LIMIT 1'
+    );
+    $stmt->execute(['codigo_hash' => $codigoHash]);
+    $record = $stmt->fetch();
+
+    if (!is_array($record)) {
+        return null;
+    }
+
+    if ($record['used_at'] !== null) {
+        return null;
+    }
+
+    if (strtotime((string) $record['expires_at']) < time()) {
+        return null;
+    }
+
+    if ((int) $record['codigo_attempts'] >= 5) {
+        return null;
+    }
+
+    return $record;
+}
+
+function increment_admin_codigo_attempts(int $tokenId): void
+{
+    db()->prepare('UPDATE admin_login_tokens SET codigo_attempts = codigo_attempts + 1 WHERE id = :id')
+        ->execute(['id' => $tokenId]);
 }
 
 function find_admin_login_token(string $rawToken): ?array

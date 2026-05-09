@@ -7,6 +7,34 @@
     <base href="/frontend/">
     <title>Cadastro | Portal Vida Livre</title>
     <link rel="stylesheet" href="./assets/css/styles.css">
+    <style>
+        #section-verificar { display: none; }
+
+        .verify-code-input {
+            width: 100%;
+            font-size: 32px;
+            font-weight: bold;
+            letter-spacing: 12px;
+            text-align: center;
+            padding: 14px 16px;
+            box-sizing: border-box;
+        }
+
+        .btn-reenviar-link {
+            background: none;
+            border: none;
+            color: var(--gray-500, #6b7280);
+            font-size: 13px;
+            cursor: pointer;
+            padding: 0;
+            font-family: inherit;
+            text-decoration: underline;
+            transition: color 0.2s;
+        }
+
+        .btn-reenviar-link:hover { color: var(--text-primary, #292524); }
+        .btn-reenviar-link:disabled { opacity: 0.5; cursor: not-allowed; text-decoration: none; }
+    </style>
 </head>
 
 <body data-page="cadastro">
@@ -46,7 +74,43 @@
     </header>
 
     <main class="container">
-        <section class="panel">
+
+        <!-- Fase 2: confirmar e-mail -->
+        <section class="panel" id="section-verificar">
+            <h1>Confirme seu e-mail</h1>
+            <p class="page-text">
+                Enviamos um link e um <strong>código de 6 dígitos</strong> para o seu e-mail.<br>
+                Clique no link ou insira o código abaixo.
+            </p>
+
+            <div class="message hidden" data-verificar-message></div>
+
+            <form id="verificar-form" class="form" novalidate>
+                <div class="form-group">
+                    <label for="codigo-verificacao">Código de confirmação</label>
+                    <input
+                        id="codigo-verificacao"
+                        type="text"
+                        inputmode="numeric"
+                        autocomplete="one-time-code"
+                        maxlength="6"
+                        placeholder="000000"
+                        class="verify-code-input"
+                        aria-label="Código de 6 dígitos"
+                    >
+                    <small class="field-error" id="codigo-field-error"></small>
+                </div>
+
+                <button type="submit" id="btn-verificar">Confirmar cadastro</button>
+            </form>
+
+            <p class="page-text" style="margin-top:20px;">
+                <button type="button" id="btn-reenviar" class="btn-reenviar-link">Reenviar e-mail</button>
+            </p>
+        </section>
+
+        <!-- Fase 1: formulário de cadastro -->
+        <section class="panel" id="section-cadastro">
             <h1>Criar conta</h1>
             <p class="page-text">Cadastre-se para acessar o portal. </p>
             <p class="page-text">É profissional de saúde? Realize seu cadastro como profissional <a href="./cadastro-profissional.html">clicando aqui</a>.</p>
@@ -178,7 +242,7 @@
 
                 <button type="submit">Criar conta</button>
             </form>
-        </section>
+        </section><!-- /section-cadastro -->
     </main>
 
     <!-- MODAL DA POLITICA DE PRIVACIDADE  -->

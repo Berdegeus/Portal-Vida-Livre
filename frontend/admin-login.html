@@ -170,6 +170,61 @@
         .admin-footer a:hover {
             color: var(--gray-300);
         }
+
+        /* Fase 2: entrada do código */
+        #section-codigo { display: none; }
+
+        .code-hint {
+            color: var(--gray-400);
+            font-size: 13px;
+            margin: 0 0 24px;
+            line-height: 1.6;
+        }
+
+        .code-hint strong {
+            color: var(--gray-200);
+        }
+
+        .code-input-wrap {
+            margin-bottom: 8px;
+        }
+
+        .code-input-wrap input {
+            width: 100%;
+            background: var(--gray-900);
+            border: 1px solid var(--gray-600);
+            border-radius: var(--radius-sm);
+            color: #FFFFFF;
+            font-size: 32px;
+            font-weight: bold;
+            letter-spacing: 12px;
+            text-align: center;
+            padding: 14px 16px;
+            outline: none;
+            box-sizing: border-box;
+            font-family: var(--font-body);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .code-input-wrap input:focus {
+            border-color: var(--amber-500);
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+        }
+
+        .resend-link {
+            background: none;
+            border: none;
+            color: var(--gray-500);
+            font-size: 13px;
+            cursor: pointer;
+            padding: 0;
+            font-family: var(--font-body);
+            text-decoration: underline;
+            transition: color 0.2s;
+        }
+
+        .resend-link:hover { color: var(--gray-300); }
+        .resend-link:disabled { opacity: 0.5; cursor: not-allowed; text-decoration: none; }
     </style>
 </head>
 
@@ -182,23 +237,58 @@
             Área restrita
         </span>
 
-        <h1>Acesso Administrativo</h1>
-        <p class="subtitle">Informe seu e-mail de administrador. Você receberá um link de acesso seguro.</p>
+        <!-- Fase 1: solicitar e-mail -->
+        <div id="section-email">
+            <h1>Acesso Administrativo</h1>
+            <p class="subtitle">Informe seu e-mail de administrador. Você receberá um link de acesso seguro.</p>
 
-        <div class="admin-message hidden" data-message></div>
+            <div class="admin-message hidden" data-message></div>
 
-        <form id="admin-login-form" novalidate>
-            <div class="form-group">
-                <label for="email">E-mail</label>
-                <input id="email" name="email" type="email" autocomplete="email"
-                    placeholder="seu@email.com">
-                <small class="field-error" data-error-for="email"></small>
+            <form id="admin-login-form" novalidate>
+                <div class="form-group">
+                    <label for="email">E-mail</label>
+                    <input id="email" name="email" type="email" autocomplete="email"
+                        placeholder="seu@email.com">
+                    <small class="field-error" data-error-for="email"></small>
+                </div>
+
+                <button type="submit" id="submit-btn">Enviar link de acesso</button>
+            </form>
+        </div>
+
+        <!-- Fase 2: inserir código do e-mail -->
+        <div id="section-codigo">
+            <h1>Verifique seu e-mail</h1>
+            <p class="code-hint">
+                Enviamos um link e um <strong>código de 6 dígitos</strong> para o seu e-mail.
+                Clique no link ou insira o código abaixo.
+            </p>
+
+            <div class="admin-message hidden" data-codigo-message></div>
+
+            <form id="codigo-form" novalidate>
+                <div class="code-input-wrap">
+                    <input
+                        id="input-codigo"
+                        type="text"
+                        inputmode="numeric"
+                        autocomplete="one-time-code"
+                        maxlength="6"
+                        placeholder="000000"
+                        aria-label="Código de 6 dígitos"
+                    >
+                </div>
+                <small class="field-error" id="codigo-field-error"></small>
+
+                <button type="submit" id="submit-codigo-btn">Verificar código</button>
+            </form>
+
+            <div class="admin-footer" style="margin-top:20px;">
+                <button type="button" id="btn-reenviar" class="resend-link">Reenviar e-mail</button>
             </div>
+        </div>
 
-            <button type="submit" id="submit-btn">Enviar link de acesso</button>
-        </form>
-
-        <div class="admin-footer">
+        <div class="admin-footer" id="footer-voltar">
             <a href="/frontend/login.html">&larr; Voltar ao portal</a>
         </div>
     </div>

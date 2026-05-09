@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS email_verification_tokens (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     user_id BIGINT UNSIGNED NOT NULL,
     token_hash CHAR(64) NOT NULL,
+    codigo_hash CHAR(64) NULL,
     expires_at DATETIME NOT NULL,
     used_at DATETIME NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -23,6 +24,9 @@ CREATE TABLE IF NOT EXISTS email_verification_tokens (
         FOREIGN KEY (user_id) REFERENCES users(id)
         ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+ALTER TABLE email_verification_tokens
+    ADD COLUMN IF NOT EXISTS codigo_hash CHAR(64) NULL;
 
 CREATE TABLE IF NOT EXISTS directory_entries (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -130,6 +134,8 @@ CREATE TABLE IF NOT EXISTS admin_login_tokens (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     admin_id BIGINT UNSIGNED NOT NULL,
     token_hash CHAR(64) NOT NULL,
+    codigo_hash CHAR(64) NULL,
+    codigo_attempts TINYINT UNSIGNED NOT NULL DEFAULT 0,
     expires_at DATETIME NOT NULL,
     used_at DATETIME NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -140,6 +146,10 @@ CREATE TABLE IF NOT EXISTS admin_login_tokens (
         FOREIGN KEY (admin_id) REFERENCES admins(id)
         ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+ALTER TABLE admin_login_tokens
+    ADD COLUMN IF NOT EXISTS codigo_hash CHAR(64) NULL,
+    ADD COLUMN IF NOT EXISTS codigo_attempts TINYINT UNSIGNED NOT NULL DEFAULT 0;
 
 
 

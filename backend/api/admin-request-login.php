@@ -29,8 +29,8 @@ if ($admin !== null) {
         // Simulation mode: pretend the email failed without actually sending.
     } else {
         try {
-            $token = create_admin_login_token((int) $admin['id']);
-            send_admin_magic_link_email($admin, $token);
+            $tokenData = create_admin_login_token((int) $admin['id']);
+            send_admin_magic_link_email($admin, $tokenData['token'], $tokenData['codigo']);
             $emailSent = true;
         } catch (\Throwable $e) {
             // Email send failed.

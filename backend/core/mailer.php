@@ -137,11 +137,14 @@ function send_password_reset_email(array $user, string $token): void
     deliver_email($user, $subject, $html, $text);
 }
 
-function send_admin_magic_link_email(array $admin, string $token): void
+function send_admin_magic_link_email(array $admin, string $token, string $codigo): void
 {
-    $verifyUrl = frontend_url('admin-verify.html?token=' . urlencode($token));
+    $verifyUrl  = frontend_url('admin-verify.html?token=' . urlencode($token));
+    $manualUrl  = frontend_url('admin-login.html');
     $name = htmlspecialchars((string) $admin['name'], ENT_QUOTES, 'UTF-8');
     $url  = htmlspecialchars($verifyUrl, ENT_QUOTES, 'UTF-8');
+    $manualHref = htmlspecialchars($manualUrl, ENT_QUOTES, 'UTF-8');
+    $codigoSafe = htmlspecialchars($codigo, ENT_QUOTES, 'UTF-8');
 
     $subject = 'Acesso administrativo - Portal Vida Livre';
 
@@ -159,20 +162,31 @@ function send_admin_magic_link_email(array $admin, string $token): void
             <a href="' . $url . '" style="color:#f59e0b;">' . $url . '</a>
         </p>
         <hr style="border:none;border-top:1px solid #eeeeee;margin:24px 0;">
+        <p style="margin:0 0 8px;font-size:13px;color:#555555;"><strong>Se o link for bloqueado pelo servidor de e-mail</strong>, volte à página de acesso administrativo e insira o código abaixo no campo que aparece após enviar seu e-mail:</p>
+        <p style="text-align:center;margin:12px 0;">
+            <span style="display:inline-block;font-size:32px;font-weight:bold;letter-spacing:8px;color:#292524;background:#FEF3C7;border:2px solid #FCD34D;border-radius:8px;padding:12px 24px;">' . $codigoSafe . '</span>
+        </p>
+        <p style="text-align:center;margin:0 0 24px;font-size:13px;">
+            <a href="' . $manualHref . '" style="color:#f59e0b;">Página de acesso administrativo</a>
+        </p>
+        <hr style="border:none;border-top:1px solid #eeeeee;margin:24px 0;">
         <p style="margin:0;font-size:13px;color:#888888;">Se você não solicitou este acesso, ignore este e-mail com segurança.</p>
     ';
 
     $html = email_template($subject, $body);
-    $text = "Olá, {$admin['name']}.\n\nAcesse o link abaixo para entrar no painel administrativo:\n{$verifyUrl}\n\nO link expira em 15 minutos e é de uso único.";
+    $text = "Olá, {$admin['name']}.\n\nAcesse o link abaixo para entrar no painel administrativo:\n{$verifyUrl}\n\nO link expira em 15 minutos e é de uso único.\n\n---\nSe o link for bloqueado, acesse {$manualUrl} e insira o código: {$codigo}";
 
     deliver_email($admin, $subject, $html, $text);
 }
 
-function send_email_verification_email(array $user, string $token): void
+function send_email_verification_email(array $user, string $token, string $codigo): void
 {
     $verificationUrl = frontend_url('confirmar-email.html?token=' . urlencode($token));
+    $cadastroUrl     = frontend_url('cadastro.html');
     $name = htmlspecialchars((string) $user['name'], ENT_QUOTES, 'UTF-8');
     $url  = htmlspecialchars($verificationUrl, ENT_QUOTES, 'UTF-8');
+    $cadastroHref = htmlspecialchars($cadastroUrl, ENT_QUOTES, 'UTF-8');
+    $codigoSafe   = htmlspecialchars($codigo, ENT_QUOTES, 'UTF-8');
 
     $subject = 'Confirme seu cadastro - Portal Vida Livre';
 
@@ -190,12 +204,20 @@ function send_email_verification_email(array $user, string $token): void
             <a href="' . $url . '" style="color:#f59e0b;">' . $url . '</a>
         </p>
         <hr style="border:none;border-top:1px solid #eeeeee;margin:24px 0;">
+        <p style="margin:0 0 8px;font-size:13px;color:#555555;"><strong>Se o link for bloqueado pelo servidor de e-mail</strong>, volte à página de cadastro e insira o código abaixo no campo que aparece após criar sua conta:</p>
+        <p style="text-align:center;margin:12px 0;">
+            <span style="display:inline-block;font-size:32px;font-weight:bold;letter-spacing:8px;color:#1a1a2e;background:#FEF3C7;border:2px solid #FCD34D;border-radius:8px;padding:12px 24px;">' . $codigoSafe . '</span>
+        </p>
+        <p style="text-align:center;margin:0 0 24px;font-size:13px;">
+            <a href="' . $cadastroHref . '" style="color:#f59e0b;">Página de cadastro</a>
+        </p>
+        <hr style="border:none;border-top:1px solid #eeeeee;margin:24px 0;">
         <p style="margin:0;font-size:13px;color:#888888;">Se você não solicitou este cadastro, ignore este e-mail.</p>
-        <p style="margin:8px 0 0;font-size:13px;color:#888888;">O link expira em <strong>24 horas</strong>.</p>
+        <p style="margin:8px 0 0;font-size:13px;color:#888888;">O link e o código expiram em <strong>24 horas</strong>.</p>
     ';
 
     $html = email_template($subject, $body);
-    $text = "Olá, {$user['name']}.\n\nConfirme seu cadastro acessando o link abaixo:\n{$verificationUrl}\n\nO link expira em 24 horas.";
+    $text = "Olá, {$user['name']}.\n\nConfirme seu cadastro acessando o link abaixo:\n{$verificationUrl}\n\nSe o link for bloqueado, volte à página de cadastro e insira o código: {$codigo}\n\nO link e o código expiram em 24 horas.";
 
     deliver_email($user, $subject, $html, $text);
 }
