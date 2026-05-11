@@ -124,26 +124,29 @@ function hash_raw_token(string $rawToken): string
     return hash('sha256', $rawToken);
 }
 
-function store_email_verification_token(\PDO $pdo, int $userId): string
+function store_email_verification_token(\PDO $pdo, int $userId): array
 {
-    $rawToken = create_raw_token();
-    $tokenHash = hash_raw_token($rawToken);
-    $expiresAt = date('Y-m-d H:i:s', time() + 86400);
+    $rawToken   = create_raw_token();
+    $tokenHash  = hash_raw_token($rawToken);
+    $codigo     = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+    $codigoHash = hash('sha256', $codigo);
+    $expiresAt  = date('Y-m-d H:i:s', time() + 86400);
 
     $deleteStatement = $pdo->prepare('DELETE FROM email_verification_tokens WHERE user_id = :user_id');
     $deleteStatement->execute(['user_id' => $userId]);
 
     $insertStatement = $pdo->prepare(
-        'INSERT INTO email_verification_tokens (user_id, token_hash, expires_at)
-         VALUES (:user_id, :token_hash, :expires_at)'
+        'INSERT INTO email_verification_tokens (user_id, token_hash, codigo_hash, expires_at)
+         VALUES (:user_id, :token_hash, :codigo_hash, :expires_at)'
     );
     $insertStatement->execute([
-        'user_id' => $userId,
+        'user_id'    => $userId,
         'token_hash' => $tokenHash,
+        'codigo_hash' => $codigoHash,
         'expires_at' => $expiresAt,
     ]);
 
-    return $rawToken;
+    return ['token' => $rawToken, 'codigo' => $codigo];
 }
 
 function register_user_and_send_verification_email(string $name, string $email, string $password): int
@@ -152,14 +155,14 @@ function register_user_and_send_verification_email(string $name, string $email, 
     $pdo->beginTransaction();
 
     try {
-        $userId = create_user($name, $email, $password);
-        $token = store_email_verification_token($pdo, $userId);
+        $userId    = create_user($name, $email, $password);
+        $tokenData = store_email_verification_token($pdo, $userId);
 
         send_email_verification_email([
             'id' => $userId,
             'name' => $name,
             'email' => $email,
-        ], $token);
+        ], $tokenData['token'], $tokenData['codigo']);
 
         $pdo->commit();
     } catch (\Throwable $throwable) {
@@ -179,8 +182,8 @@ function send_fresh_email_verification_link(array $user): void
     $pdo->beginTransaction();
 
     try {
-        $token = store_email_verification_token($pdo, (int) $user['id']);
-        send_email_verification_email($user, $token);
+        $tokenData = store_email_verification_token($pdo, (int) $user['id']);
+        send_email_verification_email($user, $tokenData['token'], $tokenData['codigo']);
         $pdo->commit();
     } catch (\Throwable $throwable) {
         if ($pdo->inTransaction()) {
@@ -421,6 +424,38 @@ function find_email_verification_token_record(string $rawToken): ?array
     return is_array($record) ? $record : null;
 }
 
+function find_email_verification_token_by_codigo(string $codigo): ?array
+{
+    if (strlen($codigo) !== 6 || !ctype_digit($codigo)) {
+        return null;
+    }
+
+    $codigoHash = hash('sha256', $codigo);
+    $stmt = db()->prepare(
+        'SELECT evt.id, evt.user_id, evt.expires_at, evt.used_at, u.name, u.email, u.email_verified_at
+         FROM email_verification_tokens evt
+         INNER JOIN users u ON u.id = evt.user_id
+         WHERE evt.codigo_hash = :codigo_hash
+         LIMIT 1'
+    );
+    $stmt->execute(['codigo_hash' => $codigoHash]);
+    $record = $stmt->fetch();
+
+    if (!is_array($record)) {
+        return null;
+    }
+
+    if ($record['used_at'] !== null) {
+        return null;
+    }
+
+    if (strtotime((string) $record['expires_at']) < time()) {
+        return null;
+    }
+
+    return $record;
+}
+
 function invalidate_user_email_verification_tokens(int $userId): void
 {
     $statement = db()->prepare(
@@ -455,6 +490,495 @@ function update_user_password(int $userId, string $password): void
         'password_hash' => password_hash($password, PASSWORD_DEFAULT),
         'id' => $userId,
     ]);
+}
+
+function find_admin_by_email(string $email): ?array
+{
+    $statement = db()->prepare(
+        'SELECT id, name, email, created_at FROM admins WHERE email = :email LIMIT 1'
+    );
+    $statement->execute(['email' => $email]);
+    $admin = $statement->fetch();
+
+    return is_array($admin) ? $admin : null;
+}
+
+function find_admin_by_id(int $id): ?array
+{
+    $statement = db()->prepare(
+        'SELECT id, name, email, created_at FROM admins WHERE id = :id LIMIT 1'
+    );
+    $statement->execute(['id' => $id]);
+    $admin = $statement->fetch();
+
+    return is_array($admin) ? $admin : null;
+}
+
+function create_admin_login_token(int $adminId): array
+{
+    $rawToken  = create_raw_token();
+    $tokenHash = hash_raw_token($rawToken);
+    $codigo    = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+    $codigoHash = hash('sha256', $codigo);
+    $expiresAt = date('Y-m-d H:i:s', time() + 900); // 15 minutes
+    $pdo = db();
+
+    $pdo->prepare('DELETE FROM admin_login_tokens WHERE admin_id = :admin_id')
+        ->execute(['admin_id' => $adminId]);
+
+    $pdo->prepare(
+        'INSERT INTO admin_login_tokens (admin_id, token_hash, codigo_hash, expires_at)
+         VALUES (:admin_id, :token_hash, :codigo_hash, :expires_at)'
+    )->execute([
+        'admin_id'   => $adminId,
+        'token_hash' => $tokenHash,
+        'codigo_hash' => $codigoHash,
+        'expires_at' => $expiresAt,
+    ]);
+
+    return ['token' => $rawToken, 'codigo' => $codigo];
+}
+
+function find_admin_login_token_by_codigo(string $codigo): ?array
+{
+    if (strlen($codigo) !== 6 || !ctype_digit($codigo)) {
+        return null;
+    }
+
+    $codigoHash = hash('sha256', $codigo);
+    $stmt = db()->prepare(
+        'SELECT alt.id, alt.admin_id, alt.expires_at, alt.used_at, alt.codigo_attempts,
+                a.name, a.email
+         FROM admin_login_tokens alt
+         INNER JOIN admins a ON a.id = alt.admin_id
+         WHERE alt.codigo_hash = :codigo_hash
+         LIMIT 1'
+    );
+    $stmt->execute(['codigo_hash' => $codigoHash]);
+    $record = $stmt->fetch();
+
+    if (!is_array($record)) {
+        return null;
+    }
+
+    if ($record['used_at'] !== null) {
+        return null;
+    }
+
+    if (strtotime((string) $record['expires_at']) < time()) {
+        return null;
+    }
+
+    if ((int) $record['codigo_attempts'] >= 5) {
+        return null;
+    }
+
+    return $record;
+}
+
+function increment_admin_codigo_attempts(int $tokenId): void
+{
+    db()->prepare('UPDATE admin_login_tokens SET codigo_attempts = codigo_attempts + 1 WHERE id = :id')
+        ->execute(['id' => $tokenId]);
+}
+
+function find_admin_login_token(string $rawToken): ?array
+{
+    if ($rawToken === '') {
+        return null;
+    }
+
+    $statement = db()->prepare(
+        'SELECT alt.id, alt.admin_id, alt.expires_at, alt.used_at, a.name, a.email
+         FROM admin_login_tokens alt
+         INNER JOIN admins a ON a.id = alt.admin_id
+         WHERE alt.token_hash = :token_hash
+         LIMIT 1'
+    );
+    $statement->execute(['token_hash' => hash_raw_token($rawToken)]);
+    $record = $statement->fetch();
+
+    if (!is_array($record)) {
+        return null;
+    }
+
+    if ($record['used_at'] !== null) {
+        return null;
+    }
+
+    if (strtotime((string) $record['expires_at']) < time()) {
+        return null;
+    }
+
+    return $record;
+}
+
+function consume_admin_login_token(int $tokenId): void
+{
+    db()->prepare('UPDATE admin_login_tokens SET used_at = NOW() WHERE id = :id')
+        ->execute(['id' => $tokenId]);
+}
+
+function login_admin(array $admin): array
+{
+    ensure_session_started();
+    session_regenerate_id(true);
+    $_SESSION['admin_id'] = (int) $admin['id'];
+    unset($_SESSION['csrf_token']);
+
+    return [
+        'id'         => (int) $admin['id'],
+        'name'       => (string) $admin['name'],
+        'email'      => (string) $admin['email'],
+        'created_at' => $admin['created_at'] ?? null,
+    ];
+}
+
+function current_admin(): ?array
+{
+    ensure_session_started();
+
+    $adminId = $_SESSION['admin_id'] ?? null;
+
+    if (!is_int($adminId) && !ctype_digit((string) $adminId)) {
+        return null;
+    }
+
+    $admin = find_admin_by_id((int) $adminId);
+
+    if ($admin === null) {
+        unset($_SESSION['admin_id']);
+        return null;
+    }
+
+    return [
+        'id'         => (int) $admin['id'],
+        'name'       => (string) $admin['name'],
+        'email'      => (string) $admin['email'],
+        'created_at' => $admin['created_at'] ?? null,
+    ];
+}
+
+function require_admin(): array
+{
+    $admin = current_admin();
+
+    if ($admin === null) {
+        error_response('Acesso restrito.', [], 401);
+    }
+
+    return $admin;
+}
+
+function logout_admin(): void
+{
+    ensure_session_started();
+    unset($_SESSION['admin_id'], $_SESSION['csrf_token']);
+    session_regenerate_id(true);
+}
+
+// ─── Admin com dados Telegram ─────────────────────────────────────────────────
+
+function find_admin_full_by_id(int $id): ?array
+{
+    $stmt = db()->prepare(
+        'SELECT id, name, email, telegram_chat_id, created_at
+         FROM admins WHERE id = :id LIMIT 1'
+    );
+    $stmt->execute(['id' => $id]);
+    $admin = $stmt->fetch();
+
+    return is_array($admin) ? $admin : null;
+}
+
+// ─── Sessão intermediária de 2FA ──────────────────────────────────────────────
+
+function start_admin_2fa_pending(int $adminId): void
+{
+    ensure_session_started();
+    unset($_SESSION['admin_id']);
+    $_SESSION['admin_2fa_pending'] = [
+        'admin_id'   => $adminId,
+        'expires_at' => time() + 300,
+    ];
+}
+
+function get_admin_2fa_pending(): ?array
+{
+    ensure_session_started();
+    $pending = $_SESSION['admin_2fa_pending'] ?? null;
+
+    if (!is_array($pending)) {
+        return null;
+    }
+
+    if (time() > (int) $pending['expires_at']) {
+        unset($_SESSION['admin_2fa_pending']);
+        return null;
+    }
+
+    return $pending;
+}
+
+function require_admin_2fa_pending(): array
+{
+    $pending = get_admin_2fa_pending();
+
+    if ($pending === null) {
+        error_response('Sessao expirada. Solicite um novo link de acesso.', [], 401);
+    }
+
+    return $pending;
+}
+
+function clear_admin_2fa_pending(): void
+{
+    ensure_session_started();
+    unset($_SESSION['admin_2fa_pending'], $_SESSION['admin_2fa_last_reenviar']);
+}
+
+// ─── Códigos Telegram ─────────────────────────────────────────────────────────
+
+function create_telegram_codigo(int $adminId, string $tipo): string
+{
+    // Remove código anterior deste tipo para este admin
+    db()->prepare('DELETE FROM telegram_codigos WHERE admin_id = :admin_id AND tipo = :tipo')
+        ->execute(['admin_id' => $adminId, 'tipo' => $tipo]);
+
+    $digits = $tipo === 'vinculacao' ? 4 : 6;
+    $max    = (int) str_repeat('9', $digits);
+    $codigo = str_pad((string) random_int(0, $max), $digits, '0', STR_PAD_LEFT);
+
+    db()->prepare(
+        'INSERT INTO telegram_codigos (admin_id, codigo, tipo) VALUES (:admin_id, :codigo, :tipo)'
+    )->execute(['admin_id' => $adminId, 'codigo' => $codigo, 'tipo' => $tipo]);
+
+    return $codigo;
+}
+
+// Usada pelo bot para encontrar o admin que enviou o código de vinculação
+function find_telegram_codigo_vinculacao(string $codigo): ?array
+{
+    $stmt = db()->prepare(
+        'SELECT tc.id, tc.admin_id, a.name
+         FROM telegram_codigos tc
+         JOIN admins a ON a.id = tc.admin_id
+         WHERE tc.codigo    = :codigo
+           AND tc.tipo      = \'vinculacao\'
+           AND tc.usado     = 0
+           AND tc.criado_em > NOW() - INTERVAL 5 MINUTE
+         LIMIT 1'
+    );
+    $stmt->execute(['codigo' => $codigo]);
+    $record = $stmt->fetch();
+
+    return is_array($record) ? $record : null;
+}
+
+// Usada pelo site para validar o código de login digitado pelo admin
+function find_telegram_codigo_login(int $adminId, string $codigo): ?array
+{
+    $stmt = db()->prepare(
+        'SELECT id FROM telegram_codigos
+         WHERE admin_id  = :admin_id
+           AND codigo    = :codigo
+           AND tipo      = \'login\'
+           AND usado     = 0
+           AND criado_em > NOW() - INTERVAL 5 MINUTE
+         LIMIT 1'
+    );
+    $stmt->execute(['admin_id' => $adminId, 'codigo' => $codigo]);
+    $record = $stmt->fetch();
+
+    return is_array($record) ? $record : null;
+}
+
+function marcar_codigo_usado(int $id): void
+{
+    db()->prepare('UPDATE telegram_codigos SET usado = 1 WHERE id = :id')
+        ->execute(['id' => $id]);
+}
+
+function link_admin_telegram(int $adminId, int $chatId): void
+{
+    db()->prepare(
+        'UPDATE admins SET telegram_chat_id = :chat_id WHERE id = :id'
+    )->execute(['chat_id' => $chatId, 'id' => $adminId]);
+}
+
+function cleanup_telegram_codigos(): void
+{
+    // Remove códigos com mais de 10 minutos (expirados + margem)
+    db()->prepare(
+        'DELETE FROM telegram_codigos WHERE criado_em < NOW() - INTERVAL 10 MINUTE'
+    )->execute();
+}
+
+// ─── Sessão de perguntas de segurança (fallback de login admin) ───────────────
+
+function start_admin_security_questions_pending(int $adminId, string $from): void
+{
+    ensure_session_started();
+    unset($_SESSION['admin_id'], $_SESSION['admin_2fa_pending'], $_SESSION['admin_2fa_last_reenviar']);
+    $_SESSION['admin_security_questions_pending'] = [
+        'admin_id'   => $adminId,
+        'from'       => $from,
+        'expires_at' => time() + 600,
+    ];
+}
+
+function get_admin_security_questions_pending(): ?array
+{
+    ensure_session_started();
+    $pending = $_SESSION['admin_security_questions_pending'] ?? null;
+
+    if (!is_array($pending)) {
+        return null;
+    }
+
+    if (time() > (int) $pending['expires_at']) {
+        unset($_SESSION['admin_security_questions_pending']);
+        return null;
+    }
+
+    return $pending;
+}
+
+function require_admin_security_questions_pending(): array
+{
+    $pending = get_admin_security_questions_pending();
+
+    if ($pending === null) {
+        error_response('Sessao expirada. Solicite um novo acesso.', [], 401);
+    }
+
+    return $pending;
+}
+
+function clear_admin_security_questions_pending(): void
+{
+    ensure_session_started();
+    unset($_SESSION['admin_security_questions_pending']);
+}
+
+// ─── Perguntas de segurança ───────────────────────────────────────────────────
+
+function admin_has_security_questions(int $adminId): bool
+{
+    $stmt = db()->prepare(
+        'SELECT COUNT(*) FROM admin_security_questions WHERE admin_id = :admin_id'
+    );
+    $stmt->execute(['admin_id' => $adminId]);
+    return (int) $stmt->fetchColumn() >= 3;
+}
+
+function get_admin_security_questions(int $adminId): array
+{
+    $stmt = db()->prepare(
+        'SELECT question_order, question
+         FROM admin_security_questions
+         WHERE admin_id = :admin_id
+         ORDER BY question_order ASC'
+    );
+    $stmt->execute(['admin_id' => $adminId]);
+    return $stmt->fetchAll() ?: [];
+}
+
+function verify_admin_security_answers(int $adminId, array $answers): bool
+{
+    $stmt = db()->prepare(
+        'SELECT question_order, answer_hash
+         FROM admin_security_questions
+         WHERE admin_id = :admin_id
+         ORDER BY question_order ASC'
+    );
+    $stmt->execute(['admin_id' => $adminId]);
+    $rows = $stmt->fetchAll();
+
+    if (count($rows) !== 3 || count($answers) !== 3) {
+        return false;
+    }
+
+    foreach ($rows as $i => $row) {
+        $normalized = mb_strtolower(trim((string) ($answers[$i] ?? '')));
+        if ($normalized === '' || !password_verify($normalized, (string) $row['answer_hash'])) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+// ─── Bloqueio por tentativas incorretas nas perguntas de segurança ────────────
+
+function is_admin_security_questions_locked(int $adminId): bool
+{
+    $stmt = db()->prepare(
+        'SELECT locked_until FROM admin_security_question_lockouts
+         WHERE admin_id = :admin_id LIMIT 1'
+    );
+    $stmt->execute(['admin_id' => $adminId]);
+    $row = $stmt->fetch();
+
+    if (!is_array($row) || $row['locked_until'] === null) {
+        return false;
+    }
+
+    if (strtotime((string) $row['locked_until']) <= time()) {
+        clear_admin_security_question_lockout($adminId);
+        return false;
+    }
+
+    return true;
+}
+
+function get_admin_security_question_lockout_seconds(int $adminId): int
+{
+    $stmt = db()->prepare(
+        'SELECT locked_until FROM admin_security_question_lockouts
+         WHERE admin_id = :admin_id LIMIT 1'
+    );
+    $stmt->execute(['admin_id' => $adminId]);
+    $row = $stmt->fetch();
+
+    if (!is_array($row) || $row['locked_until'] === null) {
+        return 0;
+    }
+
+    return max(0, (int) strtotime((string) $row['locked_until']) - time());
+}
+
+function increment_admin_security_question_attempts(int $adminId): int
+{
+    $stmt = db()->prepare(
+        'SELECT failed_attempts FROM admin_security_question_lockouts
+         WHERE admin_id = :admin_id LIMIT 1'
+    );
+    $stmt->execute(['admin_id' => $adminId]);
+    $row = $stmt->fetch();
+
+    $attempts    = is_array($row) ? (int) $row['failed_attempts'] + 1 : 1;
+    $lockedUntil = $attempts >= 2 ? date('Y-m-d H:i:s', time() + 86400) : null;
+
+    db()->prepare(
+        'INSERT INTO admin_security_question_lockouts (admin_id, failed_attempts, locked_until)
+         VALUES (:admin_id, :attempts, :locked_until)
+         ON DUPLICATE KEY UPDATE failed_attempts = :attempts2, locked_until = :locked_until2'
+    )->execute([
+        'admin_id'      => $adminId,
+        'attempts'      => $attempts,
+        'locked_until'  => $lockedUntil,
+        'attempts2'     => $attempts,
+        'locked_until2' => $lockedUntil,
+    ]);
+
+    return $attempts;
+}
+
+function clear_admin_security_question_lockout(int $adminId): void
+{
+    db()->prepare('DELETE FROM admin_security_question_lockouts WHERE admin_id = :admin_id')
+        ->execute(['admin_id' => $adminId]);
 }
 
 function two_factor_status_array(array $user): array

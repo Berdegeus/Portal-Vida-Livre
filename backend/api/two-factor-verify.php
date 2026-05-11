@@ -59,6 +59,11 @@ try {
 }
 
 if (!$validated) {
+    log_audit('user.login_2fa_failed', [
+        'actor_type'  => 'user',
+        'actor_id'    => $user['id'],
+        'actor_email' => $user['email'],
+    ]);
     $attempts = increment_two_factor_pending_attempts();
     $errorField = $backupCode !== '' ? 'backup_code' : 'code';
 
@@ -73,6 +78,12 @@ if (!$validated) {
 }
 
 $publicUser = login_user($user);
+
+log_audit('user.login_2fa_completed', [
+    'actor_type'  => 'user',
+    'actor_id'    => $user['id'],
+    'actor_email' => $user['email'],
+]);
 
 success_response('Verificacao 2FA concluida com sucesso.', [
     'user' => $publicUser,

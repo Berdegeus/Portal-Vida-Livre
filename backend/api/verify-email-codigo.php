@@ -10,20 +10,20 @@ if (request_method() !== 'POST') {
 
 require_csrf();
 
-$data = request_data();
-$token = trim((string) ($data['token'] ?? ''));
+$data   = request_data();
+$codigo = trim((string) ($data['codigo'] ?? ''));
 
-if ($token === '') {
-    error_response('O link informado e invalido ou expirou.', [
-        'token' => ['O link informado e invalido ou expirou.'],
-    ], 410);
+if (strlen($codigo) !== 6 || !ctype_digit($codigo)) {
+    error_response('Codigo invalido. Informe os 6 digitos do e-mail.', [
+        'codigo' => ['Informe os 6 digitos do e-mail.'],
+    ], 422);
 }
 
-$record = find_email_verification_token_record($token);
+$record = find_email_verification_token_by_codigo($codigo);
 
 if ($record === null) {
-    error_response('O link informado e invalido ou expirou.', [
-        'token' => ['O link informado e invalido ou expirou.'],
+    error_response('Codigo invalido ou expirado.', [
+        '_general' => ['Codigo invalido ou expirado.'],
     ], 410);
 }
 
@@ -31,14 +31,6 @@ if (user_email_is_verified($record)) {
     success_response('Seu e-mail ja foi confirmado. Agora voce pode entrar.', [
         'verified' => true,
     ]);
-}
-
-$isExpired = strtotime((string) $record['expires_at']) < time();
-
-if ($record['used_at'] !== null || $isExpired) {
-    error_response('O link informado e invalido ou expirou.', [
-        'token' => ['O link informado e invalido ou expirou.'],
-    ], 410);
 }
 
 try {

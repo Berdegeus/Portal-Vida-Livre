@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS email_verification_tokens (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     user_id BIGINT UNSIGNED NOT NULL,
     token_hash CHAR(64) NOT NULL,
+    codigo_hash CHAR(64) NULL,
     expires_at DATETIME NOT NULL,
     used_at DATETIME NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -23,6 +24,9 @@ CREATE TABLE IF NOT EXISTS email_verification_tokens (
         FOREIGN KEY (user_id) REFERENCES users(id)
         ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+ALTER TABLE email_verification_tokens
+    ADD COLUMN IF NOT EXISTS codigo_hash CHAR(64) NULL;
 
 CREATE TABLE IF NOT EXISTS directory_entries (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -118,4 +122,86 @@ CREATE TABLE IF NOT EXISTS user_backup_codes (
         ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS admins (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(120) NOT NULL,
+    email VARCHAR(190) NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_admins_email (email)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS admin_login_tokens (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    admin_id BIGINT UNSIGNED NOT NULL,
+    token_hash CHAR(64) NOT NULL,
+    codigo_hash CHAR(64) NULL,
+    codigo_attempts TINYINT UNSIGNED NOT NULL DEFAULT 0,
+    expires_at DATETIME NOT NULL,
+    used_at DATETIME NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_admin_login_tokens_token_hash (token_hash),
+    KEY idx_admin_login_tokens_admin_id (admin_id),
+    KEY idx_admin_login_tokens_expires_at (expires_at),
+    CONSTRAINT fk_admin_login_tokens_admin
+        FOREIGN KEY (admin_id) REFERENCES admins(id)
+        ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+ALTER TABLE admin_login_tokens
+    ADD COLUMN IF NOT EXISTS codigo_hash CHAR(64) NULL,
+    ADD COLUMN IF NOT EXISTS codigo_attempts TINYINT UNSIGNED NOT NULL DEFAULT 0;
+
+
+
+ALTER TABLE admins
+    ADD COLUMN IF NOT EXISTS telegram_chat_id BIGINT NULL;
+
+CREATE TABLE IF NOT EXISTS telegram_codigos (
+    id        INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    admin_id  BIGINT UNSIGNED NOT NULL,
+    codigo    VARCHAR(6) NOT NULL,
+    tipo      ENUM('vinculacao','login') NOT NULL,
+    criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    usado     TINYINT(1) NOT NULL DEFAULT 0,
+    KEY idx_tc_admin_tipo (admin_id, tipo),
+    CONSTRAINT fk_tc_admin
+        FOREIGN KEY (admin_id) REFERENCES admins(id)
+        ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS admin_security_questions (
+    id             BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    admin_id       BIGINT UNSIGNED NOT NULL,
+    question_order TINYINT UNSIGNED NOT NULL,
+    question       TEXT NOT NULL,
+    answer_hash    VARCHAR(255) NOT NULL,
+    created_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_asq_order (admin_id, question_order),
+    CONSTRAINT fk_asq_admin FOREIGN KEY (admin_id) REFERENCES admins(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS admin_security_question_lockouts (
+    id              BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    admin_id        BIGINT UNSIGNED NOT NULL,
+    failed_attempts TINYINT UNSIGNED NOT NULL DEFAULT 0,
+    locked_until    DATETIME NULL,
+    UNIQUE KEY uk_asql_admin (admin_id),
+    CONSTRAINT fk_asql_admin FOREIGN KEY (admin_id) REFERENCES admins(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS audit_logs (
+    id           BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    actor_type   ENUM('user','admin','system') NOT NULL DEFAULT 'system',
+    actor_id     BIGINT UNSIGNED NULL,
+    actor_email  VARCHAR(190) NULL,
+    action       VARCHAR(80) NOT NULL,
+    target_type  VARCHAR(40) NULL,
+    target_id    BIGINT UNSIGNED NULL,
+    target_label VARCHAR(255) NULL,
+    ip           VARCHAR(45) NULL,
+    created_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_audit_logs_actor      (actor_type, actor_id),
+    KEY idx_audit_logs_action     (action),
+    KEY idx_audit_logs_created_at (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

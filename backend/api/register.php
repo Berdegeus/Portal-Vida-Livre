@@ -9,6 +9,7 @@ if (request_method() !== 'POST') {
 }
 
 require_csrf();
+require_captcha();
 
 $data = request_data();
 $name = sanitize_name((string) ($data['name'] ?? ''));
@@ -65,6 +66,12 @@ try {
     error_log('[Register] ' . $throwable->getMessage() . ' em ' . $throwable->getFile() . ':' . $throwable->getLine());
     error_response('Nao foi possivel concluir o cadastro agora.', [], 500);
 }
+
+log_audit('user.register', [
+    'actor_type'  => 'user',
+    'actor_id'    => $userId,
+    'actor_email' => $email,
+]);
 
 success_response('Cadastro realizado. Enviamos um link de confirmacao para seu e-mail.', [
     'user' => $user !== null ? user_public_data($user) : [

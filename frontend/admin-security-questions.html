@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="/frontend/">
+    <title>Verificação de Segurança | Portal Vida Livre</title>
+    <link rel="stylesheet" href="./assets/css/styles.css">
+    <style>
+        body {
+            background: var(--gray-900);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .admin-card {
+            background: var(--gray-800);
+            border: 1px solid var(--gray-700);
+            border-radius: var(--radius-lg);
+            padding: 48px 40px;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: var(--shadow-xl);
+        }
+
+        .admin-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(245, 158, 11, 0.15);
+            border: 1px solid rgba(245, 158, 11, 0.35);
+            color: var(--amber-400);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            padding: 4px 10px;
+            border-radius: var(--radius-full);
+            margin-bottom: 24px;
+        }
+
+        .admin-card h1 {
+            font-family: var(--font-display);
+            font-size: 26px;
+            color: #FFFFFF;
+            margin: 0 0 8px;
+        }
+
+        .admin-card .subtitle {
+            color: var(--gray-400);
+            font-size: 14px;
+            margin: 0 0 32px;
+            line-height: 1.6;
+        }
+
+        .admin-card label {
+            display: block;
+            color: var(--gray-300);
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .admin-card .question-text {
+            color: var(--gray-200);
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+
+        .admin-card input[type="text"],
+        .admin-card input[type="password"] {
+            background: var(--gray-900);
+            border: 1px solid var(--gray-600);
+            color: #FFFFFF;
+            border-radius: var(--radius-sm);
+            padding: 12px 14px;
+            width: 100%;
+            font-size: 15px;
+            font-family: var(--font-body);
+            transition: border-color 0.2s;
+            box-sizing: border-box;
+        }
+
+        .admin-card input[type="text"]:focus,
+        .admin-card input[type="password"]:focus {
+            outline: none;
+            border-color: var(--amber-500);
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+        }
+
+        .admin-card input.invalid {
+            border-color: #f87171;
+        }
+
+        .question-group {
+            margin-bottom: 24px;
+        }
+
+        .field-error {
+            color: #f87171;
+            font-size: 12px;
+            margin-top: 4px;
+            display: block;
+        }
+
+        .btn-primary {
+            width: 100%;
+            background: var(--amber-500);
+            color: var(--gray-900);
+            border: none;
+            border-radius: var(--radius-sm);
+            padding: 13px;
+            font-size: 15px;
+            font-weight: 700;
+            font-family: var(--font-body);
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            margin-top: 8px;
+        }
+
+        .btn-primary:hover {
+            background: var(--amber-600);
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .admin-message {
+            border-radius: var(--radius-sm);
+            padding: 12px 16px;
+            font-size: 14px;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .admin-message.hidden {
+            display: none;
+        }
+
+        .admin-message-error {
+            background: rgba(248, 113, 113, 0.12);
+            border: 1px solid rgba(248, 113, 113, 0.3);
+            color: #fca5a5;
+        }
+
+        .admin-message-success {
+            background: rgba(52, 211, 153, 0.1);
+            border: 1px solid rgba(52, 211, 153, 0.25);
+            color: #6ee7b7;
+        }
+
+        .admin-message-warning {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            color: var(--amber-300);
+        }
+
+        .state-loading {
+            text-align: center;
+            color: var(--gray-400);
+            font-size: 14px;
+            padding: 24px 0;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--gray-600);
+            border-top-color: var(--amber-500);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .admin-footer {
+            margin-top: 28px;
+            padding-top: 20px;
+            border-top: 1px solid var(--gray-700);
+        }
+
+        .admin-footer a {
+            color: var(--gray-500);
+            font-size: 13px;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .admin-footer a:hover {
+            color: var(--gray-300);
+        }
+
+        .attempts-info {
+            font-size: 12px;
+            color: var(--gray-500);
+            text-align: center;
+            margin-top: 12px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="admin-card">
+        <span class="admin-badge">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+            Verificação de segurança
+        </span>
+
+        <h1>Perguntas de Segurança</h1>
+        <p class="subtitle">Os serviços externos estão indisponíveis. Responda corretamente as três perguntas abaixo para acessar o painel.</p>
+
+        <div class="admin-message admin-message-error hidden" id="msg-error"></div>
+        <div class="admin-message admin-message-success hidden" id="msg-success"></div>
+
+        <div id="state-loading" class="state-loading">
+            <span class="spinner"></span> Carregando perguntas...
+        </div>
+
+        <div id="state-locked" class="hidden">
+            <div class="admin-message admin-message-warning" id="msg-locked"></div>
+        </div>
+
+        <form id="form-questions" class="hidden" novalidate>
+            <div id="questions-container"></div>
+
+            <button type="submit" class="btn-primary" id="submit-btn">Verificar Respostas</button>
+            <p class="attempts-info" id="attempts-info">Máximo de 2 tentativas incorretas antes do bloqueio de 24h.</p>
+        </form>
+
+        <div class="admin-footer">
+            <a href="/frontend/admin-login.html">&larr; Solicitar novo link de acesso</a>
+        </div>
+    </div>
+
+    <script src="./assets/js/api.js" defer></script>
+    <script src="./assets/js/admin-security-questions.js" defer></script>
+</body>
+
+</html>

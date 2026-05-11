@@ -47,6 +47,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   // ── Toggle para mostrar/ocultar senha ───────────────────────────────────
   PortalVidaLivreAuth.bindTogglePassword(form);
 
+  const captchaWidget = CaptchaWidget.init(document.getElementById("captcha-widget"));
+
 // ── Validação em tempo real da senha ──────────────────────────────────────
 
   const inputSenha = form.querySelector('[name="password"]');
@@ -138,6 +140,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       errors.lgpd_consent = ["Voce precisa aceitar a Politica de Privacidade para continuar."];
     }
 
+    const humanCheck = document.getElementById("captcha_human");
+    if (!humanCheck || !humanCheck.checked) {
+      PortalVidaLivreAuth.showMessage("Confirme que voce nao e um robo marcando a caixa.", "error");
+      return;
+    }
+
     if (Object.keys(errors).length > 0) {
       PortalVidaLivreAuth.applyErrors(form, errors);
       PortalVidaLivreAuth.showMessage("Verifique os campos informados.", "error");
@@ -151,20 +159,118 @@ document.addEventListener("DOMContentLoaded", async () => {
         password: data.password,
         password_confirmation: data.password_confirmation,
         lgpd_consent: true,
+        captcha_answer: captchaWidget ? captchaWidget.getAnswer() : "",
       };
 
       const response = await PortalVidaLivreApi.post("register.php", payload, { csrf: true });
-      PortalVidaLivreAuth.showMessage(response.message, "success");
       form.reset();
-      window.setTimeout(() => {
-        window.location.assign("/frontend/login.html?status=verification-pending");
-      }, 500);
+      emailCadastrado = data.email;
+      mostrarFase2();
     } catch (error) {
       PortalVidaLivreAuth.applyErrors(form, error.errors || {});
       PortalVidaLivreAuth.showMessage(
         error.message || "Nao foi possivel concluir o cadastro.",
         "error",
       );
+      if (error.errors?.captcha && captchaWidget) captchaWidget.reset();
+    }
+  });
+
+  // ── Fase 2: verificação por código ────────────────────────────────────────
+
+  const sectionCadastro  = document.getElementById("section-cadastro");
+  const sectionVerificar = document.getElementById("section-verificar");
+  const verificarForm    = document.getElementById("verificar-form");
+  const inputCodigo      = document.getElementById("codigo-verificacao");
+  const btnVerificar     = document.getElementById("btn-verificar");
+  const codigoFieldErr   = document.getElementById("codigo-field-error");
+  const verificarMsgBox  = document.querySelector("[data-verificar-message]");
+  const btnReenviar      = document.getElementById("btn-reenviar");
+
+  let emailCadastrado = "";
+  let reenviarTimeout = null;
+
+  const mostrarFase2 = () => {
+    sectionCadastro.style.display  = "none";
+    sectionVerificar.style.display = "block";
+    inputCodigo.focus();
+  };
+
+  const showVerificarMsg = (text, type = "error") => {
+    if (!verificarMsgBox) return;
+    verificarMsgBox.textContent = text;
+    verificarMsgBox.className = `message message-${type}`;
+  };
+
+  const clearVerificarMsg = () => {
+    if (!verificarMsgBox) return;
+    verificarMsgBox.textContent = "";
+    verificarMsgBox.className = "message hidden";
+  };
+
+  inputCodigo?.addEventListener("input", () => {
+    inputCodigo.value = inputCodigo.value.replace(/\D/g, "").slice(0, 6);
+    if (codigoFieldErr) codigoFieldErr.textContent = "";
+    clearVerificarMsg();
+  });
+
+  verificarForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const codigo = inputCodigo.value.trim();
+
+    if (codigo.length !== 6) {
+      if (codigoFieldErr) codigoFieldErr.textContent = "Informe os 6 dígitos do código.";
+      return;
+    }
+
+    btnVerificar.disabled = true;
+    btnVerificar.textContent = "Verificando...";
+    clearVerificarMsg();
+
+    try {
+      await PortalVidaLivreApi.post("verify-email-codigo.php", { codigo }, { csrf: true });
+      showVerificarMsg("Cadastro confirmado! Redirecionando para o login...", "success");
+      setTimeout(() => {
+        window.location.assign("/frontend/login.html?status=email-verified");
+      }, 1200);
+    } catch (error) {
+      showVerificarMsg(error.message || "Código inválido ou expirado.");
+      btnVerificar.disabled = false;
+      btnVerificar.textContent = "Confirmar cadastro";
+    }
+  });
+
+  const iniciarCooldownReenviar = (segundos) => {
+    btnReenviar.disabled = true;
+    let restante = segundos;
+    btnReenviar.textContent = `Reenviar e-mail (${restante}s)`;
+    reenviarTimeout = setInterval(() => {
+      restante -= 1;
+      if (restante <= 0) {
+        clearInterval(reenviarTimeout);
+        btnReenviar.disabled = false;
+        btnReenviar.textContent = "Reenviar e-mail";
+      } else {
+        btnReenviar.textContent = `Reenviar e-mail (${restante}s)`;
+      }
+    }, 1000);
+  };
+
+  btnReenviar?.addEventListener("click", async () => {
+    if (!emailCadastrado) return;
+    clearVerificarMsg();
+    btnReenviar.disabled = true;
+    btnReenviar.textContent = "Enviando...";
+
+    try {
+      await PortalVidaLivreApi.post("resend-verification.php", { email: emailCadastrado }, { csrf: true });
+      showVerificarMsg("E-mail reenviado. Verifique sua caixa de entrada.", "success");
+      inputCodigo.value = "";
+      iniciarCooldownReenviar(60);
+    } catch (error) {
+      showVerificarMsg(error.message || "Não foi possível reenviar o e-mail.");
+      btnReenviar.disabled = false;
+      btnReenviar.textContent = "Reenviar e-mail";
     }
   });
 });
