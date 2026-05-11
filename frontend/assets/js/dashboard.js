@@ -165,15 +165,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (formExclusao) {
     formExclusao.addEventListener("submit", async (evento) => {
       evento.preventDefault();
-      limparErros(formExclusao);
-      limparMensagem(mensagemExclusao);
+      limparErrosCampos();
+      limparMensagemExclusao();
 
       const senha =
         formExclusao.querySelector("[name='password']")?.value || "";
 
       if (senha === "") {
         exibirErroCampo(
-          formExclusao,
           "password",
           "Informe sua senha para confirmar a exclusão.",
         );
@@ -200,10 +199,14 @@ document.addEventListener("DOMContentLoaded", async () => {
         window.location.assign("/frontend/login.html?status=conta-excluida");
       } catch (erro) {
         if (erro.errors && Object.keys(erro.errors).length > 0) {
-          aplicarErros(formExclusao, erro.errors);
+          Object.entries(erro.errors).forEach(([campo, mensagens]) => {
+            const mensagem = Array.isArray(mensagens)
+              ? mensagens[0]
+              : String(mensagens || "");
+            if (mensagem) exibirErroCampo(campo, mensagem);
+          });
         } else {
-          exibirMensagem(
-            mensagemExclusao,
+          exibirMensagemExclusao(
             erro.message || "Não foi possível processar a solicitação.",
             "error",
           );
@@ -217,7 +220,118 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-// ── Inicialização ─────────────────────────────────────────────────────────
+  // ── Exclusão parcial ──────────────────────────────────────────────────────
+
+  const formExclusaoParcial = document.querySelector("#form-exclusao-parcial");
+  const mensagemExclusaoParcial = document.querySelector(
+    "[data-exclusao-parcial-message]",
+  );
+  const botaoExclusaoParcial = document.querySelector(
+    "[data-btn-exclusao-parcial]",
+  );
+
+  if (formExclusaoParcial) {
+    formExclusaoParcial.addEventListener("submit", async (evento) => {
+      evento.preventDefault();
+
+      const senha =
+        formExclusaoParcial.querySelector("[name='password']")?.value || "";
+      const removerInscricoes = formExclusaoParcial.querySelector(
+        "[name='remover_inscricoes']",
+      )?.checked;
+      const remover2fa = formExclusaoParcial.querySelector(
+        "[name='remover_2fa']",
+      )?.checked;
+
+      // Limpa erros anteriores do formulário de exclusão parcial
+      formExclusaoParcial.querySelectorAll(".field-error").forEach((el) => {
+        el.textContent = "";
+      });
+      formExclusaoParcial.querySelectorAll("input").forEach((el) => {
+        el.classList.remove("invalid");
+      });
+      if (mensagemExclusaoParcial) {
+        mensagemExclusaoParcial.textContent = "";
+        mensagemExclusaoParcial.className = "message hidden";
+      }
+
+      if (!removerInscricoes && !remover2fa) {
+        if (mensagemExclusaoParcial) {
+          mensagemExclusaoParcial.textContent =
+            "Selecione ao menos um item para remover.";
+          mensagemExclusaoParcial.className = "message message-error";
+          mensagemExclusaoParcial.classList.remove("hidden");
+        }
+        return;
+      }
+
+      if (senha === "") {
+        const inputSenha =
+          formExclusaoParcial.querySelector("[name='password']");
+        const erroSenha = formExclusaoParcial.querySelector(
+          "[data-error-for='password']",
+        );
+        if (inputSenha) inputSenha.classList.add("invalid");
+        if (erroSenha)
+          erroSenha.textContent = "Informe sua senha para confirmar.";
+        return;
+      }
+
+      const confirmacao = window.confirm(
+        "Os dados selecionados serão removidos permanentemente. Deseja continuar?",
+      );
+
+      if (!confirmacao) return;
+
+      if (botaoExclusaoParcial) {
+        botaoExclusaoParcial.disabled = true;
+        botaoExclusaoParcial.textContent = "Processando...";
+      }
+
+      try {
+        await PortalVidaLivreApi.post(
+          "solicitar-exclusao-parcial.php",
+          {
+            password: senha,
+            remover_inscricoes: removerInscricoes ? "1" : "0",
+            remover_2fa: remover2fa ? "1" : "0",
+          },
+          { csrf: true },
+        );
+
+        if (mensagemExclusaoParcial) {
+          mensagemExclusaoParcial.textContent = "Dados removidos com sucesso.";
+          mensagemExclusaoParcial.className = "message message-success";
+          mensagemExclusaoParcial.classList.remove("hidden");
+        }
+        formExclusaoParcial.reset();
+      } catch (erro) {
+        const erroSenha = formExclusaoParcial.querySelector(
+          "[data-error-for='password']",
+        );
+        if (erro.errors?.password && erroSenha) {
+          const inputSenha =
+            formExclusaoParcial.querySelector("[name='password']");
+          if (inputSenha) inputSenha.classList.add("invalid");
+          erroSenha.textContent = Array.isArray(erro.errors.password)
+            ? erro.errors.password[0]
+            : erro.errors.password;
+        } else if (mensagemExclusaoParcial) {
+          mensagemExclusaoParcial.textContent =
+            erro.message || "Não foi possível processar a solicitação.";
+          mensagemExclusaoParcial.className = "message message-error";
+          mensagemExclusaoParcial.classList.remove("hidden");
+        }
+      } finally {
+        if (botaoExclusaoParcial) {
+          botaoExclusaoParcial.disabled = false;
+          botaoExclusaoParcial.textContent = "Remover dados selecionados";
+        }
+      }
+    });
+  }
+
+  // ── Inicialização ─────────────────────────────────────────────────────────
 
   try {
     const session = await PortalVidaLivreAuth.loadSession();
@@ -229,7 +343,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     ]);
 
     renderSubscriptions(subscriptionsResponse.data?.subscriptions || []);
-    PortalVidaLivreAuth.bindTogglePassword(document.querySelector("#form-exclusao"));
+    PortalVidaLivreAuth.bindTogglePassword(
+      document.querySelector("#form-exclusao"),
+    );
 
     if (container) {
       container.addEventListener("click", async (evento) => {
