@@ -10,9 +10,7 @@ Base inicial do Portal Vida Livre com frontend estatico em HTML/CSS/JS e backend
 
 ## Como rodar localmente
 
-1. Copie `backend/.env.example` para `backend/.env` se quiser partir de um modelo limpo.
-2. Ajuste `backend/.env` com os dados locais. O arquivo real `.env` nao deve ser commitado.
-3. Instale as dependencias:
+1. Instale as dependencias:
 
 ```bash
 cd backend
@@ -20,43 +18,55 @@ composer install
 cd ..
 ```
 
-4. Aplique schema e seed com o usuario de manutencao configurado no `.env`:
+2. Gere o `backend/.env` local:
+
+```bash
+php backend/scripts/setup-local-env.php
+```
+
+Se `backend/.env` ja existir, o script reaproveita o que estiver preenchido, nao pergunta esses campos de novo e regrava segredos diretos apenas como `*_OBFUSCATED`. O setup cobre aplicacao, banco, SMTP, Telegram e perguntas de seguranca do admin; ele so pergunta o que estiver faltando ou os blocos opcionais que a pessoa decidir configurar. Se o usuario de manutencao nao tiver senha no ambiente local, pressione Enter quando o script pedir a senha.
+
+3. Aplique schema e seed com o usuario de manutencao configurado no `.env`:
 
 ```bash
 php backend/scripts/run-schema.php
 ```
 
-5. Aplique as views, gere as credenciais locais de menor privilegio e valide os grants:
+4. Aplique as views, gere as credenciais locais de menor privilegio e valide os grants:
 
 ```bash
 php backend/scripts/apply-db-security.php
 ```
 
-6. Na raiz do projeto, rode o servidor:
+5. Na raiz do projeto, rode o servidor:
 
 ```bash
 php serve.php
 ```
 
-7. O `serve.php` cria o banco se necessario, aplica `backend/database/schema.sql`/seed com a conexao de manutencao e sobe o servidor PHP.
-8. Acesse `http://localhost:8000/frontend/`.
+6. O `serve.php` cria o banco se necessario, aplica `backend/database/schema.sql`/seed com a conexao de manutencao e sobe o servidor PHP.
+7. Acesse `http://localhost:8000/frontend/`.
 
 ## Gestao local de segredos
 
 Os segredos reais ficam em `backend/.env` ou em variaveis de ambiente da maquina. O `backend/.env.example` deve conter apenas nomes de variaveis, sem senhas, tokens ou chaves reais.
 
-Segredos principais suportam valor direto e valor ofuscado:
+Segredos principais suportam valor direto em variaveis de ambiente e valor ofuscado no arquivo local. Neste projeto, o `backend/.env` deve manter somente as variantes `*_OBFUSCATED`:
 
 ```env
-APP_KEY=
 APP_KEY_OBFUSCATED=words:v1:1,2,3
-DB_PASSWORD=
 DB_PASSWORD_OBFUSCATED=words:v1:4,5,6
 ```
 
-O formato `words:v1:` usa indices de palavras do arquivo `backend/resources/secret-base.txt`. Os indices sao 1-based e as palavras selecionadas sao concatenadas em runtime. Essa ofuscacao atende ao criterio academico, mas nao e criptografia forte: qualquer pessoa com acesso ao texto-base e ao mapa consegue reconstruir o valor. Nao use segredos no frontend.
+O formato `words:v1:` usa indices de tokens do arquivo `backend/resources/secret-base.txt`. Os indices sao 1-based e os tokens selecionados sao concatenados em runtime. O token especial `__SPACE__` e reconstruido como espaco literal, permitindo ofuscar segredos que contenham separadores. Essa ofuscacao atende ao criterio academico, mas nao e criptografia forte: qualquer pessoa com acesso ao texto-base e ao mapa consegue reconstruir o valor. Nao use segredos no frontend.
 
 No startup local, o backend valida `APP_KEY` e as senhas principais de banco. SMTP e Telegram podem ser configurados depois, quando for testar essas integracoes.
+
+Para gerar um valor ofuscado avulso, como `SMTP_PASSWORD_OBFUSCATED`, `TELEGRAM_BOT_TOKEN_OBFUSCATED` ou respostas das perguntas de seguranca, use:
+
+```bash
+php backend/scripts/obfuscate-secret.php
+```
 
 Antes de commit, rode uma verificacao local de segredos:
 
@@ -82,15 +92,14 @@ INSERT INTO admins (name, email) VALUES ('Nome do Admin', 'admin@exemplo.com');
 1. Abra o Telegram e inicie uma conversa com [@BotFather](https://t.me/botfather)
 2. Envie `/newbot` e siga as instruções (escolha nome e username)
 3. O BotFather vai retornar um token. Guarde esse valor fora do Git.
-4. Adicione o token e o username do bot em `backend/.env`:
+4. Gere o token ofuscado com `php backend/scripts/obfuscate-secret.php` e adicione o resultado, junto com o username do bot, em `backend/.env`:
 
 ```env
-TELEGRAM_BOT_TOKEN=
 TELEGRAM_BOT_TOKEN_OBFUSCATED=
 TELEGRAM_BOT_USERNAME=
 ```
 
-Use apenas uma das duas opcoes de token: valor direto em `TELEGRAM_BOT_TOKEN` ou mapa ofuscado em `TELEGRAM_BOT_TOKEN_OBFUSCATED`.
+Mantenha apenas `TELEGRAM_BOT_TOKEN_OBFUSCATED` no arquivo local.
 
 ## Rodando o bot do Telegram
 
@@ -108,18 +117,15 @@ Quando o serviço de e-mail ou o Telegram estão indisponíveis, o sistema ofere
 
 ### Configurando as perguntas
 
-1. Configure as perguntas no `backend/.env`. As respostas podem ser diretas ou ofuscadas:
+1. Configure as perguntas no `backend/.env`. Gere cada resposta com `php backend/scripts/obfuscate-secret.php`:
 
 ```env
 ADMIN_SECURITY_EMAIL=
 ADMIN_SECURITY_QUESTION_1=
-ADMIN_SECURITY_ANSWER_1=
 ADMIN_SECURITY_ANSWER_1_OBFUSCATED=
 ADMIN_SECURITY_QUESTION_2=
-ADMIN_SECURITY_ANSWER_2=
 ADMIN_SECURITY_ANSWER_2_OBFUSCATED=
 ADMIN_SECURITY_QUESTION_3=
-ADMIN_SECURITY_ANSWER_3=
 ADMIN_SECURITY_ANSWER_3_OBFUSCATED=
 ```
 
@@ -135,7 +141,7 @@ Tambem e possivel acessar no navegador com o servidor rodando:
 http://localhost:8000/backend/scripts/admin-setup-security-questions.php
 ```
 
-3. O script confirma apenas as perguntas salvas e nunca imprime as respostas. Depois do setup, remova `ADMIN_SECURITY_ANSWER_*` do `.env` local se nao precisar reconfigurar.
+3. O script confirma apenas as perguntas salvas e nunca imprime as respostas. Depois do setup, remova `ADMIN_SECURITY_ANSWER_*_OBFUSCATED` do `.env` local se nao precisar reconfigurar.
 
 > As respostas sao comparadas sem diferenca de maiusculas/minusculas.
 

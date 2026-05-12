@@ -74,6 +74,10 @@ function resolve_obfuscated_secret(string $encoded): string
         throw new \RuntimeException('Mapa de segredo ofuscado vazio.');
     }
 
+    if ($rawIndexes === 'empty') {
+        return '';
+    }
+
     $words = secret_base_words();
     $parts = array_map('trim', explode(',', $rawIndexes));
     $secret = '';
@@ -95,6 +99,33 @@ function resolve_obfuscated_secret(string $encoded): string
     return $secret;
 }
 
+function obfuscate_secret(string $value): string
+{
+    if ($value === '') {
+        return 'words:v1:empty';
+    }
+
+    $tokenIndexes = [];
+
+    foreach (secret_base_words() as $index => $token) {
+        if (!array_key_exists($token, $tokenIndexes)) {
+            $tokenIndexes[$token] = $index + 1;
+        }
+    }
+
+    $indexes = [];
+
+    foreach (str_split($value) as $character) {
+        if (!array_key_exists($character, $tokenIndexes)) {
+            throw new \RuntimeException('Texto-base nao cobre o caractere necessario para ofuscar um segredo.');
+        }
+
+        $indexes[] = $tokenIndexes[$character];
+    }
+
+    return 'words:v1:' . implode(',', $indexes);
+}
+
 function secret_base_words(): array
 {
     static $words = null;
@@ -112,6 +143,10 @@ function secret_base_words(): array
 
     $words = preg_split('/\s+/', trim($contents)) ?: [];
     $words = array_values(array_filter($words, static fn (string $word): bool => $word !== ''));
+    $words = array_map(
+        static fn (string $word): string => $word === '__SPACE__' ? ' ' : $word,
+        $words
+    );
 
     if ($words === []) {
         throw new \RuntimeException('Texto-base de segredos vazio.');

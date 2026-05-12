@@ -88,17 +88,22 @@ function security_write_env(string $path, array $updates): void
             continue;
         }
 
-        $lines[$index] = $key . '=' . $updates[$key];
+        if ($updates[$key] === null) {
+            unset($lines[$index]);
+        } else {
+            $lines[$index] = $key . '=' . $updates[$key];
+        }
+
         $seen[$key] = true;
     }
 
     foreach ($updates as $key => $value) {
-        if (!isset($seen[$key])) {
+        if ($value !== null && !isset($seen[$key])) {
             $lines[] = $key . '=' . $value;
         }
     }
 
-    file_put_contents($path, implode(PHP_EOL, $lines) . PHP_EOL);
+    file_put_contents($path, implode(PHP_EOL, array_values($lines)) . PHP_EOL);
 }
 
 function security_prepare_env_file(): array
@@ -113,8 +118,8 @@ function security_prepare_env_file(): array
         $updates['DB_MAINTENANCE_USERNAME'] = $originalDbUsername;
     }
 
-    if (env('DB_MAINTENANCE_PASSWORD') === null) {
-        $updates['DB_MAINTENANCE_PASSWORD'] = $originalDbPassword;
+    if (secret_value('DB_MAINTENANCE_PASSWORD') === null) {
+        $updates['DB_MAINTENANCE_PASSWORD_OBFUSCATED'] = obfuscate_secret($originalDbPassword);
     }
 
     foreach (security_env_specs() as $userEnv => $expectedUsername) {
@@ -127,7 +132,8 @@ function security_prepare_env_file(): array
         }
 
         if ($currentUsername !== $expectedUsername || security_password_needs_rotation($currentPassword)) {
-            $updates[$passwordEnv] = security_generate_password();
+            $updates[$passwordEnv] = null;
+            $updates[$passwordEnv . '_OBFUSCATED'] = obfuscate_secret(security_generate_password());
         }
     }
 

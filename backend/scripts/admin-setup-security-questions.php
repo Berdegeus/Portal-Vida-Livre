@@ -8,11 +8,11 @@ declare(strict_types=1);
  * Configure no backend/.env:
  *   ADMIN_SECURITY_EMAIL=
  *   ADMIN_SECURITY_QUESTION_1=
- *   ADMIN_SECURITY_ANSWER_1= ou ADMIN_SECURITY_ANSWER_1_OBFUSCATED=
+ *   ADMIN_SECURITY_ANSWER_1_OBFUSCATED=
  *   ADMIN_SECURITY_QUESTION_2=
- *   ADMIN_SECURITY_ANSWER_2= ou ADMIN_SECURITY_ANSWER_2_OBFUSCATED=
+ *   ADMIN_SECURITY_ANSWER_2_OBFUSCATED=
  *   ADMIN_SECURITY_QUESTION_3=
- *   ADMIN_SECURITY_ANSWER_3= ou ADMIN_SECURITY_ANSWER_3_OBFUSCATED=
+ *   ADMIN_SECURITY_ANSWER_3_OBFUSCATED=
  */
 
 require_once __DIR__ . '/../core/bootstrap.php';
@@ -60,7 +60,7 @@ foreach ($perguntas as $i => $p) {
 
     if (trim($p['resposta']) === '') {
         $erros[] = 'Defina ADMIN_SECURITY_ANSWER_' . ($i + 1)
-            . ' ou ADMIN_SECURITY_ANSWER_' . ($i + 1) . '_OBFUSCATED no backend/.env.';
+            . '_OBFUSCATED no backend/.env.';
     }
 }
 
