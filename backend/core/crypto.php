@@ -4,11 +4,7 @@ declare(strict_types=1);
 
 function app_key_bytes(): string
 {
-    $key = env('APP_KEY');
-
-    if (!is_string($key) || $key === '') {
-        throw new \RuntimeException('APP_KEY nao configurada.');
-    }
+    $key = required_secret('APP_KEY');
 
     if (str_starts_with($key, 'base64:')) {
         $decoded = base64_decode(substr($key, 7), true);

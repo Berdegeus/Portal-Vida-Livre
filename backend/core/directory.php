@@ -57,11 +57,10 @@ function directory_entry_public_data(array $entry): array
 
 function find_directory_entry_by_id(int $id): ?array
 {
-    $statement = db()->prepare(
+    $statement = public_db()->prepare(
         'SELECT id, slug, entry_type, name, specialty, city, state, service_mode, short_bio
-         FROM directory_entries
+         FROM vw_directory_public
          WHERE id = :id
-           AND is_active = 1
          LIMIT 1'
     );
     $statement->execute(['id' => $id]);
@@ -72,44 +71,35 @@ function find_directory_entry_by_id(int $id): ?array
 
 function directory_home_stats(): array
 {
-    $statement = db()->query(
-        'SELECT
-            SUM(CASE WHEN entry_type = "professional" AND is_active = 1 THEN 1 ELSE 0 END) AS specialists_total,
-            SUM(CASE WHEN entry_type = "support_group" AND is_active = 1 THEN 1 ELSE 0 END) AS support_groups_total,
-            COUNT(DISTINCT CASE WHEN is_active = 1 THEN CONCAT(city, "|", state) END) AS cities_total
-         FROM directory_entries'
+    $statement = public_db()->query(
+        'SELECT specialists_total, support_groups_total, transformed_lives_total, cities_total
+         FROM vw_directory_home_stats
+         LIMIT 1'
     );
     $directoryStats = $statement->fetch() ?: [];
-
-    $usersStatement = db()->query('SELECT COUNT(*) FROM users');
-    $usersTotal = (int) $usersStatement->fetchColumn();
 
     return [
         'specialists_total' => (int) ($directoryStats['specialists_total'] ?? 0),
         'support_groups_total' => (int) ($directoryStats['support_groups_total'] ?? 0),
-        'transformed_lives_total' => $usersTotal,
+        'transformed_lives_total' => (int) ($directoryStats['transformed_lives_total'] ?? 0),
         'cities_total' => (int) ($directoryStats['cities_total'] ?? 0),
     ];
 }
 
 function directory_metadata(int $limit = 24): array
 {
-    $specialtiesStatement = db()->prepare(
+    $specialtiesStatement = public_db()->prepare(
         'SELECT specialty
-         FROM directory_entries
-         WHERE is_active = 1
-         GROUP BY specialty
+         FROM vw_directory_specialties
          ORDER BY specialty ASC
          LIMIT :limit'
     );
     $specialtiesStatement->bindValue(':limit', $limit, \PDO::PARAM_INT);
     $specialtiesStatement->execute();
 
-    $locationsStatement = db()->prepare(
+    $locationsStatement = public_db()->prepare(
         'SELECT city, state
-         FROM directory_entries
-         WHERE is_active = 1
-         GROUP BY city, state
+         FROM vw_directory_locations
          ORDER BY city ASC, state ASC
          LIMIT :limit'
     );
@@ -137,7 +127,7 @@ function search_directory(string $specialty = '', string $city = '', ?string $ty
     $specialty = trim($specialty);
     $city = trim($city);
     $normalizedType = normalize_directory_type($type);
-    $conditions = ['is_active = 1'];
+    $conditions = ['1=1'];
     $params = [];
 
     if ($normalizedType !== null) {
@@ -171,8 +161,8 @@ function search_directory(string $specialty = '', string $city = '', ?string $ty
 
     $where = implode(' AND ', $conditions);
 
-    $countStatement = db()->prepare(
-        "SELECT COUNT(*) FROM directory_entries WHERE {$where}"
+    $countStatement = public_db()->prepare(
+        "SELECT COUNT(*) FROM vw_directory_public WHERE {$where}"
     );
     foreach ($params as $name => $value) {
         $countStatement->bindValue(':' . $name, $value);
@@ -180,9 +170,9 @@ function search_directory(string $specialty = '', string $city = '', ?string $ty
     $countStatement->execute();
     $total = (int) $countStatement->fetchColumn();
 
-    $resultsStatement = db()->prepare(
+    $resultsStatement = public_db()->prepare(
         "SELECT id, slug, entry_type, name, specialty, city, state, service_mode, short_bio
-         FROM directory_entries
+         FROM vw_directory_public
          WHERE {$where}
          ORDER BY
             CASE entry_type

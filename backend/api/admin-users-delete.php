@@ -18,7 +18,7 @@ if ($userId <= 0) {
     error_response('ID invalido.', [], 422);
 }
 
-$lookupStmt = db()->prepare('SELECT email FROM users WHERE id = :id');
+$lookupStmt = admin_db()->prepare('SELECT email FROM vw_admin_users WHERE id = :id');
 $lookupStmt->execute(['id' => $userId]);
 $userToDelete = $lookupStmt->fetch(\PDO::FETCH_ASSOC);
 
@@ -26,7 +26,7 @@ if (!$userToDelete) {
     error_response('Usuario nao encontrado.', [], 404);
 }
 
-$stmt = db()->prepare('DELETE FROM users WHERE id = :id');
+$stmt = admin_db()->prepare('DELETE FROM users WHERE id = :id');
 $stmt->execute(['id' => $userId]);
 
 log_audit('admin.user_deleted', [

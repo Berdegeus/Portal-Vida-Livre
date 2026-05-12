@@ -16,6 +16,6 @@ function run_seed(): void
     }
 
     foreach (split_sql_statements($sql) as $statement) {
-        db()->exec($statement);
+        maintenance_db()->exec($statement);
     }
 }
