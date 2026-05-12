@@ -9,11 +9,16 @@ if (PHP_SAPI !== 'cli') {
 
 require_once __DIR__ . '/backend/core/env.php';
 require_once __DIR__ . '/backend/core/helpers.php';
+require_once __DIR__ . '/backend/core/secrets.php';
 require_once __DIR__ . '/backend/core/db.php';
 require_once __DIR__ . '/backend/core/schema.php';
 require_once __DIR__ . '/backend/core/seed.php';
 
 load_env(__DIR__ . '/backend/.env');
+
+validate_local_secrets();
+
+// Schema e seed usam maintenance_db(), mantendo o usuario runtime sem DDL.
 run_schema();
 run_seed();
 

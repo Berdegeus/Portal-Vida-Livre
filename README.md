@@ -11,7 +11,7 @@ Base inicial do Portal Vida Livre com frontend estatico em HTML/CSS/JS e backend
 ## Como rodar localmente
 
 1. Copie `backend/.env.example` para `backend/.env` se quiser partir de um modelo limpo.
-2. Ajuste `backend/.env` com os dados do banco, SMTP e host/porta locais.
+2. Ajuste `backend/.env` com os dados locais. O arquivo real `.env` nao deve ser commitado.
 3. Instale as dependencias:
 
 ```bash
@@ -20,14 +20,55 @@ composer install
 cd ..
 ```
 
-4. Na raiz do projeto, rode:
+4. Aplique schema e seed com o usuario de manutencao configurado no `.env`:
+
+```bash
+php backend/scripts/run-schema.php
+```
+
+5. Aplique as views, gere as credenciais locais de menor privilegio e valide os grants:
+
+```bash
+php backend/scripts/apply-db-security.php
+```
+
+6. Na raiz do projeto, rode o servidor:
 
 ```bash
 php serve.php
 ```
 
-5. O `serve.php` cria o banco se necessario, aplica `backend/database/schema.sql` e sobe o servidor PHP.
-6. Acesse `http://localhost:8000/frontend/`.
+7. O `serve.php` cria o banco se necessario, aplica `backend/database/schema.sql`/seed com a conexao de manutencao e sobe o servidor PHP.
+8. Acesse `http://localhost:8000/frontend/`.
+
+## Gestao local de segredos
+
+Os segredos reais ficam em `backend/.env` ou em variaveis de ambiente da maquina. O `backend/.env.example` deve conter apenas nomes de variaveis, sem senhas, tokens ou chaves reais.
+
+Segredos principais suportam valor direto e valor ofuscado:
+
+```env
+APP_KEY=
+APP_KEY_OBFUSCATED=words:v1:1,2,3
+DB_PASSWORD=
+DB_PASSWORD_OBFUSCATED=words:v1:4,5,6
+```
+
+O formato `words:v1:` usa indices de palavras do arquivo `backend/resources/secret-base.txt`. Os indices sao 1-based e as palavras selecionadas sao concatenadas em runtime. Essa ofuscacao atende ao criterio academico, mas nao e criptografia forte: qualquer pessoa com acesso ao texto-base e ao mapa consegue reconstruir o valor. Nao use segredos no frontend.
+
+No startup local, o backend valida `APP_KEY` e as senhas principais de banco. SMTP e Telegram podem ser configurados depois, quando for testar essas integracoes.
+
+Antes de commit, rode uma verificacao local de segredos:
+
+```bash
+gitleaks detect --source . --redact --verbose
+```
+
+Comando auxiliar simples:
+
+```bash
+git grep -n -I -E "APP_KEY=|DB_PASSWORD=|SMTP_PASSWORD=|TELEGRAM_BOT_TOKEN=|client_secret|api[_-]?key|Bearer "
+```
 
 ## Criando um usuário administrador
 
@@ -40,13 +81,16 @@ INSERT INTO admins (name, email) VALUES ('Nome do Admin', 'admin@exemplo.com');
 ## Criar o bot do Telegram (para o 2FA administrativo)
 1. Abra o Telegram e inicie uma conversa com [@BotFather](https://t.me/botfather)
 2. Envie `/newbot` e siga as instruções (escolha nome e username)
-3. O BotFather vai retornar um token no formato `123456789:AAE...` — guarde-o
+3. O BotFather vai retornar um token. Guarde esse valor fora do Git.
 4. Adicione o token e o username do bot em `backend/.env`:
 
 ```env
-TELEGRAM_BOT_TOKEN=123456789:AAE...
-TELEGRAM_BOT_USERNAME=seubot
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_BOT_TOKEN_OBFUSCATED=
+TELEGRAM_BOT_USERNAME=
 ```
+
+Use apenas uma das duas opcoes de token: valor direto em `TELEGRAM_BOT_TOKEN` ou mapa ofuscado em `TELEGRAM_BOT_TOKEN_OBFUSCATED`.
 
 ## Rodando o bot do Telegram
 
@@ -64,27 +108,36 @@ Quando o serviço de e-mail ou o Telegram estão indisponíveis, o sistema ofere
 
 ### Configurando as perguntas
 
-1. Abra `backend/scripts/admin-setup-security-questions.php` e edite o topo do arquivo com seu e-mail e as respostas que quiser usar:
+1. Configure as perguntas no `backend/.env`. As respostas podem ser diretas ou ofuscadas:
 
-```php
-$EMAIL_DO_ADMIN = 'admin@exemplo.com';
-
-$PERGUNTAS = [
-    ['pergunta' => 'Qual é o nome da cidade onde você nasceu?',          'resposta' => 'Curitiba'],
-    ['pergunta' => 'Qual era o nome do seu primeiro animal de estimação?','resposta' => 'Bolinha'],
-    ['pergunta' => 'Qual é o nome da sua escola primária?',               'resposta' => 'Escola XYZ'],
-];
+```env
+ADMIN_SECURITY_EMAIL=
+ADMIN_SECURITY_QUESTION_1=
+ADMIN_SECURITY_ANSWER_1=
+ADMIN_SECURITY_ANSWER_1_OBFUSCATED=
+ADMIN_SECURITY_QUESTION_2=
+ADMIN_SECURITY_ANSWER_2=
+ADMIN_SECURITY_ANSWER_2_OBFUSCATED=
+ADMIN_SECURITY_QUESTION_3=
+ADMIN_SECURITY_ANSWER_3=
+ADMIN_SECURITY_ANSWER_3_OBFUSCATED=
 ```
 
-2. Acesse no navegador (com o servidor rodando):
+2. Execute o setup local:
+
+```bash
+php backend/scripts/admin-setup-security-questions.php
+```
+
+Tambem e possivel acessar no navegador com o servidor rodando:
 
 ```
 http://localhost:8000/backend/scripts/admin-setup-security-questions.php
 ```
 
-3. O script confirma o que foi salvo. **Delete o arquivo após usar** — ele não deve ficar acessível.
+3. O script confirma apenas as perguntas salvas e nunca imprime as respostas. Depois do setup, remova `ADMIN_SECURITY_ANSWER_*` do `.env` local se nao precisar reconfigurar.
 
-> As respostas são comparadas sem diferença de maiúsculas/minúsculas. "Curitiba", "curitiba" e "CURITIBA" funcionam igualmente.
+> As respostas sao comparadas sem diferenca de maiusculas/minusculas.
 
 ### Testando o fallback
 

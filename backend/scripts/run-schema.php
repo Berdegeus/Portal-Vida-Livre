@@ -8,6 +8,7 @@ if (PHP_SAPI !== 'cli') {
 
 require_once dirname(__DIR__) . '/core/env.php';
 require_once dirname(__DIR__) . '/core/helpers.php';
+require_once dirname(__DIR__) . '/core/secrets.php';
 require_once dirname(__DIR__) . '/core/db.php';
 require_once dirname(__DIR__) . '/core/schema.php';
 require_once dirname(__DIR__) . '/core/seed.php';
@@ -16,4 +17,4 @@ load_env(dirname(__DIR__) . '/.env');
 run_schema();
 run_seed();
 
-echo "Schema e seed aplicados com sucesso.\n";
+echo "Schema e seed aplicados com sucesso usando a conexao de manutencao.\n";

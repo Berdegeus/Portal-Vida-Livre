@@ -16,9 +16,9 @@ log_audit('admin.directory_viewed', [
     'actor_email' => $admin['email'],
 ]);
 
-$stmt = db()->query(
+$stmt = admin_db()->query(
     'SELECT id, slug, entry_type, name, specialty, city, state, service_mode, is_active, created_at
-     FROM directory_entries
+     FROM vw_admin_directory_entries
      ORDER BY created_at DESC'
 );
 $entries = $stmt->fetchAll(\PDO::FETCH_ASSOC);

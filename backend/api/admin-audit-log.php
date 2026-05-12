@@ -32,14 +32,14 @@ if (in_array($actorTypeFilter, ['user', 'admin', 'system'], true)) {
 
 $whereClause = implode(' AND ', $where);
 
-$countStmt = db()->prepare("SELECT COUNT(*) FROM audit_logs WHERE {$whereClause}");
+$countStmt = admin_db()->prepare("SELECT COUNT(*) FROM vw_admin_audit_logs WHERE {$whereClause}");
 $countStmt->execute($params);
 $total = (int) $countStmt->fetchColumn();
 
-$stmt = db()->prepare(
+$stmt = admin_db()->prepare(
     "SELECT id, actor_type, actor_id, actor_email, action,
             target_type, target_id, target_label, ip, created_at
-     FROM audit_logs
+     FROM vw_admin_audit_logs
      WHERE {$whereClause}
      ORDER BY created_at DESC
      LIMIT {$perPage} OFFSET {$offset}"

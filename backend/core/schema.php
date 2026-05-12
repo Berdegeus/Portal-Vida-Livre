@@ -4,32 +4,7 @@ declare(strict_types=1);
 
 function server_db(): \PDO
 {
-    static $pdo = null;
-
-    if ($pdo instanceof \PDO) {
-        return $pdo;
-    }
-
-    $config = load_config('database');
-    $dsn = sprintf(
-        'mysql:host=%s;port=%d;charset=%s',
-        $config['host'],
-        (int) $config['port'],
-        $config['charset']
-    );
-
-    $pdo = new \PDO(
-        $dsn,
-        (string) $config['username'],
-        (string) $config['password'],
-        [
-            \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
-            \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
-            \PDO::ATTR_EMULATE_PREPARES => false,
-        ]
-    );
-
-    return $pdo;
+    return maintenance_db(false);
 }
 
 function ensure_database_exists(): void
@@ -56,7 +31,7 @@ function schema_file_path(): string
 
 function table_has_column(string $table, string $column): bool
 {
-    $statement = db()->prepare(
+    $statement = maintenance_db()->prepare(
         'SELECT COUNT(*)
          FROM information_schema.columns
          WHERE table_schema = DATABASE()
@@ -74,12 +49,65 @@ function table_has_column(string $table, string $column): bool
 function sync_schema_additions(): void
 {
     if (!table_has_column('users', 'email_verified_at')) {
-        db()->exec(
+        maintenance_db()->exec(
             'ALTER TABLE users
              ADD COLUMN email_verified_at DATETIME NULL
              AFTER password_hash'
         );
     }
+}
+
+function run_add_column_if_not_exists(string $statement): bool
+{
+    $pattern = '/^ALTER\s+TABLE\s+`?([A-Za-z0-9_]+)`?\s+(.+);?$/is';
+
+    if (!preg_match($pattern, trim($statement), $matches)) {
+        return false;
+    }
+
+    $table = $matches[1];
+    $clauses = preg_split(
+        '/,\s*(?=ADD\s+COLUMN\s+IF\s+NOT\s+EXISTS\s+`?[A-Za-z0-9_]+`?\s+)/i',
+        rtrim(trim($matches[2]), ';')
+    ) ?: [];
+
+    if ($clauses === []) {
+        return false;
+    }
+
+    foreach ($clauses as $clause) {
+        if (!preg_match(
+            '/^ADD\s+COLUMN\s+IF\s+NOT\s+EXISTS\s+`?([A-Za-z0-9_]+)`?\s+(.+)$/is',
+            trim($clause),
+            $columnMatches
+        )) {
+            return false;
+        }
+    }
+
+    foreach ($clauses as $clause) {
+        preg_match(
+            '/^ADD\s+COLUMN\s+IF\s+NOT\s+EXISTS\s+`?([A-Za-z0-9_]+)`?\s+(.+)$/is',
+            trim($clause),
+            $columnMatches
+        );
+
+        $column = $columnMatches[1];
+        $definition = rtrim(trim($columnMatches[2]), ';');
+
+        if (table_has_column($table, $column)) {
+            continue;
+        }
+
+        maintenance_db()->exec(sprintf(
+            'ALTER TABLE `%s` ADD COLUMN `%s` %s',
+            str_replace('`', '``', $table),
+            str_replace('`', '``', $column),
+            $definition
+        ));
+    }
+
+    return true;
 }
 
 function split_sql_statements(string $sql): array
@@ -128,7 +156,11 @@ function run_schema(): void
     }
 
     foreach (split_sql_statements($sql) as $statement) {
-        db()->exec($statement);
+        if (run_add_column_if_not_exists($statement)) {
+            continue;
+        }
+
+        maintenance_db()->exec($statement);
     }
 
     sync_schema_additions();

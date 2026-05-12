@@ -18,7 +18,7 @@ if ($entryId <= 0) {
     error_response('ID invalido.', [], 422);
 }
 
-$lookupStmt = db()->prepare('SELECT name FROM directory_entries WHERE id = :id');
+$lookupStmt = admin_db()->prepare('SELECT name FROM vw_admin_directory_entries WHERE id = :id');
 $lookupStmt->execute(['id' => $entryId]);
 $entryToDelete = $lookupStmt->fetch(\PDO::FETCH_ASSOC);
 
@@ -26,7 +26,7 @@ if (!$entryToDelete) {
     error_response('Entrada nao encontrada.', [], 404);
 }
 
-$stmt = db()->prepare('DELETE FROM directory_entries WHERE id = :id');
+$stmt = admin_db()->prepare('DELETE FROM directory_entries WHERE id = :id');
 $stmt->execute(['id' => $entryId]);
 
 log_audit('admin.directory_deleted', [

@@ -16,9 +16,9 @@ log_audit('admin.users_viewed', [
     'actor_email' => $admin['email'],
 ]);
 
-$stmt = db()->query(
+$stmt = admin_db()->query(
     'SELECT id, name, email, email_verified_at, lgpd_consent_at, two_factor_enabled, created_at
-     FROM users
+     FROM vw_admin_users
      ORDER BY created_at DESC'
 );
 $users = $stmt->fetchAll(\PDO::FETCH_ASSOC);

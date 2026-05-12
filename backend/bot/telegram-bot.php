@@ -20,6 +20,17 @@ require_once __DIR__ . '/../core/bootstrap.php';
 
 echo "[bot] Iniciado. Aguardando mensagens...\n";
 
+function bot_mask_chat_id(int $chatId): string
+{
+    $value = (string) $chatId;
+
+    if (strlen($value) <= 4) {
+        return '****';
+    }
+
+    return str_repeat('*', strlen($value) - 4) . substr($value, -4);
+}
+
 $lastUpdateId = 0;
 
 while (true) {
@@ -41,7 +52,7 @@ while (true) {
                 continue;
             }
 
-            echo "[bot] chat_id={$chatId} texto=\"{$texto}\"\n";
+            echo '[bot] Mensagem recebida chat_id=' . bot_mask_chat_id($chatId) . "\n";
 
             if ($texto === '/start') {
                 telegram_send_message(
@@ -57,7 +68,7 @@ while (true) {
 
                 if ($record === null) {
                     telegram_send_message($chatId, "Código inválido ou expirado. Solicite um novo na tela de vinculação.");
-                    echo "[bot] Código de vinculação não encontrado: {$texto}\n";
+                    echo "[bot] Codigo de vinculacao invalido ou expirado.\n";
                 } else {
                     link_admin_telegram((int) $record['admin_id'], $chatId);
                     marcar_codigo_usado((int) $record['id']);
@@ -66,7 +77,7 @@ while (true) {
                         "Vinculação concluída! Bem-vindo, {$record['name']}.\n" .
                         "A partir de agora você receberá os códigos de acesso aqui."
                     );
-                    echo "[bot] Admin id={$record['admin_id']} ({$record['name']}) vinculado ao chat_id={$chatId}\n";
+                    echo "[bot] Admin id={$record['admin_id']} vinculado ao Telegram.\n";
                 }
                 continue;
             }
