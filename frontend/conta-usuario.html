@@ -93,6 +93,44 @@
                     </button>
                 </form>
             </div>
+
+            <div class="section-block">
+                <h2>Remover dados opcionais</h2>
+                <p class="page-text">
+                    Você pode remover dados específicos da sua conta sem precisar encerrá-la,
+                    conforme previsto na LGPD.
+                </p>
+                <div class="message hidden" data-exclusao-parcial-message></div>
+                <form id="form-exclusao-parcial" novalidate>
+                    <div class="form-group form-group--checkbox">
+                    <label class="label-checkbox">
+                        <input type="checkbox" name="remover_inscricoes">
+                        Remover profissionais e grupos salvos
+                    </label>
+                </div>
+
+                <div class="form-group form-group--checkbox">
+                    <label class="label-checkbox">
+                        <input type="checkbox" name="remover_2fa">
+                        Remover configuração de autenticação em dois fatores
+                    </label>
+                </div>
+                    <div class="form-group">
+                        <label for="exclusao_parcial_senha">Confirme sua senha para continuar</label>
+                        <input
+                            id="exclusao_parcial_senha"
+                            name="password"
+                            type="password"
+                            autocomplete="current-password"
+                            placeholder="Sua senha atual"
+                        >
+                        <small class="field-error" data-error-for="password"></small>
+                    </div>
+                    <button type="submit" class="btn btn--primary" data-btn-exclusao-parcial>
+                        Remover dados selecionados
+                    </button>
+                </form>
+            </div>
         </section>
     </main>
 

@@ -155,3 +155,24 @@ function frontend_url(string $path = ''): string
     return $base . '/' . ltrim($path, '/');
 }
 
+function normalize_slug(string $value): string
+{
+    $slug = trim($value);
+
+    if ($slug === '') {
+        return '';
+    }
+
+    if (function_exists('iconv')) {
+        $ascii = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $slug);
+        if (is_string($ascii) && $ascii !== '') {
+            $slug = $ascii;
+        }
+    }
+
+    $slug = strtolower($slug);
+    $slug = preg_replace('/[\s_]+/', '-', $slug) ?? '';
+    $slug = preg_replace('/-+/', '-', $slug) ?? '';
+
+    return trim($slug, '-');
+}
