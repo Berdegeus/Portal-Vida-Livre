@@ -162,11 +162,13 @@
     const twoFactorTarget = document.querySelector("[data-current-user-2fa]");
 
     if (twoFactorTarget) {
-    twoFactorTarget.textContent = session.user?.two_factor_enabled ? "Ativo" : "Inativo";
-    twoFactorTarget.className = session.user?.two_factor_enabled
-    ? "badge badge--success"
-    : "badge badge--warning";
-}
+      twoFactorTarget.textContent = session.user?.two_factor_enabled
+        ? "Ativo"
+        : "Inativo";
+      twoFactorTarget.className = session.user?.two_factor_enabled
+        ? "badge badge--success"
+        : "badge badge--warning";
+    }
 
     return session.user;
   };
@@ -213,6 +215,7 @@
 
       try {
         await PortalVidaLivreApi.post("logout.php", {}, { csrf: true });
+        localStorage.removeItem("cookie_consent");
         window.location.assign("/frontend/login.html?status=logged-out");
       } catch (error) {
         showMessage(
