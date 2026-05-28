@@ -60,6 +60,15 @@ DB_PASSWORD_OBFUSCATED=words:v1:4,5,6
 
 O formato `words:v1:` usa indices de tokens do arquivo `backend/resources/secret-base.txt`. Os indices sao 1-based e os tokens selecionados sao concatenados em runtime. O token especial `__SPACE__` e reconstruido como espaco literal, permitindo ofuscar segredos que contenham separadores. Essa ofuscacao atende ao criterio academico, mas nao e criptografia forte: qualquer pessoa com acesso ao texto-base e ao mapa consegue reconstruir o valor. Nao use segredos no frontend.
 
+O token especial `__NEWLINE__` e reconstruido como quebra de linha literal, permitindo ofuscar segredos multilinhas como chaves RSA privadas. Para gerar e ofuscar a chave privada RSA usada na criptografia hibrida:
+
+```bash
+openssl genrsa 2048 | base64 -w 0; echo
+php backend/scripts/obfuscate-secret.php
+```
+
+Adicione o resultado no `.env` como `RSA_PRIVATE_KEY_OBFUSCATED`.
+
 No startup local, o backend valida `APP_KEY` e as senhas principais de banco. SMTP e Telegram podem ser configurados depois, quando for testar essas integracoes.
 
 Para gerar um valor ofuscado avulso, como `SMTP_PASSWORD_OBFUSCATED`, `TELEGRAM_BOT_TOKEN_OBFUSCATED` ou respostas das perguntas de seguranca, use:
