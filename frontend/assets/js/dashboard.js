@@ -121,7 +121,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       .join("");
   };
 
-  // ── Dados completos da conta (inclui lgpd_consent_at) ────────────────────
+  // ── Dados completos da conta ──────────────────────────────────────────────
 
   const carregarDadosConta = async () => {
     try {
@@ -144,11 +144,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         campoCriadaEm.textContent = formatarData(usuario.created_at);
       }
     } catch (erro) {
-      // Falha silenciosa nos dados extras — os dados básicos já vêm do requireAuth
+      // Falha silenciosa nos dados extras
     }
   };
 
-  // -── open exclusão da conta ───────────────────────────────────────────────────
+  // ── Abrir formulário de exclusão total ────────────────────────────────────
+
   const btnMostrarExclusao = document.querySelector(
     "[data-btn-mostrar-exclusao]",
   );
@@ -160,19 +161,21 @@ document.addEventListener("DOMContentLoaded", async () => {
       btnMostrarExclusao.classList.add("hidden");
     });
   }
+
   // ── Excluir conta ─────────────────────────────────────────────────────────
 
   if (formExclusao) {
     formExclusao.addEventListener("submit", async (evento) => {
       evento.preventDefault();
-      limparErrosCampos();
-      limparMensagemExclusao();
+      limparErros(formExclusao);
+      limparMensagem(mensagemExclusao);
 
       const senha =
         formExclusao.querySelector("[name='password']")?.value || "";
 
       if (senha === "") {
         exibirErroCampo(
+          formExclusao,
           "password",
           "Informe sua senha para confirmar a exclusão.",
         );
@@ -199,14 +202,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         window.location.assign("/frontend/login.html?status=conta-excluida");
       } catch (erro) {
         if (erro.errors && Object.keys(erro.errors).length > 0) {
-          Object.entries(erro.errors).forEach(([campo, mensagens]) => {
-            const mensagem = Array.isArray(mensagens)
-              ? mensagens[0]
-              : String(mensagens || "");
-            if (mensagem) exibirErroCampo(campo, mensagem);
-          });
+          aplicarErros(formExclusao, erro.errors);
         } else {
-          exibirMensagemExclusao(
+          exibirMensagem(
+            mensagemExclusao,
             erro.message || "Não foi possível processar a solicitação.",
             "error",
           );
@@ -243,37 +242,24 @@ document.addEventListener("DOMContentLoaded", async () => {
         "[name='remover_2fa']",
       )?.checked;
 
-      // Limpa erros anteriores do formulário de exclusão parcial
-      formExclusaoParcial.querySelectorAll(".field-error").forEach((el) => {
-        el.textContent = "";
-      });
-      formExclusaoParcial.querySelectorAll("input").forEach((el) => {
-        el.classList.remove("invalid");
-      });
-      if (mensagemExclusaoParcial) {
-        mensagemExclusaoParcial.textContent = "";
-        mensagemExclusaoParcial.className = "message hidden";
-      }
+      limparErros(formExclusaoParcial);
+      limparMensagem(mensagemExclusaoParcial);
 
       if (!removerInscricoes && !remover2fa) {
-        if (mensagemExclusaoParcial) {
-          mensagemExclusaoParcial.textContent =
-            "Selecione ao menos um item para remover.";
-          mensagemExclusaoParcial.className = "message message-error";
-          mensagemExclusaoParcial.classList.remove("hidden");
-        }
+        exibirMensagem(
+          mensagemExclusaoParcial,
+          "Selecione ao menos um item para remover.",
+          "error",
+        );
         return;
       }
 
       if (senha === "") {
-        const inputSenha =
-          formExclusaoParcial.querySelector("[name='password']");
-        const erroSenha = formExclusaoParcial.querySelector(
-          "[data-error-for='password']",
+        exibirErroCampo(
+          formExclusaoParcial,
+          "password",
+          "Informe sua senha para confirmar.",
         );
-        if (inputSenha) inputSenha.classList.add("invalid");
-        if (erroSenha)
-          erroSenha.textContent = "Informe sua senha para confirmar.";
         return;
       }
 
@@ -299,28 +285,27 @@ document.addEventListener("DOMContentLoaded", async () => {
           { csrf: true },
         );
 
-        if (mensagemExclusaoParcial) {
-          mensagemExclusaoParcial.textContent = "Dados removidos com sucesso.";
-          mensagemExclusaoParcial.className = "message message-success";
-          mensagemExclusaoParcial.classList.remove("hidden");
-        }
+        exibirMensagem(
+          mensagemExclusaoParcial,
+          "Dados removidos com sucesso.",
+          "success",
+        );
         formExclusaoParcial.reset();
       } catch (erro) {
-        const erroSenha = formExclusaoParcial.querySelector(
-          "[data-error-for='password']",
-        );
-        if (erro.errors?.password && erroSenha) {
-          const inputSenha =
-            formExclusaoParcial.querySelector("[name='password']");
-          if (inputSenha) inputSenha.classList.add("invalid");
-          erroSenha.textContent = Array.isArray(erro.errors.password)
-            ? erro.errors.password[0]
-            : erro.errors.password;
-        } else if (mensagemExclusaoParcial) {
-          mensagemExclusaoParcial.textContent =
-            erro.message || "Não foi possível processar a solicitação.";
-          mensagemExclusaoParcial.className = "message message-error";
-          mensagemExclusaoParcial.classList.remove("hidden");
+        if (erro.errors?.password) {
+          exibirErroCampo(
+            formExclusaoParcial,
+            "password",
+            Array.isArray(erro.errors.password)
+              ? erro.errors.password[0]
+              : erro.errors.password,
+          );
+        } else {
+          exibirMensagem(
+            mensagemExclusaoParcial,
+            erro.message || "Não foi possível processar a solicitação.",
+            "error",
+          );
         }
       } finally {
         if (botaoExclusaoParcial) {

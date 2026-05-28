@@ -1419,3 +1419,21 @@ code {
         align-items: flex-start;
     }
 }
+
+.checkbox-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.8rem;
+    color: var(--gray-600);
+    font-weight: 600;
+    line-height: 1.6;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 1.1rem;
+    height: 1.1rem;
+    margin-top: 0.15rem;
+    flex-shrink: 0;
+    accent-color: var(--color-primary);
+    box-shadow: none;
+}

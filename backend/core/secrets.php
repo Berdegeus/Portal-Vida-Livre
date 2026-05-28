@@ -144,7 +144,11 @@ function secret_base_words(): array
     $words = preg_split('/\s+/', trim($contents)) ?: [];
     $words = array_values(array_filter($words, static fn (string $word): bool => $word !== ''));
     $words = array_map(
-        static fn (string $word): string => $word === '__SPACE__' ? ' ' : $word,
+        static fn (string $word): string => match($word) {
+            '__SPACE__' => ' ',
+            '__NEWLINE__' => "\n",
+            default => $word,
+        },
         $words
     );
 
