@@ -34,7 +34,7 @@ function user_public_data(array $user): array
 {
     return [
         'id' => (int) $user['id'],
-        'name' => (string) $user['name'],
+        'name' => decrypt_sensitive_value((string) $user['name']),
         'email' => (string) $user['email'],
         'email_verified' => user_email_is_verified($user),
         'created_at' => $user['created_at'] ?? null,
@@ -104,7 +104,7 @@ function create_user(string $name, string $email, string $password): int
         VALUES (:name, :email, :password_hash, :lgpd_consent_at)'
     );
     $statement->execute([
-        'name' => $name,
+        'name' => encrypt_sensitive_value($name),
         'email' => $email,
         'password_hash' => password_hash($password, PASSWORD_DEFAULT),
         'lgpd_consent_at' => date('Y-m-d H:i:s'),
