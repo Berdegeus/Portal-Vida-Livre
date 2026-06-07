@@ -993,3 +993,87 @@ function two_factor_status_array(array $user): array
         'backup_codes_remaining' => $userId > 0 ? count_remaining_backup_codes($userId) : 0,
     ];
 }
+
+// ─── Telegram para usuários ───────────────────────────────────────────────────
+
+function create_user_telegram_codigo(int $userId, string $tipo, ?string $extraData = null): string
+{
+    db()->prepare('DELETE FROM user_telegram_codigos WHERE user_id = :user_id AND tipo = :tipo')
+        ->execute(['user_id' => $userId, 'tipo' => $tipo]);
+
+    $codigo = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+
+    db()->prepare(
+        'INSERT INTO user_telegram_codigos (user_id, codigo, tipo, extra_data)
+         VALUES (:user_id, :codigo, :tipo, :extra_data)'
+    )->execute(['user_id' => $userId, 'codigo' => $codigo, 'tipo' => $tipo, 'extra_data' => $extraData]);
+
+    return $codigo;
+}
+
+function find_user_telegram_codigo(string $prefix, string $codigo): ?array
+{
+    $tipo = match (strtoupper($prefix)) {
+        'V' => 'vinculacao',
+        'R' => 'reset_senha',
+        default => null,
+    };
+
+    if ($tipo === null || !ctype_digit($codigo)) {
+        return null;
+    }
+
+    $stmt = db()->prepare(
+        'SELECT utc.id, utc.user_id, utc.tipo, utc.extra_data, u.name, u.email
+         FROM user_telegram_codigos utc
+         JOIN users u ON u.id = utc.user_id
+         WHERE utc.codigo    = :codigo
+           AND utc.tipo      = :tipo
+           AND utc.usado     = 0
+           AND utc.criado_em > NOW() - INTERVAL 10 MINUTE
+         LIMIT 1'
+    );
+    $stmt->execute(['codigo' => $codigo, 'tipo' => $tipo]);
+    $record = $stmt->fetch();
+
+    return is_array($record) ? $record : null;
+}
+
+function link_user_telegram(int $userId, int $chatId): void
+{
+    db()->prepare('UPDATE users SET telegram_chat_id = :chat_id, updated_at = NOW() WHERE id = :id')
+        ->execute(['chat_id' => $chatId, 'id' => $userId]);
+}
+
+function find_user_telegram_chat_id(int $userId): ?int
+{
+    $stmt = db()->prepare('SELECT telegram_chat_id FROM users WHERE id = :id LIMIT 1');
+    $stmt->execute(['id' => $userId]);
+    $value = $stmt->fetchColumn();
+
+    return ($value !== false && $value !== null) ? (int) $value : null;
+}
+
+function find_user_by_telegram_chat_id(int $chatId): ?array
+{
+    $stmt = db()->prepare(
+        'SELECT id, name, email FROM users WHERE telegram_chat_id = :chat_id LIMIT 1'
+    );
+    $stmt->execute(['chat_id' => $chatId]);
+    $user = $stmt->fetch();
+
+    return is_array($user) ? $user : null;
+}
+
+function mark_user_telegram_codigo_usado(int $id): void
+{
+    db()->prepare('UPDATE user_telegram_codigos SET usado = 1 WHERE id = :id')
+        ->execute(['id' => $id]);
+}
+
+function cleanup_user_telegram_codigos(): void
+{
+    db()->prepare(
+        'DELETE FROM user_telegram_codigos WHERE criado_em < NOW() - INTERVAL 15 MINUTE'
+    )->execute();
+}

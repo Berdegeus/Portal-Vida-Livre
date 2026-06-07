@@ -60,12 +60,26 @@ if (has_errors($errors)) {
 }
 
 try {
-    $userId = register_user_and_send_verification_email($name, $email, $password);
-    $user = find_user_by_id($userId);
+    $pdo = db();
+    $pdo->beginTransaction();
+    $userId    = create_user($name, $email, $password);
+    $tokenData = store_email_verification_token($pdo, $userId);
+    $pdo->commit();
 } catch (\Throwable $throwable) {
+    if (isset($pdo) && $pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
     error_log('[Register] ' . $throwable->getMessage() . ' em ' . $throwable->getFile() . ':' . $throwable->getLine());
     error_response('Nao foi possivel concluir o cadastro agora.', [], 500);
 }
+
+$notif = notify_user_verification(
+    ['id' => $userId, 'name' => $name, 'email' => $email],
+    $tokenData['token'],
+    $tokenData['codigo']
+);
+
+$user = find_user_by_id($userId);
 
 log_audit('user.register', [
     'actor_type'  => 'user',
@@ -73,13 +87,13 @@ log_audit('user.register', [
     'actor_email' => $email,
 ]);
 
-success_response('Cadastro realizado. Enviamos um link de confirmacao para seu e-mail.', [
+success_response('Cadastro realizado. Verifique sua conta via Telegram.', array_merge($notif, [
     'user' => $user !== null ? user_public_data($user) : [
-        'id' => $userId,
-        'name' => $name,
-        'email' => $email,
+        'id'             => $userId,
+        'name'           => $name,
+        'email'          => $email,
         'email_verified' => false,
-        'created_at' => null,
+        'created_at'     => null,
     ],
-], 201);
+]), 201);
 

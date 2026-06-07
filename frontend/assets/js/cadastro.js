@@ -165,7 +165,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const response = await PortalVidaLivreApi.post("register.php", payload, { csrf: true });
       form.reset();
       emailCadastrado = data.email;
-      mostrarFase2();
+      mostrarFase2(response.data || {});
     } catch (error) {
       PortalVidaLivreAuth.applyErrors(form, error.errors || {});
       PortalVidaLivreAuth.showMessage(
@@ -190,10 +190,19 @@ document.addEventListener("DOMContentLoaded", async () => {
   let emailCadastrado = "";
   let reenviarTimeout = null;
 
-  const mostrarFase2 = () => {
+  let telegramUrlAtual = "";
+
+  const mostrarFase2 = (responseData = {}) => {
+    telegramUrlAtual = responseData.telegram_url || "";
+    const btnTelegram = document.getElementById("btn-telegram-verify");
+    if (btnTelegram && telegramUrlAtual) {
+      btnTelegram.href = telegramUrlAtual;
+      btnTelegram.style.display = "inline-block";
+    } else if (btnTelegram) {
+      btnTelegram.style.display = "none";
+    }
     sectionCadastro.style.display  = "none";
     sectionVerificar.style.display = "block";
-    inputCodigo.focus();
   };
 
   const showVerificarMsg = (text, type = "error") => {
@@ -241,17 +250,18 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   const iniciarCooldownReenviar = (segundos) => {
+    if (!btnReenviar) return;
     btnReenviar.disabled = true;
     let restante = segundos;
-    btnReenviar.textContent = `Reenviar e-mail (${restante}s)`;
+    btnReenviar.textContent = `Gerar novo link (${restante}s)`;
     reenviarTimeout = setInterval(() => {
       restante -= 1;
       if (restante <= 0) {
         clearInterval(reenviarTimeout);
         btnReenviar.disabled = false;
-        btnReenviar.textContent = "Reenviar e-mail";
+        btnReenviar.textContent = "Gerar novo link Telegram";
       } else {
-        btnReenviar.textContent = `Reenviar e-mail (${restante}s)`;
+        btnReenviar.textContent = `Gerar novo link (${restante}s)`;
       }
     }, 1000);
   };
@@ -260,17 +270,23 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!emailCadastrado) return;
     clearVerificarMsg();
     btnReenviar.disabled = true;
-    btnReenviar.textContent = "Enviando...";
+    btnReenviar.textContent = "Gerando...";
 
     try {
-      await PortalVidaLivreApi.post("resend-verification.php", { email: emailCadastrado }, { csrf: true });
-      showVerificarMsg("E-mail reenviado. Verifique sua caixa de entrada.", "success");
-      inputCodigo.value = "";
+      const res = await PortalVidaLivreApi.post("resend-verification.php", { email: emailCadastrado }, { csrf: true });
+      const novoUrl = res.data?.telegram_url;
+      const btnTelegram = document.getElementById("btn-telegram-verify");
+      if (novoUrl && btnTelegram) {
+        telegramUrlAtual = novoUrl;
+        btnTelegram.href = novoUrl;
+      }
+      showVerificarMsg("Novo link gerado. Clique em 'Verificar via Telegram' para continuar.", "success");
+      if (inputCodigo) inputCodigo.value = "";
       iniciarCooldownReenviar(60);
     } catch (error) {
-      showVerificarMsg(error.message || "Não foi possível reenviar o e-mail.");
+      showVerificarMsg(error.message || "Não foi possível gerar novo link.");
       btnReenviar.disabled = false;
-      btnReenviar.textContent = "Reenviar e-mail";
+      btnReenviar.textContent = "Gerar novo link Telegram";
     }
   });
 });

@@ -220,6 +220,7 @@ function security_apply_runtime_grants(\PDO $pdo, string $username): void
         'telegram_codigos' => 'SELECT, INSERT, UPDATE, DELETE',
         'admin_security_questions' => 'SELECT',
         'admin_security_question_lockouts' => 'SELECT, INSERT, UPDATE, DELETE',
+        'user_telegram_codigos' => 'SELECT, INSERT, UPDATE',
     ];
 
     foreach ($grants as $table => $privileges) {

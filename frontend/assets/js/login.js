@@ -64,6 +64,22 @@ document.addEventListener("DOMContentLoaded", async () => {
       window.location.assign(redirectTarget);
     } catch (error) {
       PortalVidaLivreAuth.applyErrors(form, error.errors || {});
+      const telegramUrl = error.errors?.telegram_url || (typeof error.data === "object" ? error.data?.telegram_url : null);
+      if (telegramUrl) {
+        // Email não verificado: mostrar link Telegram
+        let btnTg = document.getElementById("btn-telegram-verify-login");
+        if (!btnTg) {
+          btnTg = document.createElement("a");
+          btnTg.id = "btn-telegram-verify-login";
+          btnTg.target = "_blank";
+          btnTg.rel = "noopener noreferrer";
+          btnTg.className = "btn btn--primary";
+          btnTg.style.cssText = "display:inline-block;margin-top:12px;width:100%;text-align:center;box-sizing:border-box;";
+          form.parentNode.appendChild(btnTg);
+        }
+        btnTg.href = telegramUrl;
+        btnTg.textContent = "Verificar conta via Telegram";
+      }
       PortalVidaLivreAuth.showMessage(error.message || "Nao foi possivel realizar o login.", "error");
       if (error.errors?.captcha && captchaWidget) captchaWidget.reset();
     }

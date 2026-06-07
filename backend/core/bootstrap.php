@@ -18,6 +18,7 @@ require_once __DIR__ . '/captcha.php';
 require_once __DIR__ . '/mailer.php';
 require_once __DIR__ . '/totp.php';
 require_once __DIR__ . '/telegram.php';
+require_once __DIR__ . '/notifier.php';
 require_once __DIR__ . '/audit.php';
 
 load_env(dirname(__DIR__) . '/.env');

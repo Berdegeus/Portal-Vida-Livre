@@ -54,7 +54,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   };
 
-  const mostrarFase2 = () => {
+  const mostrarFase2Telegram = () => {
+    const title = document.getElementById("section-codigo-title");
+    const hint  = document.getElementById("section-codigo-hint");
+    if (title) title.textContent = "Código Telegram";
+    if (hint)  hint.innerHTML = "Enviamos um <strong>código de 6 dígitos</strong> ao seu Telegram. Insira-o abaixo para acessar o painel.";
     sectionEmail.style.display  = "none";
     sectionCodigo.style.display = "block";
     footerVoltar.style.display  = "none";
@@ -90,13 +94,23 @@ document.addEventListener("DOMContentLoaded", async () => {
     try {
       const response = await PortalVidaLivreApi.post("admin-request-login.php", { email }, { csrf: true });
 
-      if (response.data?.fallback === "security_questions") {
+      const d = response.data || {};
+
+      if (d.fallback === "security_questions") {
         window.location.replace("/frontend/admin-security-questions.html");
         return;
       }
 
+      if (d.step === "vinculacao") {
+        sessionStorage.setItem("admin_2fa_codigo", d.codigo || "");
+        sessionStorage.setItem("admin_2fa_bot", d.bot_username || "");
+        window.location.replace("/frontend/admin-vinculacao.html");
+        return;
+      }
+
+      // step === 'telegram_code': admin vinculado, código enviado ao Telegram
       emailSalvo = email;
-      mostrarFase2();
+      mostrarFase2Telegram();
     } catch (error) {
       if (error.errors?.email) {
         const errEl = loginForm.querySelector("[data-error-for='email']");
@@ -146,15 +160,15 @@ document.addEventListener("DOMContentLoaded", async () => {
   const iniciarCooldownReenviar = (segundos) => {
     btnReenviar.disabled = true;
     let restante = segundos;
-    btnReenviar.textContent = `Reenviar e-mail (${restante}s)`;
+    btnReenviar.textContent = `Reenviar código (${restante}s)`;
     reenviarTimeout = setInterval(() => {
       restante -= 1;
       if (restante <= 0) {
         clearInterval(reenviarTimeout);
         btnReenviar.disabled = false;
-        btnReenviar.textContent = "Reenviar e-mail";
+        btnReenviar.textContent = "Reenviar código";
       } else {
-        btnReenviar.textContent = `Reenviar e-mail (${restante}s)`;
+        btnReenviar.textContent = `Reenviar código (${restante}s)`;
       }
     }, 1000);
   };
@@ -166,14 +180,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     btnReenviar.textContent = "Enviando...";
 
     try {
-      await PortalVidaLivreApi.post("admin-request-login.php", { email: emailSalvo }, { csrf: true });
-      showMsg(codigoMsgBox, "E-mail reenviado. Verifique sua caixa de entrada.", "success");
+      await PortalVidaLivreApi.post("admin-2fa-reenviar.php", {}, { csrf: true });
+      showMsg(codigoMsgBox, "Código reenviado ao seu Telegram.", "success");
       inputCodigo.value = "";
       iniciarCooldownReenviar(60);
     } catch (error) {
-      showMsg(codigoMsgBox, error.message || "Não foi possível reenviar o e-mail.");
+      showMsg(codigoMsgBox, error.message || "Não foi possível reenviar o código.");
       btnReenviar.disabled = false;
-      btnReenviar.textContent = "Reenviar e-mail";
+      btnReenviar.textContent = "Reenviar código";
     }
   });
 });

@@ -17,44 +17,63 @@ if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
     error_response('Informe um e-mail valido.', ['email' => ['Informe um e-mail valido.']], 422);
 }
 
-$simulateFail = !empty($_SESSION['admin_simulate_3p_fail']);
-
-// Always return the same success message to prevent email enumeration.
+// Resposta genérica para evitar enumeração de admins.
 $admin = find_admin_by_email($email);
 
 if ($admin !== null) {
-    $emailSent = false;
+    $adminId    = (int) $admin['id'];
+    $adminFull  = find_admin_full_by_id($adminId);
+    $simulateFail = !empty($_SESSION['admin_simulate_3p_fail']);
+    $telegramSent = false;
 
-    if ($simulateFail) {
-        // Simulation mode: pretend the email failed without actually sending.
-    } else {
-        try {
-            $tokenData = create_admin_login_token((int) $admin['id']);
-            send_admin_magic_link_email($admin, $tokenData['token'], $tokenData['codigo']);
-            $emailSent = true;
-        } catch (\Throwable $e) {
-            // Email send failed.
+    if (!$simulateFail && $adminFull !== null) {
+        if (!empty($adminFull['telegram_chat_id'])) {
+            // Admin já vinculado: envia código 6 dígitos diretamente via Telegram.
+            $codigo = create_telegram_codigo($adminId, 'login');
+            $sent   = notify_admin_login($adminFull, $codigo);
+
+            if ($sent) {
+                start_admin_2fa_pending($adminId);
+                success_response(
+                    'Código enviado ao seu Telegram. Insira-o abaixo para acessar o painel.',
+                    ['step' => 'telegram_code', 'csrf_token' => rotate_csrf_token()]
+                );
+            }
+        } else {
+            // Admin sem Telegram vinculado: inicia vinculação direta.
+            $codigo = create_telegram_codigo($adminId, 'vinculacao');
+            start_admin_2fa_pending($adminId);
+            success_response(
+                'Para acessar o painel, vincule seu Telegram enviando o código abaixo para @' . telegram_bot_username() . '.',
+                [
+                    'step'         => 'vinculacao',
+                    'codigo'       => $codigo,
+                    'bot_username' => telegram_bot_username(),
+                    'csrf_token'   => rotate_csrf_token(),
+                ]
+            );
         }
     }
 
-    if (!$emailSent && admin_has_security_questions((int) $admin['id'])) {
-        if (is_admin_security_questions_locked((int) $admin['id'])) {
-            $horas = (int) ceil(get_admin_security_question_lockout_seconds((int) $admin['id']) / 3600);
+    // Fallback: Telegram falhou ou simulação ativa.
+    if (admin_has_security_questions($adminId)) {
+        if (is_admin_security_questions_locked($adminId)) {
+            $horas = (int) ceil(get_admin_security_question_lockout_seconds($adminId) / 3600);
             error_response(
-                "Servico de e-mail indisponivel e acesso via perguntas bloqueado. Tente novamente em {$horas} hora(s).",
+                "Servico de Telegram indisponivel e acesso via perguntas bloqueado. Tente novamente em {$horas} hora(s).",
                 [],
                 429
             );
         }
 
-        start_admin_security_questions_pending((int) $admin['id'], 'email');
-        success_response('Servico de e-mail indisponivel. Use as perguntas de seguranca para acessar.', [
+        start_admin_security_questions_pending($adminId, 'telegram');
+        success_response('Servico de Telegram indisponivel. Use as perguntas de seguranca para acessar.', [
             'fallback'   => 'security_questions',
             'csrf_token' => rotate_csrf_token(),
         ]);
     }
 }
 
-success_response('Se este e-mail estiver cadastrado como administrador, voce receberá um link de acesso em instantes.', [
+success_response('Se este e-mail estiver cadastrado como administrador, voce receberá instruções de acesso em instantes.', [
     'csrf_token' => rotate_csrf_token(),
 ]);
