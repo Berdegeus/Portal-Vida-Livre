@@ -7,6 +7,32 @@
     <base href="/frontend/">
     <title>Entrar | Portal Vida Livre</title>
     <link rel="stylesheet" href="./assets/css/styles.css">
+    <style>
+        #section-telegram-code,
+        #section-telegram-vinculacao { display: none; }
+
+        .verify-code-input {
+            width: 100%;
+            font-size: 32px;
+            font-weight: bold;
+            letter-spacing: 12px;
+            text-align: center;
+            padding: 14px 16px;
+            box-sizing: border-box;
+        }
+
+        .btn-reenviar-link {
+            background: none;
+            border: none;
+            color: var(--gray-500, #6b7280);
+            font-size: 13px;
+            cursor: pointer;
+            padding: 0;
+            font-family: inherit;
+            text-decoration: underline;
+        }
+        .btn-reenviar-link:disabled { opacity: 0.5; cursor: not-allowed; text-decoration: none; }
+    </style>
 </head>
 
 <body data-page="login">
@@ -46,7 +72,42 @@
     </header>
 
     <main class="container">
-        <section class="panel">
+
+        <!-- Fase 2a: código OTP Telegram -->
+        <section class="panel" id="section-telegram-code">
+            <h1>Código Telegram</h1>
+            <p class="page-text">Enviamos um <strong>código de 6 dígitos</strong> ao seu Telegram. Insira-o abaixo para acessar.</p>
+            <div class="message hidden" data-tg-code-message></div>
+            <form id="tg-code-form" class="form" novalidate>
+                <div class="form-group">
+                    <label for="input-user-tg-codigo">Código de 6 dígitos</label>
+                    <input id="input-user-tg-codigo" type="text" inputmode="numeric" autocomplete="one-time-code"
+                        maxlength="6" placeholder="000000" class="verify-code-input" aria-label="Código de 6 dígitos">
+                    <small class="field-error" id="tg-code-field-error"></small>
+                </div>
+                <button type="submit" id="btn-user-tg-verificar">Verificar código</button>
+            </form>
+            <p class="page-text" style="margin-top:12px;">
+                <button type="button" id="btn-user-tg-reenviar" class="btn-reenviar-link">Reenviar código</button>
+            </p>
+        </section>
+
+        <!-- Fase 2b: vinculação obrigatória do Telegram -->
+        <section class="panel" id="section-telegram-vinculacao">
+            <h1>Vincule seu Telegram</h1>
+            <p class="page-text">Para acessar o portal, você precisa vincular sua conta ao Telegram. Clique no botão abaixo e envie a mensagem ao bot.</p>
+            <div class="message hidden" data-tg-vinc-message></div>
+            <a id="btn-user-tg-vinc" href="#" target="_blank" rel="noopener noreferrer"
+               class="btn btn--primary" style="display:inline-block;margin-bottom:16px;text-align:center;width:100%;box-sizing:border-box;">
+                Vincular via Telegram
+            </a>
+            <p class="page-text" style="font-size:13px;color:var(--gray-500);">
+                Após clicar no botão e enviar a mensagem ao bot, o login será concluído automaticamente.
+            </p>
+        </section>
+
+        <!-- Fase 1: formulário de login -->
+        <section class="panel" id="section-login">
             <h1>Bem-vindo de volta</h1>
             <p class="page-text">Entre para continuar sua jornada.</p>
             <div class="message hidden" data-message></div>
@@ -132,7 +193,7 @@
                     Acesso administrativo
                 </a>
             </p>
-        </section>
+        </section><!-- /section-login -->
     </main>
 
     <script src="./assets/js/api.js" defer></script>

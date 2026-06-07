@@ -147,7 +147,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     setFieldError(inputCodigo, codigoFieldErr, "");
 
     try {
-      const result = await PortalVidaLivreApi.post("admin-verify-codigo.php", { codigo }, { csrf: true });
+      const result = await PortalVidaLivreApi.post("admin-2fa-verify-login.php", { codigo }, { csrf: true });
       handleNextStep(result.data);
     } catch (error) {
       showMsg(codigoMsgBox, error.message || "Código inválido ou expirado.");
