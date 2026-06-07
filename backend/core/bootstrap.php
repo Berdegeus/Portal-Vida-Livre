@@ -12,6 +12,7 @@ require_once __DIR__ . '/response.php';
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/directory.php';
 require_once __DIR__ . '/crypto.php';
+require_once __DIR__ . '/hybrid_decrypt.php';
 require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/csrf.php';
 require_once __DIR__ . '/captcha.php';

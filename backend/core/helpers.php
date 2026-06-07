@@ -50,6 +50,14 @@ function request_data(): array
         $decoded = json_decode($raw ?: '[]', true);
         $data = is_array($decoded) ? $decoded : [];
 
+        if (
+            is_array($data) &&
+            function_exists('hybrid_decrypt_payload') &&
+            isset($data['session_key_encrypted'], $data['data_encrypted'], $data['iv'])
+        ) {
+            $data = hybrid_decrypt_payload($data);
+        }
+
         return $data;
     }
 

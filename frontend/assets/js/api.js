@@ -1,3 +1,50 @@
+const HybridCrypto = (() => {
+  let _publicKeyCache = null;
+
+  const fetchPublicKey = async () => {
+    if (_publicKeyCache) return _publicKeyCache;
+    const res = await fetch('/backend/api/public-key.php');
+    const json = await res.json();
+    const pem = json.data.public_key;
+    const b64 = pem.replace(/-----[^-]+-----/g, '').replace(/\s/g, '');
+    const der = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+    _publicKeyCache = await crypto.subtle.importKey(
+      'spki', der.buffer,
+      { name: 'RSA-OAEP', hash: 'SHA-256' },
+      false, ['wrapKey']
+    );
+    return _publicKeyCache;
+  };
+
+  const encryptPayload = async (data) => {
+    if (!window.crypto?.subtle) {
+      console.error('[HybridCrypto] WebCrypto nao disponivel; enviando sem criptografia.');
+      return data;
+    }
+    try {
+      const publicKey = await fetchPublicKey();
+      const sessionKey = await crypto.subtle.generateKey(
+        { name: 'AES-GCM', length: 256 }, true, ['encrypt']
+      );
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+      const encoded = new TextEncoder().encode(JSON.stringify(data));
+      const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, sessionKey, encoded);
+      const wrappedKey = await crypto.subtle.wrapKey('raw', sessionKey, publicKey, { name: 'RSA-OAEP' });
+      const toB64 = buf => btoa(String.fromCharCode(...new Uint8Array(buf)));
+      return {
+        session_key_encrypted: toB64(wrappedKey),
+        data_encrypted: toB64(encrypted),
+        iv: toB64(iv),
+      };
+    } catch (e) {
+      console.error('[HybridCrypto] Falha na criptografia:', e);
+      return data;
+    }
+  };
+
+  return { encryptPayload };
+})();
+
 const PortalVidaLivreApi = (() => {
   const API_BASE = "/backend/api";
   const STORAGE_KEY = "portal-vida-livre-csrf";
@@ -61,7 +108,10 @@ const PortalVidaLivreApi = (() => {
 
     if (options.body !== undefined) {
       settings.headers["Content-Type"] = "application/json";
-      settings.body = JSON.stringify(options.body);
+      const bodyToSend = settings.method === "POST"
+        ? await HybridCrypto.encryptPayload(options.body)
+        : options.body;
+      settings.body = JSON.stringify(bodyToSend);
     }
 
     let response;
