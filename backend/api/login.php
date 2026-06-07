@@ -77,6 +77,7 @@ if ($chatId === null) {
             'step'         => 'vinculacao',
             'telegram_url' => $telegramUrl,
             'bot_username' => telegram_bot_username(),
+            'vinc_code'    => 'V_' . $userCode,
         ],
         403
     );

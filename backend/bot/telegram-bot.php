@@ -101,6 +101,12 @@ while (true) {
 
             echo '[bot] Mensagem recebida chat_id=' . bot_mask_chat_id($chatId) . "\n";
 
+            // Código de vinculação de usuário digitado diretamente (ex: V_123456)
+            if (preg_match('/^V_(\d{6})$/', $texto, $m)) {
+                bot_handle_user_vinculacao($chatId, $m[1]);
+                continue;
+            }
+
             // /start com payload de usuário
             if (preg_match('/^\/start\s+([VR])_(\d{6})$/', $texto, $m)) {
                 $prefix = $m[1];

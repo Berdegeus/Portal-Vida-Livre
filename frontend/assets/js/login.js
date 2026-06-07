@@ -45,10 +45,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (inputCodigo)  inputCodigo.focus();
   };
 
-  const mostrarVinculacao = (telegramUrl) => {
+  const mostrarVinculacao = (telegramUrl, botUsername, vincCode) => {
     if (sectionLogin) sectionLogin.style.display = "none";
     if (sectionVinc)  sectionVinc.style.display  = "block";
     if (btnVinc && telegramUrl) btnVinc.href = telegramUrl;
+    const codeEl = document.getElementById("login-vinc-code-display");
+    if (codeEl) codeEl.textContent = vincCode || "---";
+    const botEl = document.getElementById("login-vinc-bot-username");
+    if (botEl) botEl.textContent = botUsername || "VidaLivreBot";
     iniciarPollingVinculacao();
   };
 
@@ -111,7 +115,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const d = error.errors || {};
 
       if (d.step === "vinculacao" && d.telegram_url) {
-        mostrarVinculacao(d.telegram_url);
+        mostrarVinculacao(d.telegram_url, d.bot_username, d.vinc_code);
         return;
       }
 

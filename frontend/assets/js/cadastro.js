@@ -201,6 +201,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     } else if (btnTelegram) {
       btnTelegram.style.display = "none";
     }
+    const vincCode   = responseData.vinc_code   || "";
+    const botUsername = responseData.bot_username || "VidaLivreBot";
+    const codeEl = document.getElementById("vinc-code-display");
+    if (codeEl) codeEl.textContent = vincCode || "---";
+    const botEl = document.getElementById("vinc-bot-username");
+    if (botEl) botEl.textContent = botUsername;
     sectionCadastro.style.display  = "none";
     sectionVerificar.style.display = "block";
   };
