@@ -2,6 +2,18 @@
 
 declare(strict_types=1);
 
+function load_rsa_private_key(): \OpenSSLAsymmetricKey
+{
+    $pem = base64_decode(required_secret('RSA_PRIVATE_KEY'));
+    $key = openssl_pkey_get_private($pem);
+
+    if ($key === false) {
+        throw new \RuntimeException('Nao foi possivel carregar a chave privada RSA.');
+    }
+
+    return $key;
+}
+
 function app_key_bytes(): string
 {
     $key = required_secret('APP_KEY');
@@ -66,7 +78,7 @@ function decrypt_sensitive_value(string $payload, string $field = 'unknown', int
 
     $host    = gethostname() ?: 'unknown';
     $actorId = $actorId !== null ? (string) $actorId : 'system';
-    error_log($actorId . ':' . $host . '>decrypt field=' . $field);
+    error_log("{$actorId}:{$host}>campo={$field} descriptografado user_id={$actorId}");
 
     return $plaintext;
 }

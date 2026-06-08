@@ -19,12 +19,7 @@ function hybrid_decrypt_payload(array $raw): array
     }
 
     if ($privateKey === null) {
-        $privateKeyPem = base64_decode(required_secret('RSA_PRIVATE_KEY'));
-        $privateKey    = openssl_pkey_get_private($privateKeyPem);
-    }
-
-    if ($privateKey === false) {
-        throw new \RuntimeException('[HybridCrypto] failed to load RSA private key');
+        $privateKey = load_rsa_private_key();
     }
 
     $sessionKey = '';

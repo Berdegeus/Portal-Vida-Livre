@@ -6,10 +6,9 @@ if (request_method() !== 'GET') {
     error_response('Metodo nao permitido.', [], 405);
 }
 
-$privateKeyPem = base64_decode(required_secret('RSA_PRIVATE_KEY'));
-$privateKey = openssl_pkey_get_private($privateKeyPem);
-
-if ($privateKey === false) {
+try {
+    $privateKey = load_rsa_private_key();
+} catch (\RuntimeException $e) {
     error_response('Erro ao carregar chave privada.', [], 500);
 }
 

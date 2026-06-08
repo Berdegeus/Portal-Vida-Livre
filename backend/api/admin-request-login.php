@@ -33,6 +33,7 @@ if ($admin !== null) {
             $sent   = notify_admin_login($adminFull, $codigo);
 
             if ($sent) {
+                $telegramSent = true;
                 start_admin_2fa_pending($adminId);
                 success_response(
                     'Código enviado ao seu Telegram. Insira-o abaixo para acessar o painel.',
@@ -56,6 +57,10 @@ if ($admin !== null) {
     }
 
     // Fallback: Telegram falhou ou simulação ativa.
+    if (!$telegramSent) {
+        error_log("admin_id={$adminId}:sistema>fallback para perguntas de seguranca ativado simulate={$simulateFail}");
+    }
+
     if (admin_has_security_questions($adminId)) {
         if (is_admin_security_questions_locked($adminId)) {
             $horas = (int) ceil(get_admin_security_question_lockout_seconds($adminId) / 3600);
