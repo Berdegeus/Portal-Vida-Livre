@@ -1077,3 +1077,66 @@ function cleanup_user_telegram_codigos(): void
         'DELETE FROM user_telegram_codigos WHERE criado_em < NOW() - INTERVAL 15 MINUTE'
     )->execute();
 }
+
+// ─── Sessão pendente de 2FA Telegram para usuário ─────────────────────────────
+
+function start_user_telegram_pending(int $userId): void
+{
+    ensure_session_started();
+    unset($_SESSION['user_id']);
+    $_SESSION['user_telegram_pending'] = [
+        'user_id'    => $userId,
+        'expires_at' => time() + 600,
+    ];
+}
+
+function get_user_telegram_pending(): ?array
+{
+    ensure_session_started();
+    $pending = $_SESSION['user_telegram_pending'] ?? null;
+
+    if (!is_array($pending)) {
+        return null;
+    }
+
+    if (time() > (int) $pending['expires_at']) {
+        unset($_SESSION['user_telegram_pending']);
+        return null;
+    }
+
+    return $pending;
+}
+
+function require_user_telegram_pending(): array
+{
+    $pending = get_user_telegram_pending();
+
+    if ($pending === null) {
+        error_response('Sessao expirada. Faca login novamente.', [], 401);
+    }
+
+    return $pending;
+}
+
+function clear_user_telegram_pending(): void
+{
+    ensure_session_started();
+    unset($_SESSION['user_telegram_pending'], $_SESSION['user_tg_last_reenviar']);
+}
+
+function find_user_telegram_login_code(int $userId, string $codigo): ?array
+{
+    $stmt = db()->prepare(
+        'SELECT id, user_id FROM user_telegram_codigos
+         WHERE user_id  = :user_id
+           AND codigo   = :codigo
+           AND tipo     = \'login\'
+           AND usado    = 0
+           AND criado_em > NOW() - INTERVAL 10 MINUTE
+         LIMIT 1'
+    );
+    $stmt->execute(['user_id' => $userId, 'codigo' => $codigo]);
+    $record = $stmt->fetch();
+
+    return is_array($record) ? $record : null;
+}

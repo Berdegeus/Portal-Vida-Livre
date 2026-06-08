@@ -78,23 +78,30 @@
         <!-- Fase 2: verificar via Telegram -->
         <section class="panel" id="section-verificar">
             <h1>Verifique sua conta</h1>
-            <p class="page-text">
-                Clique no botão abaixo para confirmar sua conta via Telegram.<br>
-                O bot verificará seu e-mail e vinculará sua conta automaticamente.
-            </p>
+            <p class="page-text">Abra o bot e envie o código abaixo, ou clique no botão para abrir direto no Telegram.</p>
 
             <div class="message hidden" data-verificar-message></div>
 
+            <!-- Código em destaque -->
+            <div style="background:var(--gray-100,#f3f4f6);border:2px solid var(--color-primary,#16a34a);border-radius:8px;padding:16px 24px;margin:20px 0;text-align:center;">
+                <div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gray-500,#6b7280);margin-bottom:8px;">Código de vinculação</div>
+                <div id="vinc-code-display" style="font-family:monospace;font-size:36px;font-weight:700;letter-spacing:6px;color:var(--color-primary,#16a34a);">---</div>
+            </div>
+
+            <p style="font-size:13px;color:var(--gray-500,#6b7280);margin:0 0 16px;text-align:center;">
+                Abra <strong>@<span id="vinc-bot-username">VidaLivreBot</span></strong> e envie o código acima.
+            </p>
+
             <a id="btn-telegram-verify" href="#" target="_blank" rel="noopener noreferrer"
-               class="btn btn--primary" style="display:inline-block;margin-bottom:24px;text-align:center;width:100%;box-sizing:border-box;">
-                Verificar via Telegram
+               class="btn btn--primary" style="display:inline-block;margin-bottom:16px;text-align:center;width:100%;box-sizing:border-box;">
+                Abrir bot no Telegram
             </a>
 
             <details style="margin-bottom:16px;">
-                <summary style="cursor:pointer;font-size:14px;color:var(--gray-500);">Não tenho Telegram — usar código</summary>
+                <summary style="cursor:pointer;font-size:14px;color:var(--gray-500,#6b7280);">Não tenho Telegram — usar código de e-mail</summary>
                 <form id="verificar-form" class="form" novalidate style="margin-top:12px;">
                     <div class="form-group">
-                        <label for="codigo-verificacao">Código de confirmação</label>
+                        <label for="codigo-verificacao">Código de confirmação (e-mail)</label>
                         <input
                             id="codigo-verificacao"
                             type="text"
@@ -112,7 +119,7 @@
             </details>
 
             <p class="page-text" style="margin-top:8px;">
-                <button type="button" id="btn-reenviar" class="btn-reenviar-link">Gerar novo link Telegram</button>
+                <button type="button" id="btn-reenviar" class="btn-reenviar-link">Gerar novo código</button>
             </p>
         </section>
 
@@ -316,11 +323,11 @@
         </div>
     </div>
 
-    <script src="./assets/js/api.js" defer></script>
-    <script src="./assets/js/internal-ui.js" defer></script>
-    <script src="./assets/js/auth.js" defer></script>
-    <script src="./assets/js/captcha.js" defer></script>
-    <script src="./assets/js/cadastro.js" defer></script>
+    <script src="./assets/js/api.js?v=20260608" defer></script>
+    <script src="./assets/js/internal-ui.js?v=20260608" defer></script>
+    <script src="./assets/js/auth.js?v=20260608" defer></script>
+    <script src="./assets/js/captcha.js?v=20260608" defer></script>
+    <script src="./assets/js/cadastro.js?v=20260608" defer></script>
 </body>
 
 </html>

@@ -73,11 +73,18 @@ try {
     error_response('Nao foi possivel concluir o cadastro agora.', [], 500);
 }
 
-$notif = notify_user_verification(
-    ['id' => $userId, 'name' => $name, 'email' => $email],
-    $tokenData['token'],
-    $tokenData['codigo']
-);
+try {
+    $notif = notify_user_verification(
+        ['id' => $userId, 'name' => $name, 'email' => $email],
+        $tokenData['token'],
+        $tokenData['codigo']
+    );
+} catch (\Throwable $e) {
+    error_log('[Register] Falha ao gerar link Telegram: ' . $e->getMessage());
+    $notif = ['channel' => 'telegram', 'telegram_url' => null];
+}
+
+start_user_telegram_pending($userId);
 
 $user = find_user_by_id($userId);
 

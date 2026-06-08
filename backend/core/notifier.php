@@ -15,6 +15,7 @@ function notify_user_verification(array $user, string $token, string $codigo): a
         'bot_username'  => $botUsername,
         'fallback_code' => $codigo,
         'verify_url'    => $verifyUrl,
+        'vinc_code'     => 'V_' . $userCode,
     ];
 }
 

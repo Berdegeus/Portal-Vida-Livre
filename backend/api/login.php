@@ -55,37 +55,59 @@ if (!user_email_is_verified($user)) {
         }
     }
 
+    start_user_telegram_pending((int) $user['id']);
+
     error_response(
-        'Confirme seu cadastro via Telegram. Clique no link enviado para concluir a verificacao.',
-        array_merge(['_general' => ['Confirme seu cadastro via Telegram.']], $notif),
+        'Confirme seu cadastro via Telegram.',
+        array_merge(['step' => 'vinculacao'], $notif),
         403
     );
 }
 
-if ((bool) ($user['two_factor_enabled'] ?? false) && !empty($user['two_factor_secret_encrypted'])) {
-    start_two_factor_pending((int) $user['id']);
+// Telegram 2FA obrigatório para todos os usuários.
+$chatId = find_user_telegram_chat_id((int) $user['id']);
 
-    log_audit('user.login_2fa_required', [
-        'actor_type'  => 'user',
-        'actor_id'    => $user['id'],
-        'actor_email' => $user['email'],
-    ]);
+if ($chatId === null) {
+    // Sem Telegram vinculado: exigir vinculação antes de permitir login.
+    $userCode    = create_user_telegram_codigo((int) $user['id'], 'vinculacao');
+    $telegramUrl = 'https://t.me/' . telegram_bot_username() . '?start=V_' . $userCode;
+    start_user_telegram_pending((int) $user['id']);
 
-    success_response('Codigo de verificacao necessario.', [
-        'requires_2fa' => true,
-        'csrf_token' => rotate_csrf_token(),
-    ]);
+    error_response(
+        'Vincule seu Telegram para concluir o login.',
+        [
+            'step'         => 'vinculacao',
+            'telegram_url' => $telegramUrl,
+            'bot_username' => telegram_bot_username(),
+            'vinc_code'    => 'V_' . $userCode,
+        ],
+        403
+    );
 }
 
-$publicUser = login_user($user);
+// Com Telegram vinculado: enviar OTP de 6 dígitos.
+$codigo = create_user_telegram_codigo((int) $user['id'], 'login');
 
-log_audit('user.login', [
+try {
+    telegram_send_message(
+        $chatId,
+        "Código de acesso — Portal Vida Livre:\n\n{$codigo}\n\nExpira em 10 minutos. Não compartilhe."
+    );
+} catch (\Throwable $e) {
+    fwrite(STDERR, '[login] Erro ao enviar OTP Telegram: ' . $e->getMessage() . "\n");
+    error_response('Nao foi possivel enviar o codigo pelo Telegram. Tente novamente.', [], 503);
+}
+
+start_user_telegram_pending((int) $user['id']);
+
+log_audit('user.login_telegram_otp_sent', [
     'actor_type'  => 'user',
     'actor_id'    => $user['id'],
     'actor_email' => $user['email'],
 ]);
 
-success_response('Login realizado com sucesso.', [
-    'user' => $publicUser,
-    'csrf_token' => rotate_csrf_token(),
+success_response('Codigo enviado ao seu Telegram.', [
+    'requires_2fa' => true,
+    'step'         => 'telegram_code',
+    'csrf_token'   => rotate_csrf_token(),
 ]);

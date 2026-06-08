@@ -1,14 +1,18 @@
 <?php
 
 /**
- * Bot de Telegram — script persistente para vinculação de admins.
+ * Bot de Telegram — script persistente.
  *
  * Execute em um terminal separado:
  *   php backend/bot/telegram-bot.php
  *
  * Mantém em loop, buscando atualizações a cada 1 segundo.
- * Processa apenas mensagens de vinculação (código de 4 dígitos).
- * Códigos de login (6 dígitos) são validados exclusivamente pelo site.
+ * Fluxos tratados pelo bot:
+ *   - V_XXXXXX  → vinculação de usuário (digitado ou via deep link)
+ *   - R_XXXXXX  → reset de senha de usuário (digitado ou via deep link)
+ *   - XXXX      → vinculação de admin (4 dígitos)
+ *   - XXXXXX    → tentativa de código sem prefixo (orientação ao usuário)
+ * Códigos de login OTP são validados exclusivamente pelo site.
  */
 
 declare(strict_types=1);
@@ -101,40 +105,38 @@ while (true) {
 
             echo '[bot] Mensagem recebida chat_id=' . bot_mask_chat_id($chatId) . "\n";
 
-            // /start com payload de usuário
-            if (preg_match('/^\/start\s+([VR])_(\d{6})$/', $texto, $m)) {
-                $prefix = $m[1];
-                $codigo = $m[2];
+            // Código de vinculação de usuário: V_XXXXXX digitado ou via deep link
+            if (preg_match('/^(?:\/start\s+)?V_(\d{6})$/i', $texto, $m)) {
+                bot_handle_user_vinculacao($chatId, $m[1]);
+                continue;
+            }
 
-                if ($prefix === 'V') {
-                    bot_handle_user_vinculacao($chatId, $codigo);
-                } else {
-                    bot_handle_user_reset($chatId, $codigo);
-                }
+            // Código de reset de senha de usuário: R_XXXXXX digitado ou via deep link
+            if (preg_match('/^(?:\/start\s+)?R_(\d{6})$/i', $texto, $m)) {
+                bot_handle_user_reset($chatId, $m[1]);
                 continue;
             }
 
             // /start sem payload
-            if ($texto === '/start') {
-                $botUsername = telegram_bot_username();
+            if (strcasecmp($texto, '/start') === 0) {
                 telegram_send_message(
                     $chatId,
                     "Olá! Sou o bot do Portal Vida Livre.\n\n" .
-                    "Sou usado para:\n" .
-                    "• Verificar seu email ao criar uma conta\n" .
-                    "• Enviar links de redefinição de senha\n" .
-                    "• Autenticar administradores (2FA)\n\n" .
-                    "Use os links enviados pelo site para interagir comigo."
+                    "Posso ajudar com:\n" .
+                    "• Verificar sua conta ao se cadastrar (envie o código V_XXXXXX)\n" .
+                    "• Redefinir sua senha (use o link enviado pelo site)\n" .
+                    "• Autenticar administradores\n\n" .
+                    "Use os links ou códigos exibidos no site para interagir comigo."
                 );
                 continue;
             }
 
-            // Código de 4 dígitos: vinculação de admin (fluxo existente)
+            // Código de 4 dígitos: vinculação de admin
             if (preg_match('/^\d{4}$/', $texto)) {
                 $record = find_telegram_codigo_vinculacao($texto);
 
                 if ($record === null) {
-                    telegram_send_message($chatId, "Código inválido ou expirado. Solicite um novo na tela de vinculação.");
+                    telegram_send_message($chatId, "Código inválido ou expirado. Acesse o painel administrativo para gerar um novo código.");
                     echo "[bot] Codigo de vinculacao de admin invalido ou expirado.\n";
                 } else {
                     link_admin_telegram((int) $record['admin_id'], $chatId);
@@ -142,14 +144,36 @@ while (true) {
                     telegram_send_message(
                         $chatId,
                         "Vinculação concluída! Bem-vindo, {$record['name']}.\n" .
-                        "A partir de agora você receberá os códigos de acesso aqui."
+                        "Retorne ao painel para concluir o acesso."
                     );
                     echo "[bot] Admin id={$record['admin_id']} vinculado ao Telegram.\n";
                 }
                 continue;
             }
 
-            telegram_send_message($chatId, "Não entendi. Use os links enviados pelo Portal Vida Livre para interagir comigo.");
+            // Número de 6 dígitos sem prefixo — pode ser código de vinculação digitado errado
+            if (preg_match('/^\d{6}$/', $texto)) {
+                $record = find_user_telegram_codigo('V', $texto);
+                if ($record !== null) {
+                    bot_handle_user_vinculacao($chatId, $texto);
+                } else {
+                    telegram_send_message(
+                        $chatId,
+                        "Código não reconhecido.\n\n" .
+                        "• Para verificar sua conta, envie o código no formato V_XXXXXX (ex.: V_123456).\n" .
+                        "• Códigos de login são inseridos diretamente no site, não aqui."
+                    );
+                }
+                continue;
+            }
+
+            telegram_send_message(
+                $chatId,
+                "Não reconheço essa mensagem.\n\n" .
+                "• Para verificar sua conta: envie o código V_XXXXXX exibido no site.\n" .
+                "• Para redefinir sua senha: use o link enviado pelo site.\n" .
+                "• Para acessar o painel admin: use o código de 4 dígitos exibido no painel."
+            );
         }
 
         $iteracoes++;
