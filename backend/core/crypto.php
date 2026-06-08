@@ -39,7 +39,7 @@ function encrypt_sensitive_value(string $value): string
     return base64_encode($iv . $tag . $ciphertext);
 }
 
-function decrypt_sensitive_value(string $payload): string
+function decrypt_sensitive_value(string $payload, string $field = 'unknown', int|string|null $actorId = null): string
 {
     $decoded = base64_decode($payload, true);
 
@@ -63,6 +63,10 @@ function decrypt_sensitive_value(string $payload): string
     if (!is_string($plaintext)) {
         throw new \RuntimeException('Nao foi possivel descriptografar o valor.');
     }
+
+    $host    = gethostname() ?: 'unknown';
+    $actorId = $actorId !== null ? (string) $actorId : 'system';
+    error_log($actorId . ':' . $host . '>decrypt field=' . $field);
 
     return $plaintext;
 }

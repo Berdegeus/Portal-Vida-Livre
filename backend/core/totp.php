@@ -65,7 +65,7 @@ function get_pending_two_factor_secret(array $user): ?string
         return null;
     }
 
-    return decrypt_sensitive_value((string) $encrypted);
+    return decrypt_sensitive_value((string) $encrypted, 'users.two_factor_temp_secret_encrypted', $user['id'] ?? null);
 }
 
 // ─── Ativação ────────────────────────────────────────────────────────────────

@@ -50,7 +50,7 @@ try {
     if ($backupCode !== '') {
         $validated = verify_and_consume_backup_code((int) $user['id'], $backupCode);
     } else {
-        $secret = decrypt_sensitive_value((string) $user['two_factor_secret_encrypted']);
+        $secret = decrypt_sensitive_value((string) $user['two_factor_secret_encrypted'], 'users.two_factor_secret_encrypted', $user['id']);
         $validated = verify_totp_code($secret, $code);
     }
 } catch (\Throwable $throwable) {
