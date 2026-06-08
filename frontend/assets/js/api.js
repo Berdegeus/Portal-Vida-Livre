@@ -29,28 +29,22 @@ const HybridCrypto = (() => {
 
   const encryptPayload = async (data) => {
     if (!window.crypto?.subtle) {
-      console.error('[HybridCrypto] WebCrypto nao disponivel; enviando sem criptografia.');
-      return data;
+      throw new Error('WebCrypto indisponivel. Use um navegador moderno com HTTPS.');
     }
-    try {
-      const publicKey = await fetchPublicKey();
-      const sessionKey = await crypto.subtle.generateKey(
-        { name: 'AES-GCM', length: 256 }, true, ['encrypt']
-      );
-      const iv = crypto.getRandomValues(new Uint8Array(12));
-      const encoded = new TextEncoder().encode(JSON.stringify(data));
-      const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, sessionKey, encoded);
-      const wrappedKey = await crypto.subtle.wrapKey('raw', sessionKey, publicKey, { name: 'RSA-OAEP' });
-      const toB64 = buf => btoa(String.fromCharCode(...new Uint8Array(buf)));
-      return {
-        session_key_encrypted: toB64(wrappedKey),
-        data_encrypted: toB64(encrypted),
-        iv: toB64(iv),
-      };
-    } catch (e) {
-      console.error('[HybridCrypto] Falha na criptografia — enviando sem criptografia:', e);
-      return data;
-    }
+    const publicKey = await fetchPublicKey();
+    const sessionKey = await crypto.subtle.generateKey(
+      { name: 'AES-GCM', length: 256 }, true, ['encrypt']
+    );
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const encoded = new TextEncoder().encode(JSON.stringify(data));
+    const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, sessionKey, encoded);
+    const wrappedKey = await crypto.subtle.wrapKey('raw', sessionKey, publicKey, { name: 'RSA-OAEP' });
+    const toB64 = buf => btoa(String.fromCharCode(...new Uint8Array(buf)));
+    return {
+      session_key_encrypted: toB64(wrappedKey),
+      data_encrypted: toB64(encrypted),
+      iv: toB64(iv),
+    };
   };
 
   return { encryptPayload };
@@ -119,9 +113,21 @@ const PortalVidaLivreApi = (() => {
 
     if (options.body !== undefined) {
       settings.headers["Content-Type"] = "application/json";
-      const bodyToSend = settings.method === "POST"
-        ? await HybridCrypto.encryptPayload(options.body)
-        : options.body;
+      let bodyToSend;
+      if (settings.method === "POST") {
+        try {
+          bodyToSend = await HybridCrypto.encryptPayload(options.body);
+        } catch (e) {
+          throw {
+            status: 0,
+            message: "Nao foi possivel proteger a requisicao. Verifique se esta usando HTTPS em um navegador atualizado.",
+            errors: {},
+            data: {},
+          };
+        }
+      } else {
+        bodyToSend = options.body;
+      }
       settings.body = JSON.stringify(bodyToSend);
     }
 

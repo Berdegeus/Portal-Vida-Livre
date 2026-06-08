@@ -61,6 +61,13 @@ function request_data(): array
                 error_log('[HybridCrypto] decryption rejected: ' . $e->getMessage());
                 error_response('Payload de requisicao invalido.', [], 400);
             }
+        } elseif (
+            !empty($data) &&
+            strtoupper($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' &&
+            function_exists('hybrid_decrypt_payload')
+        ) {
+            error_log('[HybridCrypto] POST JSON sem criptografia rejeitado');
+            error_response('Payload de requisicao invalido.', [], 400);
         }
 
         return $data;
