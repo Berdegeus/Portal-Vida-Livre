@@ -119,22 +119,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
       }
 
-      // Email ainda não verificado — mostrar botão de deep link de verificação
-      if (d.telegram_url) {
-        let btnTg = document.getElementById("btn-telegram-verify-login");
-        if (!btnTg) {
-          btnTg = document.createElement("a");
-          btnTg.id = "btn-telegram-verify-login";
-          btnTg.target = "_blank";
-          btnTg.rel = "noopener noreferrer";
-          btnTg.className = "btn btn--primary";
-          btnTg.style.cssText = "display:inline-block;margin-top:12px;width:100%;text-align:center;box-sizing:border-box;";
-          form.parentNode.appendChild(btnTg);
-        }
-        btnTg.href = d.telegram_url;
-        btnTg.textContent = "Verificar conta via Telegram";
-      }
-
       PortalVidaLivreAuth.applyErrors(form, d);
       PortalVidaLivreAuth.showMessage(error.message || "Nao foi possivel realizar o login.", "error");
       if (d.captcha && captchaWidget) captchaWidget.reset();

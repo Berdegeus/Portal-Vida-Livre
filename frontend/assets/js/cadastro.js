@@ -192,6 +192,30 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   let telegramUrlAtual = "";
 
+  let pollingVinc = null;
+
+  const iniciarPollingCadastro = () => {
+    if (pollingVinc) return;
+    pollingVinc = setInterval(async () => {
+      try {
+        const res = await PortalVidaLivreApi.post("user-poll-vinculacao.php", {}, { csrf: true });
+        const d = res.data || {};
+        if (d.vinculado) {
+          clearInterval(pollingVinc);
+          pollingVinc = null;
+          window.location.assign("/frontend/dashboard.html");
+        } else if (d.expirado) {
+          clearInterval(pollingVinc);
+          pollingVinc = null;
+          showVerificarMsg("Código expirado. Gere um novo clicando em 'Gerar novo código'.");
+        }
+      } catch {
+        clearInterval(pollingVinc);
+        pollingVinc = null;
+      }
+    }, 3000);
+  };
+
   const mostrarFase2 = (responseData = {}) => {
     telegramUrlAtual = responseData.telegram_url || "";
     const btnTelegram = document.getElementById("btn-telegram-verify");
@@ -201,7 +225,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     } else if (btnTelegram) {
       btnTelegram.style.display = "none";
     }
-    const vincCode   = responseData.vinc_code   || "";
+    const vincCode    = responseData.vinc_code   || "";
     const botUsername = responseData.bot_username || "VidaLivreBot";
     const codeEl = document.getElementById("vinc-code-display");
     if (codeEl) codeEl.textContent = vincCode || "---";
@@ -209,6 +233,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (botEl) botEl.textContent = botUsername;
     sectionCadastro.style.display  = "none";
     sectionVerificar.style.display = "block";
+    iniciarPollingCadastro();
   };
 
   const showVerificarMsg = (text, type = "error") => {

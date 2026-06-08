@@ -84,6 +84,8 @@ try {
     $notif = ['channel' => 'telegram', 'telegram_url' => null];
 }
 
+start_user_telegram_pending($userId);
+
 $user = find_user_by_id($userId);
 
 log_audit('user.register', [

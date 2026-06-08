@@ -55,9 +55,11 @@ if (!user_email_is_verified($user)) {
         }
     }
 
+    start_user_telegram_pending((int) $user['id']);
+
     error_response(
-        'Confirme seu cadastro via Telegram. Clique no link enviado para concluir a verificacao.',
-        array_merge(['_general' => ['Confirme seu cadastro via Telegram.']], $notif),
+        'Confirme seu cadastro via Telegram.',
+        array_merge(['step' => 'vinculacao'], $notif),
         403
     );
 }
