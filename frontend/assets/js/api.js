@@ -1,5 +1,4 @@
 const HybridCrypto = (() => {
-  const PUBKEY_STORAGE_KEY = 'portal-vida-livre-pubkey';
   let _publicKeyCache = null;
 
   const pemToCryptoKey = async (pem) => {
@@ -7,22 +6,18 @@ const HybridCrypto = (() => {
     const der = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
     return crypto.subtle.importKey(
       'spki', der.buffer,
-      { name: 'RSA-OAEP', hash: 'SHA-256' },
+      { name: 'RSA-OAEP', hash: 'SHA-1' },
       false, ['wrapKey']
     );
   };
 
   const fetchPublicKey = async () => {
     if (_publicKeyCache) return _publicKeyCache;
-    const cachedPem = sessionStorage.getItem(PUBKEY_STORAGE_KEY);
-    if (cachedPem) {
-      _publicKeyCache = await pemToCryptoKey(cachedPem);
-      return _publicKeyCache;
-    }
     const res = await fetch('/backend/api/public-key.php');
+    if (!res.ok) throw new Error('Falha ao obter chave publica do servidor.');
     const json = await res.json();
-    const pem = json.data.public_key;
-    sessionStorage.setItem(PUBKEY_STORAGE_KEY, pem);
+    const pem = json?.data?.public_key;
+    if (!pem) throw new Error('Chave publica ausente na resposta do servidor.');
     _publicKeyCache = await pemToCryptoKey(pem);
     return _publicKeyCache;
   };
