@@ -44,6 +44,17 @@ function notify_user_password_reset(array $user, string $token): array
     ];
 }
 
+function notify_user_telegram_login(int $chatId, string $codigo): bool
+{
+    try {
+        telegram_send_message($chatId, "Portal Vida Livre — Código de acesso:\n\n{$codigo}\n\nExpira em 10 minutos. Não compartilhe este código.");
+        return true;
+    } catch (\Throwable $e) {
+        fwrite(STDERR, '[notifier] Erro ao enviar código de login via Telegram: ' . $e->getMessage() . "\n");
+        return false;
+    }
+}
+
 function notify_admin_login(array $admin, string $codigo): bool
 {
     $chatId = (int) ($admin['telegram_chat_id'] ?? 0);

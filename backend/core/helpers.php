@@ -55,7 +55,12 @@ function request_data(): array
             function_exists('hybrid_decrypt_payload') &&
             isset($data['session_key_encrypted'], $data['data_encrypted'], $data['iv'])
         ) {
-            $data = hybrid_decrypt_payload($data);
+            try {
+                $data = hybrid_decrypt_payload($data);
+            } catch (\Throwable $e) {
+                error_log('[HybridCrypto] decryption rejected: ' . $e->getMessage());
+                error_response('Payload de requisicao invalido.', [], 400);
+            }
         }
 
         return $data;

@@ -16,25 +16,18 @@ $userId  = (int) $pending['user_id'];
 $chatId = find_user_telegram_chat_id($userId);
 
 if ($chatId !== null) {
-    clear_user_telegram_pending();
+    // Telegram foi vinculado — enviar OTP de login antes de autenticar.
+    // Isso garante que apenas quem controla o Telegram vinculado consegue completar o login.
+    $codigo = create_user_telegram_codigo($userId, 'login');
+    $sent   = notify_user_telegram_login($chatId, $codigo);
 
-    $user = find_user_by_id($userId);
-
-    if ($user === null) {
-        error_response('Usuario nao encontrado.', [], 500);
+    if (!$sent) {
+        error_response('Nao foi possivel enviar o codigo de verificacao. Tente novamente.', [], 503);
     }
 
-    $publicUser = login_user($user);
-
-    log_audit('user.login', [
-        'actor_type'  => 'user',
-        'actor_id'    => $user['id'],
-        'actor_email' => $user['email'],
-    ]);
-
-    success_response('Telegram vinculado. Login realizado.', [
+    success_response('Telegram vinculado. Insira o codigo enviado ao seu Telegram para continuar.', [
         'vinculado'  => true,
-        'user'       => $publicUser,
+        'step'       => 'verify_otp',
         'csrf_token' => rotate_csrf_token(),
     ]);
 }
