@@ -24,12 +24,19 @@ if (has_errors($errors)) {
 
 $user = find_user_by_email($email);
 
+$notif = [];
+
 if ($user !== null) {
     try {
-        $token = create_password_reset_token((int) $user['id']);
-        send_password_reset_email($user, $token);
+        $token    = create_password_reset_token((int) $user['id']);
+        $chatId   = find_user_telegram_chat_id((int) $user['id']);
+        $notif    = notify_user_password_reset(
+            array_merge($user, ['telegram_chat_id' => $chatId]),
+            $token
+        );
     } catch (\Throwable $throwable) {
-        error_response('Nao foi possivel processar sua solicitacao agora.', [], 500);
+        error_log('[ForgotPassword] ' . $throwable->getMessage());
+        // Silencioso: não revelar falhas para evitar enumeração.
     }
 
     log_audit('user.password_reset_requested', [
@@ -39,5 +46,5 @@ if ($user !== null) {
     ]);
 }
 
-success_response('Se o e-mail estiver cadastrado, enviaremos um link para redefinicao de senha.');
+success_response('Se o e-mail estiver cadastrado, enviaremos instrucoes para redefinicao de senha.', $notif);
 

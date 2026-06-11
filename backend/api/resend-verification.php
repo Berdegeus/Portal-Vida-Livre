@@ -18,16 +18,23 @@ if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
 }
 
 // Always return success to prevent email enumeration.
-$user = find_user_by_email($email);
+$user  = find_user_by_email($email);
+$notif = [];
 
 if ($user !== null && !user_email_is_verified($user)) {
     try {
-        send_fresh_email_verification_link($user);
+        $pdo       = db();
+        $pdo->beginTransaction();
+        $tokenData = store_email_verification_token($pdo, (int) $user['id']);
+        $pdo->commit();
+        $notif = notify_user_verification($user, $tokenData['token'], $tokenData['codigo']);
     } catch (\Throwable $e) {
-        // Silent failure; success message still returned.
+        if (isset($pdo) && $pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
     }
 }
 
-success_response('Se este e-mail tiver um cadastro pendente, enviaremos um novo codigo de confirmacao.', [
+success_response('Se este e-mail tiver um cadastro pendente, enviaremos um novo codigo de confirmacao.', array_merge($notif, [
     'csrf_token' => rotate_csrf_token(),
-]);
+]));

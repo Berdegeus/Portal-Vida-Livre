@@ -34,7 +34,7 @@ function user_public_data(array $user): array
 {
     return [
         'id' => (int) $user['id'],
-        'name' => decrypt_sensitive_value((string) $user['name']),
+        'name' => decrypt_sensitive_value((string) $user['name'], 'users.name', $user['id'] ?? null),
         'email' => (string) $user['email'],
         'email_verified' => user_email_is_verified($user),
         'created_at' => $user['created_at'] ?? null,
@@ -741,53 +741,51 @@ function clear_admin_2fa_pending(): void
 
 function create_telegram_codigo(int $adminId, string $tipo): string
 {
-    // Remove código anterior deste tipo para este admin
     db()->prepare('DELETE FROM telegram_codigos WHERE admin_id = :admin_id AND tipo = :tipo')
         ->execute(['admin_id' => $adminId, 'tipo' => $tipo]);
 
-    $digits = $tipo === 'vinculacao' ? 4 : 6;
-    $max    = (int) str_repeat('9', $digits);
-    $codigo = str_pad((string) random_int(0, $max), $digits, '0', STR_PAD_LEFT);
+    $digits    = $tipo === 'vinculacao' ? 4 : 6;
+    $max       = (int) str_repeat('9', $digits);
+    $codigo    = str_pad((string) random_int(0, $max), $digits, '0', STR_PAD_LEFT);
+    $codigoHash = hash('sha256', $codigo);
 
     db()->prepare(
-        'INSERT INTO telegram_codigos (admin_id, codigo, tipo) VALUES (:admin_id, :codigo, :tipo)'
-    )->execute(['admin_id' => $adminId, 'codigo' => $codigo, 'tipo' => $tipo]);
+        'INSERT INTO telegram_codigos (admin_id, codigo_hash, tipo) VALUES (:admin_id, :codigo_hash, :tipo)'
+    )->execute(['admin_id' => $adminId, 'codigo_hash' => $codigoHash, 'tipo' => $tipo]);
 
     return $codigo;
 }
 
-// Usada pelo bot para encontrar o admin que enviou o código de vinculação
 function find_telegram_codigo_vinculacao(string $codigo): ?array
 {
     $stmt = db()->prepare(
         'SELECT tc.id, tc.admin_id, a.name
          FROM telegram_codigos tc
          JOIN admins a ON a.id = tc.admin_id
-         WHERE tc.codigo    = :codigo
-           AND tc.tipo      = \'vinculacao\'
-           AND tc.usado     = 0
-           AND tc.criado_em > NOW() - INTERVAL 5 MINUTE
+         WHERE tc.codigo_hash = :codigo_hash
+           AND tc.tipo        = \'vinculacao\'
+           AND tc.usado       = 0
+           AND tc.criado_em   > NOW() - INTERVAL 5 MINUTE
          LIMIT 1'
     );
-    $stmt->execute(['codigo' => $codigo]);
+    $stmt->execute(['codigo_hash' => hash('sha256', $codigo)]);
     $record = $stmt->fetch();
 
     return is_array($record) ? $record : null;
 }
 
-// Usada pelo site para validar o código de login digitado pelo admin
 function find_telegram_codigo_login(int $adminId, string $codigo): ?array
 {
     $stmt = db()->prepare(
         'SELECT id FROM telegram_codigos
-         WHERE admin_id  = :admin_id
-           AND codigo    = :codigo
-           AND tipo      = \'login\'
-           AND usado     = 0
-           AND criado_em > NOW() - INTERVAL 5 MINUTE
+         WHERE admin_id    = :admin_id
+           AND codigo_hash = :codigo_hash
+           AND tipo        = \'login\'
+           AND usado       = 0
+           AND criado_em   > NOW() - INTERVAL 5 MINUTE
          LIMIT 1'
     );
-    $stmt->execute(['admin_id' => $adminId, 'codigo' => $codigo]);
+    $stmt->execute(['admin_id' => $adminId, 'codigo_hash' => hash('sha256', $codigo)]);
     $record = $stmt->fetch();
 
     return is_array($record) ? $record : null;
@@ -992,4 +990,152 @@ function two_factor_status_array(array $user): array
         'setup_pending'          => !empty($user['two_factor_temp_secret_encrypted']),
         'backup_codes_remaining' => $userId > 0 ? count_remaining_backup_codes($userId) : 0,
     ];
+}
+
+// ─── Telegram para usuários ───────────────────────────────────────────────────
+
+function create_user_telegram_codigo(int $userId, string $tipo, ?string $extraData = null): string
+{
+    db()->prepare('DELETE FROM user_telegram_codigos WHERE user_id = :user_id AND tipo = :tipo')
+        ->execute(['user_id' => $userId, 'tipo' => $tipo]);
+
+    $codigo     = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+    $codigoHash = hash('sha256', $codigo);
+
+    db()->prepare(
+        'INSERT INTO user_telegram_codigos (user_id, codigo_hash, tipo, extra_data)
+         VALUES (:user_id, :codigo_hash, :tipo, :extra_data)'
+    )->execute(['user_id' => $userId, 'codigo_hash' => $codigoHash, 'tipo' => $tipo, 'extra_data' => $extraData]);
+
+    return $codigo;
+}
+
+function find_user_telegram_codigo(string $prefix, string $codigo): ?array
+{
+    $tipo = match (strtoupper($prefix)) {
+        'V' => 'vinculacao',
+        'R' => 'reset_senha',
+        default => null,
+    };
+
+    if ($tipo === null || !ctype_digit($codigo)) {
+        return null;
+    }
+
+    $stmt = db()->prepare(
+        'SELECT utc.id, utc.user_id, utc.tipo, utc.extra_data, u.name, u.email
+         FROM user_telegram_codigos utc
+         JOIN users u ON u.id = utc.user_id
+         WHERE utc.codigo_hash = :codigo_hash
+           AND utc.tipo        = :tipo
+           AND utc.usado       = 0
+           AND utc.criado_em   > NOW() - INTERVAL 10 MINUTE
+         LIMIT 1'
+    );
+    $stmt->execute(['codigo_hash' => hash('sha256', $codigo), 'tipo' => $tipo]);
+    $record = $stmt->fetch();
+
+    return is_array($record) ? $record : null;
+}
+
+function link_user_telegram(int $userId, int $chatId): void
+{
+    db()->prepare('UPDATE users SET telegram_chat_id = :chat_id, updated_at = NOW() WHERE id = :id')
+        ->execute(['chat_id' => $chatId, 'id' => $userId]);
+}
+
+function find_user_telegram_chat_id(int $userId): ?int
+{
+    $stmt = db()->prepare('SELECT telegram_chat_id FROM users WHERE id = :id LIMIT 1');
+    $stmt->execute(['id' => $userId]);
+    $value = $stmt->fetchColumn();
+
+    return ($value !== false && $value !== null) ? (int) $value : null;
+}
+
+function find_user_by_telegram_chat_id(int $chatId): ?array
+{
+    $stmt = db()->prepare(
+        'SELECT id, name, email FROM users WHERE telegram_chat_id = :chat_id LIMIT 1'
+    );
+    $stmt->execute(['chat_id' => $chatId]);
+    $user = $stmt->fetch();
+
+    return is_array($user) ? $user : null;
+}
+
+function mark_user_telegram_codigo_usado(int $id): void
+{
+    db()->prepare('UPDATE user_telegram_codigos SET usado = 1 WHERE id = :id')
+        ->execute(['id' => $id]);
+}
+
+function cleanup_user_telegram_codigos(): void
+{
+    db()->prepare(
+        'DELETE FROM user_telegram_codigos WHERE criado_em < NOW() - INTERVAL 15 MINUTE'
+    )->execute();
+}
+
+// ─── Sessão pendente de 2FA Telegram para usuário ─────────────────────────────
+
+function start_user_telegram_pending(int $userId): void
+{
+    ensure_session_started();
+    unset($_SESSION['user_id']);
+    $_SESSION['user_telegram_pending'] = [
+        'user_id'    => $userId,
+        'expires_at' => time() + 600,
+    ];
+}
+
+function get_user_telegram_pending(): ?array
+{
+    ensure_session_started();
+    $pending = $_SESSION['user_telegram_pending'] ?? null;
+
+    if (!is_array($pending)) {
+        return null;
+    }
+
+    if (time() > (int) $pending['expires_at']) {
+        unset($_SESSION['user_telegram_pending']);
+        return null;
+    }
+
+    return $pending;
+}
+
+function require_user_telegram_pending(): array
+{
+    $pending = get_user_telegram_pending();
+
+    if ($pending === null) {
+        error_response('Sessao expirada. Faca login novamente.', [], 401);
+    }
+
+    return $pending;
+}
+
+function clear_user_telegram_pending(): void
+{
+    ensure_session_started();
+    unset($_SESSION['user_telegram_pending'], $_SESSION['user_tg_last_reenviar']);
+}
+
+function find_user_telegram_login_code(int $userId, string $codigo): ?array
+{
+    $stmt = db()->prepare(
+        'SELECT id, user_id FROM user_telegram_codigos
+         WHERE user_id    = :user_id
+           AND codigo_hash = :codigo_hash
+           AND tipo        = \'login\'
+           AND usado       = 0
+           AND criado_em   > NOW() - INTERVAL 10 MINUTE
+         LIMIT 1'
+    );
+    $stmt->execute(['user_id' => $userId, 'codigo_hash' => hash('sha256', $codigo)]);
+    $record = $stmt->fetch();
+
+    return is_array($record) ? $record : null;
 }

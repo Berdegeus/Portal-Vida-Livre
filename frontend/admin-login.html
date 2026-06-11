@@ -240,7 +240,7 @@
         <!-- Fase 1: solicitar e-mail -->
         <div id="section-email">
             <h1>Acesso Administrativo</h1>
-            <p class="subtitle">Informe seu e-mail de administrador. Você receberá um link de acesso seguro.</p>
+            <p class="subtitle">Informe seu e-mail de administrador. Você receberá um código de acesso via Telegram.</p>
 
             <div class="admin-message hidden" data-message></div>
 
@@ -256,12 +256,12 @@
             </form>
         </div>
 
-        <!-- Fase 2: inserir código do e-mail -->
+        <!-- Fase 2: inserir código Telegram -->
         <div id="section-codigo">
-            <h1>Verifique seu e-mail</h1>
-            <p class="code-hint">
-                Enviamos um link e um <strong>código de 6 dígitos</strong> para o seu e-mail.
-                Clique no link ou insira o código abaixo.
+            <h1 id="section-codigo-title">Código Telegram</h1>
+            <p class="code-hint" id="section-codigo-hint">
+                Enviamos um <strong>código de 6 dígitos</strong> ao seu Telegram.
+                Insira-o abaixo para acessar o painel.
             </p>
 
             <div class="admin-message hidden" data-codigo-message></div>
@@ -284,7 +284,7 @@
             </form>
 
             <div class="admin-footer" style="margin-top:20px;">
-                <button type="button" id="btn-reenviar" class="resend-link">Reenviar e-mail</button>
+                <button type="button" id="btn-reenviar" class="resend-link">Reenviar código</button>
             </div>
         </div>
 
@@ -293,7 +293,7 @@
         </div>
     </div>
 
-    <script src="./assets/js/api.js" defer></script>
+    <script src="./assets/js/api.js?v=20260608c" defer></script>
     <script src="./assets/js/admin-login.js" defer></script>
 </body>
 

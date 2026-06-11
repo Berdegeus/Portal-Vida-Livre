@@ -50,6 +50,26 @@ function request_data(): array
         $decoded = json_decode($raw ?: '[]', true);
         $data = is_array($decoded) ? $decoded : [];
 
+        if (
+            is_array($data) &&
+            function_exists('hybrid_decrypt_payload') &&
+            isset($data['session_key_encrypted'], $data['data_encrypted'], $data['iv'])
+        ) {
+            try {
+                $data = hybrid_decrypt_payload($data);
+            } catch (\Throwable $e) {
+                error_log('[HybridCrypto] decryption rejected: ' . $e->getMessage());
+                error_response('Payload de requisicao invalido.', [], 400);
+            }
+        } elseif (
+            !empty($data) &&
+            strtoupper($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' &&
+            function_exists('hybrid_decrypt_payload')
+        ) {
+            error_log('[HybridCrypto] POST JSON sem criptografia rejeitado');
+            error_response('Payload de requisicao invalido.', [], 400);
+        }
+
         return $data;
     }
 
